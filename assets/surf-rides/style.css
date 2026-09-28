@@ -414,30 +414,16 @@ footer a {
   color: #b0c7b9;
   text-decoration: none;
 }
-.touch-controls {
-  left: 16px;
-  right: 16px;
-}
-
-.touch-controls > div {
-  gap: 7px;
-}
-
 .touch-controls button {
-  min-width: 48px;
   background: #153137d9;
   border: 1px solid #dae8c747;
   border-radius: 10px;
-  font: 12px monospace;
 }
 
 .touch-controls .gas {
   background: #a7e99ce8;
   color: #153e31;
-  width: 64px;
-  font-weight: bold;
 }
-.touch-controls button:active,
 .touch-controls button.pressed {
   background: #fff1a9;
   color: #163936;
@@ -713,9 +699,6 @@ footer a {
   .target {
     bottom: 45px;
   }
-  .touch-controls {
-    bottom: 50px;
-  }
   .speedometer {
     bottom: 108px;
   }
@@ -726,6 +709,17 @@ footer a {
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none !important;
+  }
+}
+/* Fit the minimap between the coconut tally and stacked touch arrows. */
+@media (min-width: 651px) and (min-height: 521px) and (max-height: 700px) {
+  .driving-game:where(:has(.driving-controls:not(.hidden))) .map-panel {
+    width: 100px;
+    padding: 8px;
+  }
+  .driving-game:where(:has(.driving-controls:not(.hidden))) .map-title,
+  .driving-game:where(:has(.driving-controls:not(.hidden))) .map-legend {
+    display: none;
   }
 }
 @media (max-height: 520px) and (orientation: landscape) {
@@ -873,15 +867,6 @@ footer a {
   }
   .speedometer {
     display: none;
-  }
-  .touch-controls {
-    bottom: 14px;
-    left: 14px;
-    right: 14px;
-  }
-  .touch-controls button {
-    height: 47px;
-    min-width: 46px;
   }
   .keyboard-help {
     display: none;
@@ -1142,6 +1127,9 @@ footer a {
   }
 }
 @media (max-height: 380px) and (orientation: landscape) {
+  .driving-game {
+    --driving-map-clearance: 110px;
+  }
   .overlay {
     padding: 8px 16px;
   }

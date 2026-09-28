@@ -243,6 +243,9 @@ main {
 .scene-hotspot:disabled {
   cursor: default;
 }
+.hotspot-pin {
+  display: none;
+}
 .scene-hotspot:focus-visible {
   outline: 2px dashed var(--accent);
   outline-offset: 5px;
@@ -732,7 +735,8 @@ main {
 
 /* A quiet reading card, with room to scroll on short landscape screens. */
 .quote-dialog,
-.books-dialog {
+.books-dialog,
+.external-link-dialog {
   width: min(600px, calc(100vw - 32px));
   max-width: none;
   max-height: calc(100dvh - 32px);
@@ -747,14 +751,70 @@ main {
   text-align: left;
 }
 .quote-dialog::backdrop,
-.books-dialog::backdrop {
+.books-dialog::backdrop,
+.external-link-dialog::backdrop {
   background: #101b2c99;
   backdrop-filter: blur(5px);
 }
 .quote-dialog[open],
-.books-dialog[open] {
+.books-dialog[open],
+.external-link-dialog[open] {
   display: flex;
   flex-direction: column;
+}
+.external-link-dialog {
+  width: min(440px, calc(100vw - 32px));
+  padding: 24px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.external-link-dialog h2 {
+  margin: 0;
+  font:
+    400 34px/1.15 'Caveat Brush',
+    cursive;
+}
+.external-link-dialog p {
+  margin: 14px 0 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.external-link-dialog .external-link-url {
+  color: var(--ink);
+  font: 12px/1.6 monospace;
+  overflow-wrap: anywhere;
+}
+.external-link-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}
+.external-link-actions > * {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  font:
+    14px/1.4 Arial,
+    sans-serif;
+  text-align: center;
+  cursor: pointer;
+}
+.external-link-cancel {
+  background: var(--paper);
+  color: var(--strong);
+}
+.external-link-continue {
+  background: color-mix(in srgb, var(--accent) 80%, var(--strong));
+  color: var(--paper);
+  border-color: var(--accent);
+}
+.external-link-actions > :hover {
+  box-shadow: 0 0 0 2px var(--line);
 }
 .quote-close {
   position: absolute;
@@ -1505,9 +1565,66 @@ footer span {
   }
 }
 @media (hover: none) {
+  /* Keep pins inside the existing controls: their transparent circular targets
+     grow with the illustration, without adding focus stops or duplicate actions. */
+  .scene-hotspot:not(:disabled) .hotspot-pin,
+  .painting-toggle .hotspot-pin {
+    display: block;
+    position: absolute;
+    z-index: 1;
+    left: var(--pin-x, 50%);
+    top: var(--pin-y, 50%);
+    width: clamp(24px, 4.4cqw, 44px);
+    height: clamp(24px, 4.4cqw, 44px);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: auto;
+    touch-action: manipulation;
+  }
+  .hotspot-pin::before,
+  .hotspot-pin::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    border-radius: 50%;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+  }
+  .hotspot-pin::before {
+    width: 10px;
+    height: 10px;
+    border: 2px solid #fff;
+    background: var(--accent);
+    box-shadow: 0 1px 4px #142b4d80;
+  }
+  .hotspot-pin::after {
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--accent);
+    opacity: 0.5;
+    animation: hotspot-pulse 2.6s ease-out infinite;
+  }
+  .monitor .hotspot-pin {
+    /* The phone monitor target expands upward; keep its pin on the screen. */
+    --pin-y: calc(100% - var(--h) / 1536 * 50cqw);
+  }
+  .sisyphus-toggle .hotspot-pin {
+    --pin-x: 35%;
+    --pin-y: 85%;
+  }
   .scene-hotspot:not(:focus-visible) .label,
   .painting-toggle:not(:focus-visible) .label {
     display: none;
+  }
+}
+@media (hover: none) and (max-width: 650px) {
+  /* Leave room between the camera, katana and candle on the narrow left shelves. */
+  .camera-toggle .hotspot-pin {
+    --pin-y: 15%;
+  }
+  .candle-toggle .hotspot-pin {
+    --pin-y: 85%;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1554,6 +1671,17 @@ footer span {
 @keyframes blink {
   to {
     visibility: hidden;
+  }
+}
+@keyframes hotspot-pulse {
+  0% {
+    opacity: 0.55;
+    transform: translate(-50%, -50%) scale(0.85);
+  }
+  75%,
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.65);
   }
 }
 

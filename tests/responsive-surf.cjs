@@ -8,6 +8,7 @@ const {
   artifactPath,
   settleCamera,
 } = require('./helpers/browser.cjs');
+const { assertDrivingControls } = require('./helpers/driving-controls.cjs');
 const gameURL = new URL(
   process.env.GAME_URL ||
     new URL('surf-riders.html', process.env.SITE_URL || 'http://localhost:8000/'),
@@ -28,6 +29,9 @@ const viewports = [
   [820, 1180, true],
   [1024, 768, true],
   [1180, 820, true],
+  // Touch-capable laptops can report a fine primary pointer.
+  [1024, 768, false, true],
+  [667, 600, false, true],
   [1024, 600, false],
   [1280, 720, false],
   [1366, 768, false],
@@ -115,8 +119,8 @@ test('responsive surf', { timeout: 300_000 }, async () => {
     const page = await browser.newPage();
     const errors = [];
     page.on('pageerror', (error) => errors.push(error.message));
-    for (const [width, height, hasTouch] of viewports) {
-      const label = `${width}×${height}`;
+    for (const [width, height, hasTouch, hybrid = false] of viewports) {
+      const label = `${width}×${height}${hybrid ? ' hybrid' : ''}`;
       await page.setViewport({
         width,
         height,
@@ -124,10 +128,25 @@ test('responsive surf', { timeout: 300_000 }, async () => {
         isMobile: hasTouch && width < 900,
         deviceScaleFactor: 1,
       });
+      const hybridSetup = hybrid
+        ? await page.evaluateOnNewDocument(() => {
+            Object.defineProperty(navigator, 'maxTouchPoints', { get: () => 5 });
+          })
+        : null;
       await loadGame(page, url, 'surfDebug');
+      if (hybridSetup) {
+        await page.removeScriptToEvaluateOnNewDocument(hybridSetup.identifier);
+        assert.ok(
+          await page.evaluate(
+            () => matchMedia('(pointer: fine)').matches && navigator.maxTouchPoints === 5,
+          ),
+          `${label}: fixture has a fine primary pointer and touch capability`,
+        );
+      }
       await inspectLayout(page, `${label} menu`, false);
       await page.click('#start');
       await inspectLayout(page, `${label} driving`, true);
+      if (hasTouch || hybrid) await assertDrivingControls(page, label);
       await page.click('#pause');
       assert.equal(await page.evaluate(() => surfDebug.state.mode), 'paused');
       await inspectLayout(page, `${label} paused`, false);
@@ -151,6 +170,7 @@ test('responsive surf', { timeout: 300_000 }, async () => {
     await inspectLayout(page, 'landscape safe area menu', false);
     await page.click('#start');
     await inspectLayout(page, 'landscape safe area driving', true);
+    await assertDrivingControls(page, 'landscape safe area driving');
     await page.evaluate(() => surfDebug.endGame());
     await inspectLayout(page, 'landscape safe area results', false);
     assert.deepEqual(errors, [], 'No browser errors across the responsive matrix');

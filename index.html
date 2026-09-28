@@ -372,6 +372,7 @@
             disabled
             style="--x: 287; --y: 434; --w: 69; --h: 55"
           >
+            <span class="hotspot-pin" aria-hidden="true"></span>
             <span class="label" aria-hidden="true"
               ><span class="candle-hint">Blow out the candle</span>
               <span class="arrow">↴</span></span
@@ -422,6 +423,7 @@
               aria-expanded="false"
               aria-controls="wall-safe"
             >
+              <span class="hotspot-pin" aria-hidden="true"></span>
               <span class="painting-door" aria-hidden="true">
                 <span class="painting-front">
                   <span class="wall-crop crop-day"></span>
@@ -478,6 +480,7 @@
             style="--x: 263; --y: 232; --w: 86; --h: 76"
             disabled
           >
+            <span class="hotspot-pin" aria-hidden="true"></span>
             <span class="label" aria-hidden="true"
               >A little snapshot <span class="arrow">↴</span></span
             >
@@ -491,6 +494,7 @@
             style="--x: 412; --y: 263; --w: 68; --h: 66"
             disabled
           >
+            <span class="hotspot-pin" aria-hidden="true"></span>
             <span class="label" aria-hidden="true">Meditations <span class="arrow">↴</span></span>
           </button>
           <button
@@ -502,6 +506,7 @@
             style="--x: 230; --y: 350; --w: 140; --h: 50"
             disabled
           >
+            <span class="hotspot-pin" aria-hidden="true"></span>
             <span class="label" aria-hidden="true"
               >The Art of War <span class="arrow">↴</span></span
             >
@@ -512,38 +517,54 @@
             style="--x: 657; --y: 315; --w: 428; --h: 125"
             aria-label="Explore my projects on the large monitor"
           >
+            <span class="hotspot-pin" aria-hidden="true"></span>
             <span class="label" aria-hidden="true"
               >Stuff I've built <span class="arrow">↴</span></span
             >
           </a>
           <a
             class="scene-hotspot screen-link left-screen"
+            data-confirm-external
+            data-destination="Twitter"
+            aria-haspopup="dialog"
+            aria-controls="external-link-dialog"
             href="https://x.com/markhammonds"
             target="_blank"
             rel="noopener noreferrer"
             style="--x: 681; --y: 449; --w: 97; --h: 73"
             aria-label="Mark Hammonds on Twitter"
           >
+            <span class="hotspot-pin" aria-hidden="true"></span>
             <span class="label" aria-hidden="true">Twitter <span class="arrow">↴</span></span>
           </a>
           <a
             class="scene-hotspot screen-link laptop"
+            data-confirm-external
+            data-destination="LinkedIn"
+            aria-haspopup="dialog"
+            aria-controls="external-link-dialog"
             href="https://www.linkedin.com/in/mhammonds/"
             target="_blank"
             rel="noopener noreferrer"
             style="--x: 793; --y: 450; --w: 128; --h: 112"
             aria-label="Mark Hammonds on LinkedIn"
           >
+            <span class="hotspot-pin" aria-hidden="true"></span>
             <span class="label" aria-hidden="true">LinkedIn <span class="arrow">↴</span></span>
           </a>
           <a
             class="scene-hotspot screen-link right-screen"
+            data-confirm-external
+            data-destination="GitHub"
+            aria-haspopup="dialog"
+            aria-controls="external-link-dialog"
             href="https://github.com/mhammonds"
             target="_blank"
             rel="noopener noreferrer"
             style="--x: 948; --y: 454; --w: 127; --h: 131"
             aria-label="Mark Hammonds on GitHub"
           >
+            <span class="hotspot-pin" aria-hidden="true"></span>
             <span class="label" aria-hidden="true">GitHub <span class="arrow">↴</span></span>
           </a>
           <button
@@ -555,6 +576,7 @@
             style="--x: 1250; --y: 258; --w: 165; --h: 127"
             disabled
           >
+            <span class="hotspot-pin" aria-hidden="true"></span>
             <span class="label" aria-hidden="true">Sisyphus <span class="arrow">↴</span></span>
           </button>
           <button
@@ -566,6 +588,7 @@
             style="--x: 1204; --y: 393; --w: 200; --h: 250"
             disabled
           >
+            <span class="hotspot-pin" aria-hidden="true"></span>
             <span class="label" aria-hidden="true"
               >Favorite books <span class="arrow">↴</span></span
             >
@@ -579,6 +602,7 @@
             style="--x: 430; --y: 330; --w: 242; --h: 310"
             aria-label="Open Mark’s business card"
           >
+            <span class="hotspot-pin" aria-hidden="true"></span>
             <span class="label" aria-hidden="true"
               >My business card <span class="arrow">↴</span></span
             >
@@ -591,6 +615,7 @@
             aria-describedby="dog-status"
             disabled
           >
+            <span class="hotspot-pin" aria-hidden="true"></span>
             <span class="label" aria-hidden="true">CiCi <span class="arrow">↴</span></span>
             <span class="dog-heart" aria-hidden="true">♥</span>
           </button>
@@ -690,7 +715,7 @@
           <div class="project-caption">
             <div>
               <h3>Bay Racer</h3>
-              <p>Three laps. Your Sea-Doo. One more shot at your best time.</p>
+              <p>Become a speed racer with three laps in the Tampa Bay.</p>
             </div>
             <span class="project-arrow" aria-hidden="true">↗</span>
           </div>
@@ -734,6 +759,24 @@
       </button>
       <span aria-hidden="true">·</span> A little corner of the internet.
     </footer>
+    <dialog
+      id="external-link-dialog"
+      class="external-link-dialog"
+      aria-labelledby="external-link-title"
+      aria-describedby="external-link-description external-link-destination"
+    >
+      <h2 id="external-link-title">Open this profile?</h2>
+      <p id="external-link-description">The profile opens in a new tab. This page stays open.</p>
+      <p id="external-link-destination" class="external-link-url"></p>
+      <div class="external-link-actions">
+        <button type="button" class="external-link-cancel" data-dialog-close autofocus>
+          Stay here
+        </button>
+        <a class="external-link-continue" target="_blank" rel="noopener noreferrer">
+          Open profile ↗
+        </a>
+      </div>
+    </dialog>
     <dialog
       id="business-card-dialog"
       class="business-card"

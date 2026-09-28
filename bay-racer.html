@@ -52,7 +52,7 @@
       ><span class="terminal">./bay-racer <span aria-hidden="true">▌</span></span
       ><button id="sound" type="button" aria-pressed="false">SOUND OFF</button>
     </header>
-    <main id="game-shell">
+    <main id="game-shell" class="driving-game">
       <div role="group" id="viewport" aria-label="3D boat racing game"></div>
       <div class="vignette" aria-hidden="true"></div>
       <section class="hud" aria-label="Race statistics">
@@ -117,25 +117,30 @@
       <div
         role="group"
         id="touch-controls"
-        class="touch-controls hidden"
+        class="touch-controls driving-controls hidden"
         aria-label="Touch boat controls"
       >
-        <div>
-          <button type="button" data-control="left" aria-label="Steer left">◀</button
-          ><button type="button" data-control="right" aria-label="Steer right">▶</button>
+        <div data-control-pad="steering" role="group" aria-label="Steering">
+          <button type="button" data-control="left" aria-label="Steer left">←</button>
+          <button type="button" data-control="right" aria-label="Steer right">→</button>
         </div>
-        <div>
-          <button type="button" data-control="reverse" aria-label="Slow down or reverse">REV</button
-          ><button
+        <div class="driving-actions">
+          <button
             type="button"
             data-control="boost"
-            class="boost"
+            class="boost driving-auxiliary"
             aria-label="Boost while accelerating"
           >
-            BOOST</button
-          ><button type="button" data-control="gas" class="gas" aria-label="Accelerate">
-            GO ↑
+            BOOST
           </button>
+          <div data-control-pad="throttle" role="group" aria-label="Forward and reverse">
+            <button type="button" data-control="gas" class="gas" aria-label="Drive forward">
+              ↑
+            </button>
+            <button type="button" data-control="reverse" aria-label="Slow down or reverse">
+              ↓
+            </button>
+          </div>
         </div>
       </div>
       <section id="overlay" class="overlay" aria-label="Race menu">
@@ -167,8 +172,7 @@
             LET'S RACE <span aria-hidden="true">↗</span></button
           ><button id="restart" class="secondary hidden" type="button">START A NEW RACE</button>
           <p id="menu-note" class="menu-note">
-            WASD / arrows to drive · Space to boost<br />S / ↓ to slow down or reverse · Touch
-            controls on mobile
+            Hold ↑ / ↓ to drive · ← / → to steer<br />WASD also works · Space to boost
           </p>
         </div>
       </section>

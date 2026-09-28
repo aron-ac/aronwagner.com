@@ -357,6 +357,14 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
     await page.click('.candle-toggle');
     await page.screenshot({ path: artifactPath('homepage-night-lit.png'), fullPage: true });
 
+    const tapPin = async (selector) => {
+      const point = await page.$eval(`${selector} .hotspot-pin`, (pin) => {
+        pin.scrollIntoView({ block: 'center', behavior: 'instant' });
+        const bounds = pin.getBoundingClientRect();
+        return { x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2 };
+      });
+      await page.touchscreen.tap(point.x, point.y);
+    };
     for (const width of [390, 768]) {
       await page.setViewport({
         width,
@@ -369,6 +377,25 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
         await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
         'No horizontal overflow',
       );
+      if (width === 390) {
+        const pins = await page.$$eval('.hotspot-pin', (pins) =>
+          pins.map((pin) => ({
+            control: pin.parentElement.className,
+            pulsing: [null, '::before', '::after'].some((pseudo) => {
+              const style = getComputedStyle(pin, pseudo);
+              return (
+                style.animationName !== 'none' &&
+                parseFloat(style.animationDuration) > 0 &&
+                style.animationIterationCount === 'infinite'
+              );
+            }),
+          })),
+        );
+        assert.equal(pins.length, 13, 'Each scene hotspot has a touch pin');
+        for (const pin of pins) {
+          assert.equal(pin.pulsing, true, `${pin.control} pin pulses with normal motion`);
+        }
+      }
       for (const [href, label] of links) {
         assert.ok(
           await page.$eval(`.scene a[href="${href}"]`, (el) => {
@@ -391,14 +418,37 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
       await page.screenshot({ path: artifactPath(`homepage-business-card-${width}.png`) });
       await page.click('.business-card-close');
       assert.equal(await popupOpen(), false);
-      await page.click('.candle-toggle');
+      if (width === 390) {
+        await tapPin('.portrait');
+        assert.equal(await popupOpen(), true, 'Tapping the portrait pin opens the business card');
+        await page.click('.business-card-close');
+        await tapPin('.candle-toggle');
+      } else await page.click('.candle-toggle');
       assert.equal(await pressed(), 'false', 'Mobile candle toggle');
-      await page.click('.painting-toggle');
+      if (width === 390) await tapPin('.painting-toggle');
+      else await page.click('.painting-toggle');
       assert.equal(
         await page.$eval('.painting-toggle', (el) => el.getAttribute('aria-expanded')),
         'true',
+        'Painting tap reveals the safe',
       );
       await settlePage(page);
+      if (width === 390) {
+        await tapPin('.painting-toggle');
+        assert.equal(
+          await page.$eval('.painting-toggle', (el) => el.getAttribute('aria-expanded')),
+          'false',
+          'The painting pin can close the revealed safe',
+        );
+        await settlePage(page);
+        await tapPin('.painting-toggle');
+        assert.equal(
+          await page.$eval('.painting-toggle', (el) => el.getAttribute('aria-expanded')),
+          'true',
+          'The painting pin can reopen the safe',
+        );
+        await settlePage(page);
+      }
       await page.screenshot({ path: artifactPath(`homepage-${width}.png`), fullPage: true });
     }
     for (const viewport of [
@@ -407,8 +457,8 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
     ]) {
       await page.setViewport({ ...viewport, isMobile: true, hasTouch: true });
       await page.goto(site, { waitUntil: 'networkidle0' });
-      await page.click('.camera-toggle');
-      assert.equal(await polaroidOpen(), true, 'Mobile camera tap opens the photo viewer');
+      await tapPin('.camera-toggle');
+      assert.equal(await polaroidOpen(), true, 'Tapping the camera pin opens the photo viewer');
       let prior = '';
       for (let i = 0; i < 6; i++) {
         if (i) await page.click('.polaroid-next');
@@ -453,7 +503,7 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
     }
     assert.deepEqual(errors, [], 'No JavaScript errors or failed homepage assets');
     console.log(
-      'PASS: Eastern schedule (winter/summer), manual override expiry, new-tab navigation and all three game launches, social screen and submenu links, Bitmotive business card and email link, six-photo Polaroid shuffle and keyboard controls, candle click/keyboard, safe reveal/Escape, all three game cards, and responsive layouts.',
+      'PASS: Eastern schedule (winter/summer), manual override expiry, new-tab navigation and all three game launches, social screen and submenu links, Bitmotive business card and email link, six-photo Polaroid shuffle and keyboard controls, candle click/keyboard, safe reveal/Escape, pulsing touch pins and touchscreen activation, all three game cards, and responsive layouts.',
     );
   } finally {
     await closeBrowser(browser);

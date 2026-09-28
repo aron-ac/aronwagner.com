@@ -8,6 +8,10 @@ const {
   artifactPath,
   settleCamera,
 } = require('./helpers/browser.cjs');
+const {
+  assertDrivingControls,
+  exerciseDrivingControls,
+} = require('./helpers/driving-controls.cjs');
 const gameURL = new URL(
   process.env.GAME_URL ||
     new URL('surf-riders.html', process.env.SITE_URL || 'http://localhost:8000/'),
@@ -363,6 +367,8 @@ test('surf rides smoke', { timeout: 300_000 }, async () => {
         'Touch cancellation clears input',
       );
       await client.detach();
+      await assertDrivingControls(page, `Surf Riders ${viewport.width}×${viewport.height}`);
+      await exerciseDrivingControls(page, { debugName: 'surfDebug', start: 'startGame' });
       await page.screenshot({ path: artifactPath(`surf-riders-${viewport.width}.png`) });
     }
     await loadGame(page, new URL('cr-surf-rides.html?debug=1#start', url).href, 'surfDebug');
@@ -375,7 +381,7 @@ test('surf rides smoke', { timeout: 300_000 }, async () => {
     assert.equal(redirected.hash, '#start', 'The redirect retains the fragment');
     assert.deepEqual(errors, [], 'No page errors or failed asset requests');
     console.log(
-      `PASS: ${mechanical.length} mechanics, keyboard pickup, pause keys, portrait and landscape layouts.\n${mechanical.join('\n')}`,
+      `PASS: ${mechanical.length} mechanics, keyboard pickup, pause keys, two-thumb driving and sliding, portrait and landscape layouts.\n${mechanical.join('\n')}`,
     );
   } finally {
     await closeBrowser(browser);

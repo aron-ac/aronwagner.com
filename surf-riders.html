@@ -63,7 +63,7 @@
         SOUND OFF
       </button>
     </header>
-    <main id="game-shell">
+    <main id="game-shell" class="driving-game">
       <div role="group" id="viewport" aria-label="3D surf taxi driving game"></div>
       <div class="vignette" aria-hidden="true"></div>
       <section class="hud" aria-label="Shift statistics">
@@ -143,19 +143,25 @@
       <div
         role="group"
         id="touch-controls"
-        class="touch-controls hidden"
+        class="touch-controls driving-controls hidden"
         aria-label="Touch driving controls"
       >
-        <div>
-          <button type="button" data-control="left" aria-label="Steer left">◀</button
-          ><button type="button" data-control="right" aria-label="Steer right">▶</button>
+        <div data-control-pad="steering" role="group" aria-label="Steering">
+          <button type="button" data-control="left" aria-label="Steer left">←</button>
+          <button type="button" data-control="right" aria-label="Steer right">→</button>
         </div>
-        <div>
-          <button type="button" data-control="reverse" aria-label="Reverse">REV</button
-          ><button type="button" data-control="brake" aria-label="Brake">■</button
-          ><button type="button" data-control="gas" class="gas" aria-label="Accelerate">
-            GO ↑
+        <div class="driving-actions">
+          <button type="button" data-control="brake" class="driving-auxiliary" aria-label="Brake">
+            BRAKE
           </button>
+          <div data-control-pad="throttle" role="group" aria-label="Forward and reverse">
+            <button type="button" data-control="gas" class="gas" aria-label="Drive forward">
+              ↑
+            </button>
+            <button type="button" data-control="reverse" aria-label="Slow down or reverse">
+              ↓
+            </button>
+          </div>
         </div>
       </div>
       <section id="overlay" class="overlay" aria-label="Game menu">
@@ -187,8 +193,8 @@
           <button type="button" id="start" class="primary">LET'S RIDE <span>↗</span></button
           ><button type="button" id="restart" class="secondary hidden">START A NEW SHIFT</button>
           <p class="menu-note" id="menu-note">
-            WASD / arrow keys to drive · Space to brake<br />Stop in the rings to pick up / drop
-            off.<br />Touch controls on mobile · Best score: <span id="best">0 pts</span>
+            Hold ↑ / ↓ to drive · ← / → to steer<br />WASD also works · Space to brake<br />
+            Best score: <span id="best">0 pts</span>
           </p>
         </div>
       </section>

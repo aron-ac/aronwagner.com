@@ -11,7 +11,7 @@ Complete three laps through eight buoy gates in order. The next gate is gold, an
 - **Space:** boost while accelerating. Normal top speed is 19 units/s, boosted speed 26; these are arcade tuning values, not specifications of the real boat.
 - **P / Escape:** pause/resume. Losing focus or hiding the tab pauses the race, including its countdown.
 - **R / Reset:** return to an approach to the next gate for a five-second penalty. It does not advance the course.
-- Touch controls support simultaneous steering, throttle and boost. Releasing/canceling a pointer releases its control.
+- Touch devices have a left-thumb ← / → steering pad and a right-thumb ↑ / ↓ forward/reverse pad, plus a separate boost button. Hold a driving arrow while steering; slide between arrows within either pad to change direction. Releasing a finger or sliding off its pad releases only that input. Boost can be held alongside forward throttle.
 
 A center pass awards 20 boost; other successful passes award eight. Boost also recharges when unused. Running into land at speed adds two seconds, with a short collision cooldown to prevent repeated penalties while stuck. The final time includes all penalties. Results show the race time, best lap, penalties and personal best. Gold is under 100 seconds, silver under 125, and bronze celebrates every other finish. The fastest completed race is saved locally under `bay-racer-best-time`. Three-second countdowns, a pause screen, restart, optional synthesized sound, drifting foam trails and mobile controls round out the demo.
 

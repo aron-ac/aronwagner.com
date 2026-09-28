@@ -387,34 +387,19 @@ kbd {
   font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
-.touch-controls {
-  left: 16px;
-  right: 16px;
-}
-
-.touch-controls > div {
-  gap: 7px;
-}
-
 .touch-controls button {
-  min-width: 48px;
-  padding: 0 11px;
   background: #153642e8;
   border: 1px solid #e4fae65c;
   border-radius: 10px;
-  font: 11px monospace;
 }
 
 .touch-controls .gas {
   background: #b3f4dce8;
   color: #143e40;
-  min-width: 61px;
-  font-weight: bold;
 }
 .touch-controls .boost {
   color: var(--gold);
 }
-.touch-controls button:active,
 .touch-controls button.pressed {
   background: var(--gold);
   color: #123b42;
@@ -622,21 +607,6 @@ footer a {
   .keyboard-help {
     display: none;
   }
-  .touch-controls {
-    left: 12px;
-    right: 12px;
-  }
-  .touch-controls > div {
-    gap: 5px;
-  }
-  .touch-controls button {
-    min-width: 43px;
-    padding: 0 9px;
-    font-size: 10px;
-  }
-  .touch-controls .gas {
-    min-width: 55px;
-  }
   .overlay {
     padding: 86px 16px 55px;
     justify-content: center;
@@ -708,7 +678,7 @@ footer a {
   .course-panel progress {
     margin-bottom: 0;
   }
-  .map-panel {
+  .driving-game .map-panel {
     top: 84px;
     bottom: auto;
     right: 12px;
@@ -752,20 +722,6 @@ footer a {
   }
   .stats strong {
     font-size: 14px;
-  }
-  .touch-controls {
-    left: 8px;
-    right: 8px;
-  }
-  .touch-controls > div {
-    gap: 4px;
-  }
-  .touch-controls button {
-    min-width: 41px;
-    padding: 0 8px;
-  }
-  .touch-controls .gas {
-    min-width: 48px;
   }
 }
 @media (max-height: 700px) and (min-width: 651px) {
@@ -946,15 +902,6 @@ footer a {
   }
   .speedometer {
     display: none;
-  }
-  .touch-controls {
-    bottom: 14px;
-    left: 14px;
-    right: 14px;
-  }
-  .touch-controls button {
-    height: 47px;
-    min-width: 46px;
   }
   .keyboard-help {
     display: none;

@@ -38,8 +38,8 @@ export function createGameInput({
     const held = [...pointers];
     pointers.clear();
     updateButtons();
-    for (const [id, { button }] of held) {
-      if (button.hasPointerCapture(id)) button.releasePointerCapture(id);
+    for (const [id, { captureButton }] of held) {
+      if (captureButton.hasPointerCapture(id)) captureButton.releasePointerCapture(id);
     }
   }
   window.addEventListener(
@@ -75,7 +75,34 @@ export function createGameInput({
         if (!isActive() || (event.pointerType === 'mouse' && event.button !== 0)) return;
         event.preventDefault();
         button.setPointerCapture(event.pointerId);
-        pointers.set(event.pointerId, { button, action: button.dataset.control });
+        pointers.set(event.pointerId, {
+          captureButton: button,
+          button,
+          action: button.dataset.control,
+          pad: button.closest('[data-control-pad]'),
+        });
+        updateButtons();
+      },
+      options,
+    );
+    button.addEventListener(
+      'pointermove',
+      (event) => {
+        const pointer = pointers.get(event.pointerId);
+        if (!pointer?.pad) return;
+        event.preventDefault();
+        // Keep capture on the original button so lifting outside still releases.
+        // Sliding only changes actions within the pad where this finger began.
+        const target = document
+          .elementFromPoint(event.clientX, event.clientY)
+          ?.closest('[data-control]');
+        const next =
+          controls.includes(target) && target.closest('[data-control-pad]') === pointer.pad
+            ? target
+            : null;
+        if (pointer.button === next) return;
+        pointer.button = next;
+        pointer.action = next?.dataset.control;
         updateButtons();
       },
       options,

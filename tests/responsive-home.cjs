@@ -18,9 +18,27 @@ const viewports = [
   [1024, 768, true],
   [1180, 820, true],
   [1024, 600, false],
+  [390, 844, false],
   [1280, 720, false],
   [1366, 768, false],
   [1440, 900, false],
+  [1440, 900, true],
+];
+
+const sceneControls = [
+  '.camera-toggle',
+  '.meditations-toggle',
+  '.katana-toggle',
+  '.sisyphus-toggle',
+  '.books-toggle',
+  '.candle-toggle',
+  '.painting-toggle',
+  '.monitor',
+  '.left-screen',
+  '.laptop',
+  '.right-screen',
+  '.portrait',
+  '.dog',
 ];
 
 const sceneObjects = [
@@ -56,6 +74,80 @@ async function assertVisible(page, selector, label, interactive = false) {
   if (interactive) assert.equal(result.reachable, true, `${label}: ${selector} is reachable`);
 }
 
+async function assertHotspotPins(page, label, hasTouch) {
+  assert.equal(
+    await page.evaluate(() => matchMedia('(hover: none)').matches),
+    hasTouch,
+    `${label}: hover capability matches the emulated device`,
+  );
+  for (const selector of sceneControls) {
+    await page.$eval(selector, (control) => control.scrollIntoView({ block: 'center' }));
+    const pin = await page.$eval(selector, (control) => {
+      const pins = control.querySelectorAll('.hotspot-pin');
+      const pin = pins[0];
+      if (!pin) return { count: 0 };
+      const bounds = pin.getBoundingClientRect();
+      const styles = [
+        getComputedStyle(pin),
+        getComputedStyle(pin, '::before'),
+        getComputedStyle(pin, '::after'),
+      ];
+      const x = bounds.left + bounds.width / 2;
+      const y = bounds.top + bounds.height / 2;
+      const radius = Math.min(bounds.width, bounds.height) / 2 - 3;
+      return {
+        count: pins.length,
+        decorative: pin.getAttribute('aria-hidden') === 'true' && pin.tabIndex === -1,
+        visible: pin.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true }),
+        width: bounds.width,
+        height: bounds.height,
+        hasDot: styles.some(
+          (style) =>
+            style.display !== 'none' &&
+            style.visibility === 'visible' &&
+            Number(style.opacity) > 0 &&
+            parseFloat(style.width) > 0 &&
+            parseFloat(style.width) <= 18 &&
+            parseFloat(style.height) > 0 &&
+            parseFloat(style.height) <= 18 &&
+            style.backgroundColor !== 'rgba(0, 0, 0, 0)',
+        ),
+        tapFailures: [
+          [x, y],
+          [x - radius, y],
+          [x + radius, y],
+          [x, y - radius],
+          [x, y + radius],
+        ]
+          .map(([x, y]) => ({ x, y, hit: document.elementFromPoint(x, y) }))
+          .filter(({ hit }) => !control.contains(hit))
+          .map(({ x, y, hit }) => ({
+            x,
+            y,
+            hit: hit?.closest('a, button')?.className || hit?.className || null,
+          })),
+        animations: styles.map((style) => style.animationName),
+      };
+    });
+    assert.equal(pin.count, 1, `${label}: ${selector} has one pin`);
+    assert.equal(pin.decorative, true, `${label}: ${selector} keeps one accessible control`);
+    assert.equal(pin.visible, hasTouch, `${label}: ${selector} pin follows hover capability`);
+    if (hasTouch) {
+      assert.ok(
+        pin.width >= 24 && pin.height >= 24,
+        `${label}: ${selector} pin has a 24px tap area`,
+      );
+      assert.equal(pin.hasDot, true, `${label}: ${selector} pin displays a small dot`);
+      assert.deepEqual(pin.tapFailures, [], `${label}: ${selector} owns its pin's tap area`);
+      assert.deepEqual(
+        pin.animations,
+        ['none', 'none', 'none'],
+        `${label}: ${selector} pin remains still with reduced motion`,
+      );
+    }
+  }
+}
+
 test('responsive home', { timeout: 300_000 }, async () => {
   const browser = await launchBrowser();
   try {
@@ -64,32 +156,18 @@ test('responsive home', { timeout: 300_000 }, async () => {
     page.on('pageerror', (error) => errors.push(error.message));
     await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
     for (const [width, height, hasTouch] of viewports) {
-      const label = `homepage ${width}×${height}`;
+      const label = `homepage ${width}×${height} (${hasTouch ? 'touch' : 'mouse'})`;
       await page.setViewport({ width, height, hasTouch, isMobile: hasTouch });
       await page.goto(site, { waitUntil: 'networkidle0' });
       assert.ok(
         await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
         `${label}: no horizontal overflow`,
       );
-      const controls = [
-        '.theme-toggle',
-        '.camera-toggle',
-        '.meditations-toggle',
-        '.katana-toggle',
-        '.sisyphus-toggle',
-        '.books-toggle',
-        '.candle-toggle',
-        '.painting-toggle',
-        '.left-screen',
-        '.laptop',
-        '.right-screen',
-        '.portrait',
-        '.dog',
-      ];
-      for (const selector of controls) {
+      for (const selector of ['.theme-toggle', ...sceneControls]) {
         await page.$eval(selector, (element) => element.scrollIntoView({ block: 'center' }));
         await assertVisible(page, selector, label, true);
       }
+      await assertHotspotPins(page, label, hasTouch);
       await page.$eval('.scene', (scene) => scene.scrollIntoView({ block: 'start' }));
       for (const [selector, x, y] of sceneObjects) {
         const reachable = await page.$eval(
@@ -107,7 +185,11 @@ test('responsive home', { timeout: 300_000 }, async () => {
           },
           { selector, x, y },
         );
-        assert.equal(reachable, true, `${label}: ${selector} owns its illustrated object`);
+        assert.equal(
+          reachable,
+          true,
+          `${label}: ${selector} owns its illustrated object at (${x}, ${y})`,
+        );
       }
       if (width <= 650) {
         for (const selector of ['.meditations-toggle', '.katana-toggle', '.sisyphus-toggle']) {
@@ -278,7 +360,7 @@ test('responsive home', { timeout: 300_000 }, async () => {
     }
     assert.deepEqual(errors, [], 'No runtime errors across responsive homepage layouts');
     console.log(
-      `PASS: homepage at ${viewports.length} phone, tablet and laptop sizes; scene targets, Sisyphus quote/modal controls, business card and Polaroids remain reachable.`,
+      `PASS: homepage at ${viewports.length} phone, tablet and laptop sizes; touch pins respect hover capability and reduced motion, and scene targets, Sisyphus quote/modal controls, business card and Polaroids remain reachable.`,
     );
   } finally {
     await closeBrowser(browser);

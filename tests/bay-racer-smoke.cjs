@@ -8,6 +8,10 @@ const {
   artifactPath,
   settleCamera,
 } = require('./helpers/browser.cjs');
+const {
+  assertDrivingControls,
+  exerciseDrivingControls,
+} = require('./helpers/driving-controls.cjs');
 const url = new URL(
   process.env.GAME_URL ||
     new URL('bay-racer.html', process.env.SITE_URL || 'http://localhost:8000/').href,
@@ -329,8 +333,12 @@ test('bay racer smoke', { timeout: 300_000 }, async () => {
             height: r.height,
           };
         };
-        const panels = ['.hud', '#course-panel', '#map-panel', '#target', '#touch-controls'].map(
-          (selector) => ({ selector, ...rect(document.querySelector(selector)) }),
+        const panels = ['.hud', '#course-panel', '#map-panel', '#target', '[data-control]'].flatMap(
+          (selector) =>
+            [...document.querySelectorAll(selector)].map((element) => ({
+              selector: element.dataset.control || selector,
+              ...rect(element),
+            })),
         );
         const overlaps = (a, b) =>
           a.x < b.right && a.right > b.x && a.y < b.bottom && a.bottom > b.y;
@@ -437,11 +445,17 @@ test('bay racer smoke', { timeout: 300_000 }, async () => {
         0,
         'Releasing both fingers leaves no stuck controls',
       );
+      await assertDrivingControls(page, `Bay Racer ${viewport.width}×${viewport.height}`);
+      await exerciseDrivingControls(page, {
+        debugName: 'bayDebug',
+        start: 'startRace',
+        countdownFrames: 186,
+      });
       await page.screenshot({ path: artifactPath(`bay-racer-${viewport.width}.png`) });
     }
     assert.deepEqual(errors, [], 'No JavaScript errors or failed game assets');
     console.log(
-      `PASS: ${mechanical.length} race checks, keyboard driving, pause keys, touch input, portrait/landscape layout and new-tab navigation.\n${mechanical.join('\n')}`,
+      `PASS: ${mechanical.length} race checks, keyboard driving, pause keys, two-thumb driving and sliding, portrait/landscape layout and new-tab navigation.\n${mechanical.join('\n')}`,
     );
   } finally {
     await closeBrowser(browser);

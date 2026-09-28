@@ -2,6 +2,7 @@ const { test } = require('node:test');
 /* Browser layout regression: compact phones, tablets, and laptop viewports. */
 const assert = require('node:assert/strict');
 const { launchBrowser, loadGame, closeBrowser, artifactPath } = require('./helpers/browser.cjs');
+const { assertDrivingControls } = require('./helpers/driving-controls.cjs');
 
 const url = new URL(
   process.env.GAME_URL ||
@@ -21,6 +22,8 @@ const viewports = [
   [820, 1180],
   [1024, 768],
   [1180, 820],
+  // A touch-capable laptop still has a fine primary mouse pointer.
+  [1024, 768, false, null, true],
   [1024, 600, false],
   [1280, 720, false],
   [1366, 768, false],
@@ -38,19 +41,20 @@ async function assertLayout(page, label, selectors, checkOverlaps = false) {
       r.right <= innerWidth - parseFloat(bodyStyle.paddingRight) &&
       r.bottom <= innerHeight - parseFloat(bodyStyle.paddingBottom);
     const panels = selectors
-      .map((selector) => {
-        const el = document.querySelector(selector);
-        const r = el.getBoundingClientRect();
-        return {
-          selector,
-          x: r.x,
-          y: r.y,
-          right: r.right,
-          bottom: r.bottom,
-          width: r.width,
-          height: r.height,
-        };
-      })
+      .flatMap((selector) =>
+        [...document.querySelectorAll(selector)].map((el) => {
+          const r = el.getBoundingClientRect();
+          return {
+            selector: el.dataset.control || selector,
+            x: r.x,
+            y: r.y,
+            right: r.right,
+            bottom: r.bottom,
+            width: r.width,
+            height: r.height,
+          };
+        }),
+      )
       .filter((r) => r.width && r.height);
     const buttons = [...document.querySelectorAll('button')]
       .filter((el) => {
@@ -92,8 +96,8 @@ test('responsive bay', { timeout: 300_000 }, async () => {
     const page = await browser.newPage();
     const errors = [];
     page.on('pageerror', (error) => errors.push(error.message));
-    for (const [width, height, touch = true, safeArea] of viewports) {
-      const label = `${width}×${height} ${touch ? 'touch' : 'mouse'}${safeArea ? ' safe area' : ''}`;
+    for (const [width, height, touch = true, safeArea, hybrid = false] of viewports) {
+      const label = `${width}×${height} ${hybrid ? 'hybrid' : touch ? 'touch' : 'mouse'}${safeArea ? ' safe area' : ''}`;
       await page.setViewport({
         width,
         height,
@@ -101,7 +105,21 @@ test('responsive bay', { timeout: 300_000 }, async () => {
         isMobile: touch,
         deviceScaleFactor: 1,
       });
+      const hybridSetup = hybrid
+        ? await page.evaluateOnNewDocument(() => {
+            Object.defineProperty(navigator, 'maxTouchPoints', { get: () => 5 });
+          })
+        : null;
       await loadGame(page, url.href, 'bayDebug');
+      if (hybridSetup) {
+        await page.removeScriptToEvaluateOnNewDocument(hybridSetup.identifier);
+        assert.ok(
+          await page.evaluate(
+            () => matchMedia('(pointer: fine)').matches && navigator.maxTouchPoints === 5,
+          ),
+          `${label}: fixture has a fine primary pointer and touch capability`,
+        );
+      }
       if (safeArea)
         await page.addStyleTag({
           content: `:root { ${Object.entries(safeArea)
@@ -123,11 +141,12 @@ test('responsive bay', { timeout: 300_000 }, async () => {
           '#speedometer',
           '#map-panel',
           '#target',
-          '#touch-controls',
+          '[data-control]',
           '.bottom-bar',
         ],
         true,
       );
+      if (touch || hybrid) await assertDrivingControls(page, label);
       if (touch) {
         const button = await page.$('[data-control="gas"]');
         const box = await button.boundingBox();

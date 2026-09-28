@@ -254,6 +254,42 @@
     });
   }
 
+  function initExternalLinks() {
+    const dialog = document.querySelector('#external-link-dialog');
+    if (!dialog) return;
+    const title = dialog.querySelector('#external-link-title');
+    const destination = dialog.querySelector('.external-link-url');
+    const continueLink = dialog.querySelector('.external-link-continue');
+    initDialogDismissal(dialog);
+
+    document.querySelectorAll('.scene a[data-confirm-external]').forEach((link) => {
+      function confirmNavigation(event) {
+        if (event.defaultPrevented || (event.type === 'auxclick' && event.button !== 1)) return;
+        const url = new URL(link.href);
+        if (!['http:', 'https:'].includes(url.protocol) || url.origin === location.origin) return;
+        event.preventDefault();
+        const name = link.dataset.destination || url.hostname;
+        title.textContent = `Open ${name}?`;
+        destination.textContent = url.href;
+        continueLink.href = url.href;
+        continueLink.textContent = `Open ${name} ↗`;
+        continueLink.setAttribute('aria-label', `Open ${name} in a new tab`);
+        // Explicit focus also restores the right hotspot on touch browsers.
+        link.focus({ preventScroll: true });
+        if (!dialog.open) dialog.showModal();
+      }
+      link.addEventListener('click', confirmNavigation);
+      link.addEventListener('auxclick', confirmNavigation);
+    });
+
+    // Keep the real link's synchronous default navigation, so the new tab is
+    // opened by the visitor's click rather than an asynchronous popup request.
+    continueLink.addEventListener('click', () => dialog.close());
+    continueLink.addEventListener('auxclick', (event) => {
+      if (event.button === 1) dialog.close();
+    });
+  }
+
   function createShuffledDeck(items) {
     let bag = [];
     let lastItem = null;
@@ -634,6 +670,7 @@
   for (const initialize of [
     initThemeControls,
     initBusinessCard,
+    initExternalLinks,
     initMeditations,
     initArtOfWar,
     initSisyphus,
