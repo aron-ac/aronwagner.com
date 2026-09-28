@@ -3,6 +3,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const {
   launchBrowser,
+  loadGame,
   closeBrowser,
   artifactPath,
   settleCamera,
@@ -23,8 +24,7 @@ test('bay racer smoke', { timeout: 300_000 }, async () => {
       if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`);
     });
     await page.setViewport({ width: 1440, height: 1000 });
-    await page.goto(url.href, { waitUntil: 'networkidle0' });
-    await page.waitForFunction(() => window.bayDebug);
+    await loadGame(page, url.href, 'bayDebug');
     assert.equal(await page.title(), 'Bay Racer · Mark Hammonds');
     await page.screenshot({ path: artifactPath('bay-racer-menu-desktop.png') });
     assert.equal(
@@ -272,6 +272,17 @@ test('bay racer smoke', { timeout: 300_000 }, async () => {
     assert.equal(await page.evaluate(() => bayDebug.state.mode), 'paused');
     await page.keyboard.press('Escape');
     assert.equal(await page.evaluate(() => bayDebug.state.mode), 'racing');
+    // Stop through the real brake input before waiting for a stationary camera.
+    // Passive coasting advances with simulation time, not slow CI wall-clock time.
+    await page.keyboard.down('KeyB');
+    await page.evaluate(() => {
+      for (let i = 0; i < 240; i++) bayDebug.update(1 / 60);
+    });
+    await page.keyboard.up('KeyB');
+    assert.ok(
+      await page.evaluate(() => Math.hypot(bayDebug.state.vx, bayDebug.state.vz) < 0.01),
+      'Keyboard brake brings the boat to rest',
+    );
     const savedBest = await page.evaluate(() =>
       Number(localStorage.getItem('bay-racer-best-time')),
     );
@@ -282,8 +293,7 @@ test('bay racer smoke', { timeout: 300_000 }, async () => {
       { width: 844, height: 390 },
     ]) {
       await page.setViewport({ ...viewport, isMobile: true, hasTouch: true, deviceScaleFactor: 1 });
-      await page.goto(url.href, { waitUntil: 'networkidle0' });
-      await page.waitForFunction(() => window.bayDebug);
+      await loadGame(page, url.href, 'bayDebug');
       assert.equal(
         await page.evaluate(() => bayDebug.state.best),
         savedBest,

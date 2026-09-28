@@ -12,7 +12,6 @@ const { values, positionals } = parseArgs({
   allowPositionals: true,
 });
 const tests = join(projectRoot, 'tests');
-const built = resolve(values.root) !== resolve(projectRoot);
 const suites = positionals.length
   ? positionals.map((name) => {
       const filename = resolve(tests, name);
@@ -22,7 +21,6 @@ const suites = positionals.length
       return filename;
     })
   : (await readdir(tests))
-      .filter((name) => !built || name !== 'desk-smoke.cjs')
       .filter((name) =>
         /(?:-smoke|^responsive-.+|^homepage-theme-load|^game-lifecycle)\.cjs$/.test(name),
       )
@@ -54,7 +52,6 @@ try {
         ...process.env,
         SITE_URL: baseURL,
         TEST_ARTIFACT_DIR: artifacts,
-        SITE_BUILT: built ? '1' : '',
       },
     },
   );

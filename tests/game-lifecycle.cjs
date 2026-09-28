@@ -2,7 +2,7 @@ const { test } = require('node:test');
 /* Optional SITE_URL, PUPPETEER_MODULE and CHROME_BIN. No game-specific test hooks added. */
 const assert = require('node:assert/strict');
 const { setTimeout: delay } = require('node:timers/promises');
-const { launchBrowser, closeBrowser } = require('./helpers/browser.cjs');
+const { launchBrowser, closeBrowser, loadGame } = require('./helpers/browser.cjs');
 
 const baseURL = process.env.SITE_URL || 'http://localhost:8000/';
 const games = [
@@ -88,9 +88,8 @@ async function checkGame(browser, game) {
       };
     });
 
-    await page.goto(url.href, { waitUntil: 'networkidle0' });
-    // Numeric polling uses timers, so the test itself never contributes RAF callbacks.
-    await page.waitForFunction((name) => Boolean(window[name]), { polling: 50 }, game.debug);
+    // loadGame uses timer polling, so readiness never contributes RAF callbacks.
+    await loadGame(page, url.href, game.debug);
     assert.deepEqual(
       await page.$$eval('[data-control]', (buttons) =>
         buttons
@@ -254,7 +253,7 @@ async function checkGame(browser, game) {
       } else void request.continue();
     });
     blockingDependency = true;
-    await page.reload({ waitUntil: 'networkidle0' });
+    await page.reload({ waitUntil: 'domcontentloaded' });
     await page.waitForFunction(
       () => /could not load.*refresh/i.test(document.getElementById('load-state').textContent),
       { polling: 50 },
@@ -284,8 +283,7 @@ async function checkGame(browser, game) {
     );
 
     blockingDependency = false;
-    await page.reload({ waitUntil: 'networkidle0' });
-    await page.waitForFunction((name) => Boolean(window[name]), { polling: 50 }, game.debug);
+    await loadGame(page, url.href, game.debug, { reload: true });
     assert.equal(
       await page.$eval('#load-state', (status) => status.classList.contains('hidden')),
       true,
@@ -341,8 +339,7 @@ async function checkGame(browser, game) {
           return getContext.call(this, type, ...args);
         };
       });
-      await page.reload({ waitUntil: 'networkidle0' });
-      await page.waitForFunction((name) => Boolean(window[name]), {}, game.debug);
+      await loadGame(page, url.href, game.debug, { reload: true });
       assert.equal(
         await page.$eval('#map-panel', (panel) => getComputedStyle(panel).display),
         'none',

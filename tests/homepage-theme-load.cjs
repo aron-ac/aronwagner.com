@@ -1,6 +1,10 @@
 const { test } = require('node:test');
 /* Theme first-paint checks. Serve the repo; optional PUPPETEER_MODULE / CHROME_BIN / SITE_URL. */
 const assert = require('node:assert/strict');
+const { once } = require('node:events');
+const { readFile } = require('node:fs/promises');
+const { createServer } = require('node:http');
+const { extname, resolve, sep } = require('node:path');
 const { launchBrowser, closeBrowser, artifactPath } = require('./helpers/browser.cjs');
 const site = process.env.SITE_URL || 'http://localhost:8000/';
 const override = (night, period) => JSON.stringify({ night, period });
@@ -81,7 +85,7 @@ function assertFrames(samples, fixture, label) {
   }
 }
 
-test('homepage theme load', { timeout: 300_000 }, async () => {
+async function checkThemeLoads(site, fixtures) {
   const browser = await launchBrowser();
   let navigations = 0,
     frames = 0;
@@ -339,9 +343,64 @@ test('homepage theme load', { timeout: 300_000 }, async () => {
       }
     }
     console.log(
-      `PASS: ${navigations} cold/warm navigations and ${frames} rendered-frame samples: winter/summer schedules, saved opposite themes, expired/malformed/blocked storage, delayed CSS/deferred script, and delayed night artwork without an opposite-theme flash.`,
+      `PASS: ${navigations} cold/warm navigations and ${frames} rendered-frame samples across ${fixtures.length} theme fixtures without an opposite-theme flash.`,
     );
   } finally {
     await closeBrowser(browser);
   }
-});
+}
+
+test('homepage theme load', { timeout: 300_000 }, () => checkThemeLoads(site, fixtures));
+
+test(
+  'raw static homepage resolves the theme before first paint',
+  { timeout: 120_000 },
+  async (t) => {
+    // Deliberately serve bytes without the production build or development HTML
+    // transform, just as a generic static server does.
+    const root = resolve(__dirname, '..');
+    const mimeTypes = {
+      '.html': 'text/html',
+      '.css': 'text/css',
+      '.js': 'text/javascript',
+      '.json': 'application/json',
+      '.jpg': 'image/jpeg',
+      '.webp': 'image/webp',
+      '.svg': 'image/svg+xml',
+      '.png': 'image/png',
+      '.ico': 'image/x-icon',
+      '.ttf': 'font/ttf',
+      '.woff2': 'font/woff2',
+    };
+    const server = createServer(async (request, response) => {
+      try {
+        const pathname = new URL(request.url, 'http://localhost').pathname;
+        const filename = resolve(root, `.${pathname === '/' ? '/index.html' : pathname}`);
+        if (!filename.startsWith(`${root}${sep}`)) {
+          response.writeHead(403).end();
+          return;
+        }
+        const bytes = await readFile(filename);
+        response.writeHead(200, {
+          'Content-Type': mimeTypes[extname(filename)] || 'application/octet-stream',
+          'Content-Length': bytes.length,
+        });
+        response.end(bytes);
+      } catch {
+        response.writeHead(404).end();
+      }
+    });
+    t.after(async () => {
+      server.closeAllConnections();
+      await new Promise((done) => server.close(done));
+    });
+    server.listen(0, '127.0.0.1');
+    await once(server, 'listening');
+    await checkThemeLoads(
+      `http://127.0.0.1:${server.address().port}/`,
+      fixtures.filter((fixture) =>
+        ['winter-day', 'winter-night', 'saved-night-during-day'].includes(fixture.name),
+      ),
+    );
+  },
+);

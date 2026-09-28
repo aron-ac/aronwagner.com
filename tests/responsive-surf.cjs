@@ -3,6 +3,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const {
   launchBrowser,
+  loadGame,
   closeBrowser,
   artifactPath,
   settleCamera,
@@ -123,8 +124,7 @@ test('responsive surf', { timeout: 300_000 }, async () => {
         isMobile: hasTouch && width < 900,
         deviceScaleFactor: 1,
       });
-      await page.goto(url, { waitUntil: 'networkidle0' });
-      await page.waitForFunction(() => window.surfDebug);
+      await loadGame(page, url, 'surfDebug');
       await inspectLayout(page, `${label} menu`, false);
       await page.click('#start');
       await inspectLayout(page, `${label} driving`, true);
@@ -144,8 +144,7 @@ test('responsive surf', { timeout: 300_000 }, async () => {
     }
     // Simulate the CSS safe-area values supplied by notched landscape phones.
     await page.setViewport({ width: 844, height: 390, hasTouch: true, isMobile: true });
-    await page.goto(url, { waitUntil: 'networkidle0' });
-    await page.waitForFunction(() => window.surfDebug);
+    await loadGame(page, url, 'surfDebug');
     await page.addStyleTag({
       content: ':root { --safe-left: 44px; --safe-right: 44px; --safe-bottom: 21px; }',
     });

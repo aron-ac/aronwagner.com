@@ -1,6 +1,11 @@
-# Maintenance audit
+# Maintenance audit — September 28, 2026
 
-This audit distinguishes the repository's current behavior from older review findings. It covers
+This is a historical record of the initial maintenance review on September 28, 2026, before Mark
+restarted the Git history and published the public repository. Findings and verification counts
+below describe that reviewed snapshot, not the current checkout. The [README](../README.md)
+contains the maintained architecture and development instructions.
+
+The audit distinguished the reviewed behavior from older findings. It covered
 the main homepage, the three games, packaging, asset provenance, and the retained desk prototype.
 The bookshelf carousel, Meditations and Art of War dialogs, and Sisyphus quote remain part of the
 homepage.
@@ -80,3 +85,36 @@ Those counts describe this review run; the build and test runners report current
 
 Deployment is a separate action. A local refactor or successful package build does not mean that
 the public site has been updated.
+
+## Subsequent follow-up on September 28, 2026
+
+- Mark restarted the Git history before publishing the public repository. Its initial import
+  (`71bd417`) excludes the archived artwork; the historical statements above about retained Git
+  blobs no longer describe this repository. Mark confirmed an off-machine archive backup; its
+  location and contents have not been independently verified.
+- The unfinished desk prototype, its dedicated assets and test suite, the unused legacy redirect
+  HTML, and the obsolete Surf Riders SVG preview were removed. Server redirects preserve the old
+  desk and game URLs. Main-homepage responsive coverage remains.
+- The favorite-book thumbnails remain self-hosted by Mark's explicit choice, with provenance and
+  Amazon purchase links preserved. Game-specific responsive CSS remains separate where its
+  behavior differs; no further extraction was justified solely by stylesheet size.
+- The first GitHub Actions run after the public import passed installation and static/unit checks,
+  but five WebGL browser suites timed out during navigation and production browser tests were
+  skipped: [workflow run 36479729257](https://github.com/mhammonds/markhammonds.com/actions/runs/36479729257).
+- The navigation failure was reproduced with the pinned Chrome 154 in Linux Docker: requests had
+  completed and the game had rendered frames, but continuous software rendering prevented the
+  `networkidle0` event. Game tests now wait for initialization and rendered frames, and CI opts
+  into Chromium's supported SwiftShader backend with the browser sandbox retained. Bay's camera
+  check also now brakes through real keyboard input before waiting for a stationary view. All
+  five formerly failing suites passed in Linux Docker after these changes. This used amd64
+  emulation on Apple Silicon; a new GitHub Actions run still requires pushing the changes.
+- The raw homepage now uses ordinary stylesheet and script references that the development
+  server and production build inline. Generic static-server tests cover cold/warm day, night,
+  and saved-theme loads without an opposite-theme flash. Malformed server configuration fails
+  at startup; missing request files and internal rendering errors have distinct responses.
+- The Sisyphus dialog retains Mark's exact quotation and adds the Justin O’Brien translation,
+  Penguin Modern Classics edition, and publisher link.
+
+The follow-up passed 23 unit/build/server tests, all 13 source-browser cases and all 13 packaged-site
+browser cases, plus a Wrangler deployment dry run. These are dated local validation results;
+they do not claim a new GitHub Actions run or production deployment.

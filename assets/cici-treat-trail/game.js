@@ -184,13 +184,17 @@ function resumeGame() {
   adventure.resume();
   updateUI();
 }
-ui.start.addEventListener('click', () => (state.mode === 'paused' ? resumeGame() : startGame()));
+ui.start.addEventListener('click', () => {
+  if (state.mode === 'paused') resumeGame();
+  else startGame();
+});
 ui.restart.addEventListener('click', startGame);
 ui.pause.addEventListener('click', pauseGame);
 document.addEventListener('keydown', (event) => {
   if (event.repeat) return;
   if (event.code === 'KeyP' || event.code === 'Escape') {
-    state.mode === 'paused' ? resumeGame() : pauseGame();
+    if (state.mode === 'paused') resumeGame();
+    else pauseGame();
   }
   if (
     event.code === 'Enter' &&
@@ -198,7 +202,8 @@ document.addEventListener('keydown', (event) => {
     ['menu', 'paused', 'won', 'lost'].includes(state.mode)
   ) {
     event.preventDefault();
-    state.mode === 'paused' ? resumeGame() : startGame();
+    if (state.mode === 'paused') resumeGame();
+    else startGame();
   }
 });
 

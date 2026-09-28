@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 import { buildSite, pages, rewriteReferences } from '../tools/lib/site-build.js';
+import { inlineHomepage } from '../tools/lib/inline-homepage.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 
@@ -49,7 +50,7 @@ test('release build resolves immutable assets, secures scripts, and excludes pro
   );
   for (const page of pages) {
     const html = await readFile(join(output, page), 'utf8');
-    assert.doesNotMatch(html, /data-inline=|\?v=/);
+    assert.doesNotMatch(html, /\bdata-inline\b|\?v=/);
     for (const [, attributes, script] of html.matchAll(/<script([^>]*)>([\s\S]*?)<\/script>/g)) {
       if (!/\bsrc=/.test(attributes) && script.trim()) {
         assert.ok(
@@ -73,6 +74,26 @@ test('release build resolves immutable assets, secures scripts, and excludes pro
   assert.ok(!Object.keys(manifest).some((file) => /desk\.|-source\.png|\.md$/.test(file)));
   const again = await buildSite({ root, output });
   assert.deepEqual(again.manifest, result.manifest, 'Identical inputs yield identical cache URLs');
+});
+
+test('theme sources work as external references and inline without duplicate requests', async () => {
+  const html = await readFile(join(root, 'index.html'), 'utf8');
+  assert.match(
+    html,
+    /<link\s+rel="stylesheet"\s+href="assets\/homepage\/theme-critical.css"\s+data-inline\s*\/>/,
+  );
+  assert.match(
+    html,
+    /<script\s+src="assets\/homepage\/theme-bootstrap.js"\s+data-inline><\/script>/,
+  );
+  const rendered = inlineHomepage(html);
+  assert.doesNotMatch(rendered, /\bdata-inline\b|(?:href|src)="assets\/homepage\/theme-/);
+  assert.ok(rendered.indexOf('<style>') < rendered.indexOf('<script>'));
+  assert.equal(inlineHomepage(rendered), rendered, 'Built HTML is not transformed again');
+  assert.throws(
+    () => inlineHomepage('<script src="unknown.js" data-inline></script>'),
+    /Unknown inline script source: unknown.js/,
+  );
 });
 
 test('asset references preserve imports, fragments, srcsets and unrelated URLs', () => {

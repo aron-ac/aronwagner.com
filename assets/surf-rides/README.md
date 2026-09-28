@@ -36,7 +36,7 @@ The shared `../shared/arcade.css` defines the arcade shell and common controls. 
 - `jeep-model.js`: Mark's photo-informed procedural olive Wrangler with a white hard-shell roof, black rack, squared LED light bar, animated wheels/steering and optional roof boards.
 - `mark-jeep.glb`: portable model, downloadable from the game footer; see [MODEL.md](MODEL.md).
 - `style.css`: desktop, portrait and short landscape layouts.
-- `preview.webp`: 1200 × 600 homepage render using the actual Jeep/world and one coherent perspective camera. The previous `preview.svg` is retained as an unused earlier asset.
+- `preview.webp`: 1200 × 600 homepage render using the actual Jeep/world and one coherent perspective camera.
 - `../vendor/three/`: unmodified Three.js **0.180.0** module/core builds, served locally. MIT license is in `../vendor/three/LICENSE`. Original package: https://www.npmjs.com/package/three/v/0.180.0 .
 
 The game needs WebGL 2 in a current desktop/mobile browser. It displays a readable error if the graphics context cannot initialize. All geometry is native Three.js mesh data; no personal photos or remote textures are shipped.

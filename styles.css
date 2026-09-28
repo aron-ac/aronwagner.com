@@ -801,9 +801,6 @@ main {
   overscroll-behavior: contain;
   scrollbar-width: thin;
 }
-.sisyphus-dialog .quote-passage {
-  margin-bottom: 0;
-}
 .quote-passage blockquote {
   margin: 0 0 22px;
   padding-left: 20px;

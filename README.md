@@ -1,9 +1,16 @@
 # markhammonds.com
 
-A static personal homepage and three browser games, built with HTML, CSS, and JavaScript. Runtime
-assets are local; the 3D games share a pinned copy of Three.js. There is no application framework or
-runtime npm dependency. A small build script prepares the production asset graph and Cloudflare
-configuration.
+An interactive personal website for Mark Hammonds, CEO of Bitmotive. Explore an illustrated office,
+meet CiCi, discover favorite books and quotes, and play three browser games: Surf Riders, Bay Racer,
+and CiCi's Treat Trail.
+
+**[Visit the live site →](https://markhammonds.com/)**
+
+[![Mark Hammonds and CiCi beside his illustrated workstation, with Tampa Bay across the monitors.](assets/social/mark-hammonds-og.jpg)](https://markhammonds.com/)
+
+Built with HTML, CSS, and JavaScript. Runtime assets are local; the 3D games share a pinned copy of
+Three.js. There is no application framework or runtime npm dependency. A small build script prepares
+the production asset graph and Cloudflare configuration.
 
 ## Local development
 
@@ -15,8 +22,9 @@ npm run dev
 ```
 
 Visit http://localhost:8000. Use `npm run dev -- --port 8080` for another port. The development
-server assembles the homepage's critical theme fragments before returning its HTML. Use this
-server instead of opening HTML directly or serving the raw source through a generic file server.
+server assembles the homepage's critical theme fragments before returning its HTML. A generic
+HTTP server can also serve the source; it loads those fragments as separate stylesheet and script
+requests. The development server and production build inline them to avoid those extra requests.
 Browsers also require HTTP for game ES modules and the homepage's CSS image masks.
 
 ## Working on the code
@@ -36,9 +44,7 @@ Browsers also require HTTP for game ES modules and the homepage's CSS image mask
   dependencies. Each `game.js` connects its simulation to UI, art, audio, and controls.
 - `assets/vendor/three/` contains the local Three.js distribution and license. Keep its module and
   core files on the same version when intentionally upgrading.
-- `desk.html` and `assets/homepage/desk*` preserve an earlier SVG prototype for local development.
-  It has a separate saved theme and unfinished destinations; it is excluded from production.
-  The public `/desk.html` route redirects to `/`.
+- The earlier desk prototype has been removed. The public `/desk.html` route still redirects to `/`.
 
 The theme follows `America/New_York`, including daylight saving time: night begins at 7 p.m. and
 day begins at 6 a.m. A manual choice lasts until the next scheduled boundary. Theme checks refresh
@@ -60,6 +66,11 @@ Browser checks use Puppeteer. If Chromium was not downloaded during installation
 `npm run setup:browser`, or set `CHROME_BIN` to an existing Chrome executable.
 GitHub Actions runs the locked install, pinned Chrome setup, static/unit checks, and both source
 and production browser suites on pushes and pull requests.
+The Linux workflow sets `BROWSER_SOFTWARE_RENDERING=1` to exercise real WebGL through Chromium's
+SwiftShader backend without a graphics device. Local runs use the default graphics backend unless
+explicitly opted in. Game tests wait for initialization and rendered frames rather than network
+idle, which can stall during continuous software rendering. Failed game loads save browser errors
+and pending request URLs beside the screenshot artifacts in `test-results/`.
 For example, on macOS:
 
 ```sh
@@ -108,8 +119,12 @@ Bitmotive monitor treatment is historical. The official logo remains on the busi
 - The right bookshelf opens an eleven-title favorite-books carousel. Its catalog and local covers
   live in `assets/books/`; [cover provenance](assets/books/README.md) records the editions. Previous/
   next buttons, arrow keys, Home/End, and cover swipes navigate it. Cover links and “View on Amazon”
-  open Mark's supplied product URLs. `tests/books-smoke.cjs` covers browsing and failure recovery.
-- The Sisyphus statue opens Mark's chosen Albert Camus quote in a matching reading dialog.
+  open Mark's supplied product URLs. Mark chose to retain the self-hosted thumbnails so the
+  carousel's images do not depend on Amazon requests at runtime. `tests/books-smoke.cjs` covers
+  browsing and failure recovery.
+- The Sisyphus statue opens Mark's chosen Albert Camus quote in a matching reading dialog, with
+  the Justin O’Brien translation credited and a link to Penguin's 2013 Modern Classics edition of
+  _The Myth of Sisyphus_.
 
 All dialogs support Escape, the close button, backdrop dismissal, and focus restoration. Navigation
 links open in a new tab with `noopener noreferrer`; scene controls and section jumps stay on the
@@ -139,7 +154,9 @@ being edited at that time. [TAMPA-BAY.md](assets/workstation/TAMPA-BAY.md) and
 Unused full-size source renders and earlier scene/character exports were moved to the external
 [art archive](docs/art-archive.md). Its manifest records paths, sizes, and SHA-256 hashes after
 byte-for-byte verification. Runtime files and render-tool inputs remain here. This reduces the
-current checkout's artwork by 31.46 MiB; historical Git blobs remain unchanged.
+current checkout's artwork by 31.46 MiB. Mark subsequently restarted the Git history before the
+public import, so this repository does not retain the archived blobs. Mark also confirmed an
+off-machine backup of the archive; its location and contents have not been independently verified.
 
 Personal reference photographs remain in the owner's private `Mark Hammonds Photos` collection,
 including its `Jeep`, `Boat`, `Tattoos`, and `Polaroids` subfolders. They are not build dependencies.
@@ -148,8 +165,9 @@ a maximum 1600px long edge, and no EXIF/GPS metadata. To add a photo, add its we
 matching descriptive entry in the homepage photo list. Fonts are self-hosted in `assets/fonts/`
 with their SIL Open Font Licenses.
 
-[maintenance-audit.md](docs/maintenance-audit.md) distinguishes verified current findings from
-outdated review notes and records the archive limitations.
+[maintenance-audit.md](docs/maintenance-audit.md) preserves the September 28, 2026 review and its
+verification results as a historical record. This README describes the maintained architecture
+and workflows; the build and test runners report current totals.
 
 ## Cloudflare deployment
 
@@ -163,7 +181,7 @@ npm run deploy
 
 Wrangler runs `npm run build:site` first. That script selects runtime files, assembles the theme
 fragments, and prepares ignored `dist/`; source notes, historical art, tests, development tools,
-and the legacy desk prototype are excluded. Build output reports the current file count and size;
+and documentation are excluded. Build output reports the current file count and size;
 `dist/asset-manifest.json` maps source asset paths to their production URLs. Keep the workstation
 allowlist in `tools/lib/site-build.js` synchronized with artwork changes.
 `npm run preview:cloudflare` runs the packaged site locally;

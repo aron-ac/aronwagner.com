@@ -8,6 +8,8 @@ The files are preserved outside this repository in the sibling directory
 `../markhammonds-art-archive/`. That directory keeps the original `assets/...` layout, a copy of
 the manifest named `manifest.json`, and snapshots of the related generation/provenance notes.
 It is a local archive, not a dependency or deployment input. A fresh clone does not include it.
+On September 28, 2026, Mark confirmed that the archive also has an off-machine backup. Its location
+and contents have not been independently verified by the maintenance tools.
 
 ## What moved
 
@@ -29,7 +31,8 @@ their visible scene was superseded, their alpha channels still mask the current 
 
 Every archived file was copied and compared byte for byte, with its size and SHA-256 checked,
 before any original was removed. Both manifest copies were written and read back before removal.
-The recorded `repository_head` identifies the pre-archive committed baseline.
+The recorded `repository_head` identifies the pre-archive committed baseline in the former Git
+history; it is provenance, not a commit reachable from the current public repository.
 
 To restore an individual file, first compare its archived SHA-256 with the manifest, then copy it
 back under the same relative path. For example, from the repository root:
@@ -43,6 +46,8 @@ The generation prompts remain in `assets/workstation/`, `assets/characters/`, an
 Archived originals can be restored when intentionally regenerating an illustration; ordinary
 development, previews, tests, and deployment use only the retained runtime exports.
 
-This cleanup changes the current working tree only. The old blobs remain in Git history, so a
-full historical clone does not become smaller. No history rewrite or Git LFS migration was
-performed; either would require a separate coordinated change.
+The original archive operation removed files from the working tree without rewriting history.
+Mark subsequently restarted the Git history before publishing the public repository. Its initial
+import (`71bd417`, September 28, 2026) excludes all 43 archived paths, so the old artwork blobs are
+not part of this repository's history. Recovery of those originals relies on the external archive
+and its backup, not the public Git history.

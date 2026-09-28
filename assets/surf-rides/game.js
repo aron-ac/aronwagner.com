@@ -402,7 +402,10 @@ const pauseGame = session.pause,
   endGame = session.end;
 const recover = session.recover,
   requestRide = session.requestRide;
-ui.start.addEventListener('click', () => (state.mode === 'paused' ? resumeGame() : startGame()));
+ui.start.addEventListener('click', () => {
+  if (state.mode === 'paused') resumeGame();
+  else startGame();
+});
 ui.restart.addEventListener('click', startGame);
 ui.pause.addEventListener('click', pauseGame);
 ui.recover.addEventListener('click', recover);
@@ -420,7 +423,8 @@ window.addEventListener('keydown', (event) => {
   if (event.code === 'KeyR' && state.mode === 'playing') recover();
   if (event.code === 'Enter' && event.target.tagName !== 'BUTTON' && state.mode !== 'playing') {
     event.preventDefault();
-    state.mode === 'paused' ? resumeGame() : startGame();
+    if (state.mode === 'paused') resumeGame();
+    else startGame();
   }
 });
 

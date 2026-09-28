@@ -1,5 +1,5 @@
 const { basename, join, resolve } = require('node:path');
-const { mkdirSync, mkdtempSync } = require('node:fs');
+const { mkdirSync, mkdtempSync, writeFileSync } = require('node:fs');
 const browser = require('../../tools/lib/browser.cjs');
 
 let artifacts;
@@ -10,6 +10,60 @@ function artifactPath(filename) {
     artifacts = mkdtempSync(join(root, `${basename(process.argv[1], '.cjs')}-`));
   }
   return join(artifacts, basename(filename));
+}
+
+// Chromium's networkidle lifecycle also waits for renderer idle time. Continuous
+// software WebGL can prevent it even after every request completes. Observe the
+// game's actual readiness instead, without extending timeouts or skipping frames.
+async function loadGame(page, url, debugName, { reload = false } = {}) {
+  const pending = new Set();
+  const messages = [];
+  const listeners = {
+    request: (request) => pending.add(request.url()),
+    requestfinished: (request) => pending.delete(request.url()),
+    requestfailed: (request) => {
+      pending.delete(request.url());
+      messages.push(`${request.failure()?.errorText}: ${request.url()}`);
+    },
+    pageerror: (error) => messages.push(error.message),
+    console: (message) => {
+      if (['error', 'warn'].includes(message.type())) messages.push(message.text());
+    },
+  };
+  for (const [event, listener] of Object.entries(listeners)) page.on(event, listener);
+  try {
+    if (reload) await page.reload({ waitUntil: 'domcontentloaded' });
+    else await page.goto(url, { waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(
+      (name) => {
+        const game = window[name];
+        const loaded = document.getElementById('load-state')?.classList.contains('hidden');
+        if (!game || !loaded) return false;
+        return (
+          !game.renderer ||
+          (game.renderer.info.render.frame > 0 &&
+            game.renderer.info.render.calls > 0 &&
+            !game.renderer.getContext().isContextLost())
+        );
+      },
+      { polling: 50 },
+      debugName,
+    );
+    await page.evaluate(() => document.fonts.ready.then(() => undefined));
+  } catch (error) {
+    const path = artifactPath(`${debugName}-load-failure.json`);
+    writeFileSync(
+      path,
+      JSON.stringify(
+        { url: page.url(), error: error.message, pending: [...pending], messages },
+        null,
+        2,
+      ),
+    );
+    throw new Error(`Game did not become ready; diagnostics: ${path}`, { cause: error });
+  } finally {
+    for (const [event, listener] of Object.entries(listeners)) page.off(event, listener);
+  }
 }
 
 // Wait on completed CSS transitions and loaded assets, never an assumed duration.
@@ -49,4 +103,4 @@ async function settleCamera(page, debugName) {
   });
 }
 
-module.exports = { ...browser, artifactPath, settlePage, settleCamera };
+module.exports = { ...browser, artifactPath, loadGame, settlePage, settleCamera };

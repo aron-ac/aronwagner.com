@@ -219,7 +219,10 @@ function recover() {
   race.recover();
   updateUI();
 }
-ui.start.addEventListener('click', () => (state.mode === 'paused' ? resumeRace() : startRace()));
+ui.start.addEventListener('click', () => {
+  if (state.mode === 'paused') resumeRace();
+  else startRace();
+});
 ui.restart.addEventListener('click', startRace);
 ui.pause.addEventListener('click', pauseRace);
 ui.recover.addEventListener('click', recover);
@@ -236,7 +239,8 @@ document.addEventListener('keydown', (event) => {
     ['menu', 'finished', 'paused'].includes(state.mode)
   ) {
     event.preventDefault();
-    state.mode === 'paused' ? resumeRace() : startRace();
+    if (state.mode === 'paused') resumeRace();
+    else startRace();
   }
 });
 
@@ -316,9 +320,10 @@ function drawMap() {
     map.fill();
   }
   map.beginPath();
-  world.gates.forEach((gate, i) =>
-    i ? map.lineTo(X(gate.x), Z(gate.z)) : map.moveTo(X(gate.x), Z(gate.z)),
-  );
+  world.gates.forEach((gate, i) => {
+    if (i) map.lineTo(X(gate.x), Z(gate.z));
+    else map.moveTo(X(gate.x), Z(gate.z));
+  });
   map.closePath();
   map.setLineDash([5, 7]);
   map.strokeStyle = '#afdbca75';

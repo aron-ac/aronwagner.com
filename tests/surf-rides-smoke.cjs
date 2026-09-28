@@ -3,6 +3,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const {
   launchBrowser,
+  loadGame,
   closeBrowser,
   artifactPath,
   settleCamera,
@@ -23,8 +24,7 @@ test('surf rides smoke', { timeout: 300_000 }, async () => {
       if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`);
     });
     await page.setViewport({ width: 1440, height: 1000 });
-    await page.goto(url, { waitUntil: 'networkidle0' });
-    await page.waitForFunction(() => window.surfDebug);
+    await loadGame(page, url, 'surfDebug');
     assert.equal(await page.title(), 'Surf Riders · Mark Hammonds', 'The game uses its new name');
     const navigationLinks = await page.$$eval('a[href]', (els) =>
       els
@@ -287,8 +287,7 @@ test('surf rides smoke', { timeout: 300_000 }, async () => {
       { width: 844, height: 390 },
     ]) {
       await page.setViewport({ ...viewport, isMobile: true, hasTouch: true, deviceScaleFactor: 1 });
-      await page.goto(url, { waitUntil: 'networkidle0' });
-      await page.waitForFunction(() => window.surfDebug);
+      await loadGame(page, url, 'surfDebug');
       await page.click('#start');
       await settleCamera(page, 'surfDebug');
       const layout = await page.evaluate(() => {
@@ -366,10 +365,7 @@ test('surf rides smoke', { timeout: 300_000 }, async () => {
       await client.detach();
       await page.screenshot({ path: artifactPath(`surf-riders-${viewport.width}.png`) });
     }
-    await page.goto(new URL('cr-surf-rides.html?debug=1#start', url).href, {
-      waitUntil: 'networkidle0',
-    });
-    await page.waitForFunction(() => window.surfDebug);
+    await loadGame(page, new URL('cr-surf-rides.html?debug=1#start', url).href, 'surfDebug');
     const redirected = new URL(page.url());
     assert.ok(
       redirected.pathname.endsWith('/surf-riders.html'),

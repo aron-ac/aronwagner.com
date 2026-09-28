@@ -63,208 +63,222 @@ test('responsive home', { timeout: 300_000 }, async () => {
     const errors = [];
     page.on('pageerror', (error) => errors.push(error.message));
     await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
-    for (const route of process.env.SITE_BUILT ? [''] : ['', 'desk.html']) {
-      for (const [width, height, hasTouch] of viewports) {
-        const label = `${route || 'homepage'} ${width}×${height}`;
-        await page.setViewport({ width, height, hasTouch, isMobile: hasTouch });
-        await page.goto(new URL(route, site).href, { waitUntil: 'networkidle0' });
-        assert.ok(
-          await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
-          `${label}: no horizontal overflow`,
-        );
-        if (route) {
-          await page.waitForFunction(() => document.querySelector('#dog').classList.contains('up'));
-        }
-        const controls = route
-          ? ['#night', '#dog', '#laptop']
-          : [
-              '.theme-toggle',
-              '.camera-toggle',
-              '.meditations-toggle',
-              '.katana-toggle',
-              '.sisyphus-toggle',
-              '.books-toggle',
-              '.candle-toggle',
-              '.painting-toggle',
-              '.left-screen',
-              '.laptop',
-              '.right-screen',
-              '.portrait',
-              '.dog',
-            ];
-        for (const selector of controls) {
-          await page.$eval(selector, (element) => element.scrollIntoView({ block: 'center' }));
-          await assertVisible(page, selector, label, true);
-        }
-        if (route) continue;
-        await page.$eval('.scene', (scene) => scene.scrollIntoView({ block: 'start' }));
-        for (const [selector, x, y] of sceneObjects) {
-          const reachable = await page.$eval(
-            '.scene',
-            (scene, { selector, x, y }) => {
-              const bounds = scene.getBoundingClientRect();
-              return Boolean(
-                document
-                  .elementFromPoint(
-                    bounds.left + (x / 1536) * bounds.width,
-                    bounds.top + (y / 1024) * bounds.height,
-                  )
-                  ?.closest(selector),
-              );
-            },
-            { selector, x, y },
-          );
-          assert.equal(reachable, true, `${label}: ${selector} owns its illustrated object`);
-        }
-        if (width <= 650) {
-          for (const selector of ['.meditations-toggle', '.katana-toggle', '.sisyphus-toggle']) {
-            const meetsTargetSize = await page.$eval(selector, (element) => {
-              const bounds = element.getBoundingClientRect();
-              return bounds.width >= 24 && bounds.height >= 24;
-            });
-            assert.ok(meetsTargetSize, `${label}: ${selector} has a compact 24px touch target`);
-          }
-        }
-        for (const night of [false, true]) {
-          if (
-            (await page.evaluate(() => document.documentElement.classList.contains('night'))) !==
-            night
-          ) {
-            await page.click('.theme-toggle');
-          }
-          await page.click('.sisyphus-toggle');
-          await assertVisible(page, '#sisyphus-dialog', label);
-          await assertVisible(page, '#sisyphus-dialog .quote-close', label, true);
-          await assertVisible(page, '#sisyphus-dialog .quote-passage', label, true);
-          assert.equal(
-            await page.$eval('#sisyphus-quote', (quote) =>
-              quote.textContent.replace(/\s+/g, ' ').trim(),
-            ),
-            "The struggle itself towards the heights is enough to fill a man's heart. One must imagine Sisyphus happy.",
-            `${label}: the statue displays the requested Camus quote`,
-          );
-          assert.equal(
-            await page.$eval('#sisyphus-dialog .quote-author', (author) =>
-              author.textContent.trim(),
-            ),
-            'Albert Camus',
-            `${label}: the quote identifies Albert Camus`,
-          );
-          assert.equal(
-            await page.$eval(
-              '#sisyphus-dialog .quote-close',
-              (button) => button === document.activeElement,
-            ),
-            true,
-            `${label}: opening the statue dialog focuses its close button`,
-          );
-          await page.focus('#sisyphus-dialog .quote-passage');
-          await page.keyboard.press('End');
-          await assertVisible(page, '#sisyphus-dialog .quote-author', label, true);
-          await page.click('#sisyphus-dialog .quote-close');
-          assert.equal(
-            await page.$eval('#sisyphus-dialog', (dialog) => dialog.open),
-            false,
-            `${label}: the statue dialog closes`,
-          );
-          assert.equal(
-            await page.$eval('.sisyphus-toggle', (button) => button === document.activeElement),
-            true,
-            `${label}: closing returns focus to the statue`,
-          );
-        }
-        if (width === 1440) {
-          await page.keyboard.press('Enter');
-          assert.equal(
-            await page.$eval('#sisyphus-dialog', (dialog) => dialog.open),
-            true,
-            'Enter opens the focused statue',
-          );
-          await page.keyboard.press('Escape');
-          assert.equal(
-            await page.$eval('#sisyphus-dialog', (dialog) => dialog.open),
-            false,
-            'Escape closes the statue dialog',
-          );
-          assert.equal(
-            await page.$eval('.sisyphus-toggle', (button) => button === document.activeElement),
-            true,
-            'Escape restores statue focus',
-          );
-          await page.click('.painting-toggle');
-          await page.click('.sisyphus-toggle');
-          await page.keyboard.press('Escape');
-          assert.equal(
-            await page.$eval('#sisyphus-dialog', (dialog) => dialog.open),
-            false,
-            'Escape dismisses the statue quote above the open safe',
-          );
-          assert.equal(
-            await page.$eval('.painting-toggle', (button) => button.getAttribute('aria-expanded')),
-            'true',
-            'The same Escape leaves the safe open',
-          );
-          await page.keyboard.press('Escape');
-          assert.equal(
-            await page.$eval('.painting-toggle', (button) => button.getAttribute('aria-expanded')),
-            'false',
-            'The next Escape closes the safe',
-          );
-          await page.click('.sisyphus-toggle');
-          const backdrop = await page.$eval('#sisyphus-dialog', (dialog) => {
-            const bounds = dialog.getBoundingClientRect();
-            return { x: bounds.left - 8, y: bounds.top + bounds.height / 2 };
-          });
-          await page.mouse.click(backdrop.x, backdrop.y);
-          assert.equal(
-            await page.$eval('#sisyphus-dialog', (dialog) => dialog.open),
-            false,
-            'The backdrop dismisses the statue dialog',
-          );
-          assert.equal(
-            await page.$eval('.sisyphus-toggle', (button) => button === document.activeElement),
-            true,
-            'Backdrop dismissal restores statue focus',
-          );
-        }
-        await page.click('#name button');
-        await assertVisible(page, '#business-card-dialog', label);
-        await assertVisible(page, '.business-card-close', label, true);
-        await assertVisible(page, '.business-card-website', label, true);
-        await assertVisible(page, '.business-card-email', label, true);
-        await page.click('.business-card-close');
-        await page.click('.camera-toggle');
-        // Exercise every image aspect ratio where available space is most constrained.
-        const photos = width === 320 || height === 320 || height === 600 ? 6 : 1;
-        let previous = '';
-        for (let i = 0; i < photos; i++) {
-          if (i) await page.click('.polaroid-next');
-          await page.waitForFunction(
-            (previous) => {
-              const photo = document.querySelector('.polaroid-photo');
-              return (
-                photo.complete &&
-                photo.naturalWidth > 0 &&
-                photo.currentSrc &&
-                photo.currentSrc !== previous
-              );
-            },
-            {},
-            previous,
-          );
-          previous = await page.$eval('.polaroid-photo', (element) => element.currentSrc);
-          for (const selector of ['#polaroid-dialog', '.polaroid-frame', '.polaroid-photo']) {
-            await assertVisible(page, selector, label);
-          }
-          await assertVisible(page, '.polaroid-close', label, true);
-          await assertVisible(page, '.polaroid-next', label, true);
-        }
-        await page.click('.polaroid-close');
+    for (const [width, height, hasTouch] of viewports) {
+      const label = `homepage ${width}×${height}`;
+      await page.setViewport({ width, height, hasTouch, isMobile: hasTouch });
+      await page.goto(site, { waitUntil: 'networkidle0' });
+      assert.ok(
+        await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+        `${label}: no horizontal overflow`,
+      );
+      const controls = [
+        '.theme-toggle',
+        '.camera-toggle',
+        '.meditations-toggle',
+        '.katana-toggle',
+        '.sisyphus-toggle',
+        '.books-toggle',
+        '.candle-toggle',
+        '.painting-toggle',
+        '.left-screen',
+        '.laptop',
+        '.right-screen',
+        '.portrait',
+        '.dog',
+      ];
+      for (const selector of controls) {
+        await page.$eval(selector, (element) => element.scrollIntoView({ block: 'center' }));
+        await assertVisible(page, selector, label, true);
       }
+      await page.$eval('.scene', (scene) => scene.scrollIntoView({ block: 'start' }));
+      for (const [selector, x, y] of sceneObjects) {
+        const reachable = await page.$eval(
+          '.scene',
+          (scene, { selector, x, y }) => {
+            const bounds = scene.getBoundingClientRect();
+            return Boolean(
+              document
+                .elementFromPoint(
+                  bounds.left + (x / 1536) * bounds.width,
+                  bounds.top + (y / 1024) * bounds.height,
+                )
+                ?.closest(selector),
+            );
+          },
+          { selector, x, y },
+        );
+        assert.equal(reachable, true, `${label}: ${selector} owns its illustrated object`);
+      }
+      if (width <= 650) {
+        for (const selector of ['.meditations-toggle', '.katana-toggle', '.sisyphus-toggle']) {
+          const meetsTargetSize = await page.$eval(selector, (element) => {
+            const bounds = element.getBoundingClientRect();
+            return bounds.width >= 24 && bounds.height >= 24;
+          });
+          assert.ok(meetsTargetSize, `${label}: ${selector} has a compact 24px touch target`);
+        }
+      }
+      for (const night of [false, true]) {
+        if (
+          (await page.evaluate(() => document.documentElement.classList.contains('night'))) !==
+          night
+        ) {
+          await page.click('.theme-toggle');
+        }
+        await page.click('.sisyphus-toggle');
+        await assertVisible(page, '#sisyphus-dialog', label);
+        await assertVisible(page, '#sisyphus-dialog .quote-close', label, true);
+        await assertVisible(page, '#sisyphus-dialog .quote-passage', label, true);
+        assert.equal(
+          await page.$eval('#sisyphus-quote', (quote) =>
+            quote.textContent.replace(/\s+/g, ' ').trim(),
+          ),
+          "The struggle itself towards the heights is enough to fill a man's heart. One must imagine Sisyphus happy.",
+          `${label}: the statue displays the requested Camus quote`,
+        );
+        assert.equal(
+          await page.$eval('#sisyphus-dialog .quote-author', (author) => author.textContent.trim()),
+          'Albert Camus',
+          `${label}: the quote identifies Albert Camus`,
+        );
+        assert.equal(
+          await page.$eval(
+            '#sisyphus-dialog .quote-close',
+            (button) => button === document.activeElement,
+          ),
+          true,
+          `${label}: opening the statue dialog focuses its close button`,
+        );
+        await page.focus('#sisyphus-dialog .quote-passage');
+        await page.keyboard.press('End');
+        await assertVisible(page, '#sisyphus-dialog .quote-author', label, true);
+        await assertVisible(page, '#sisyphus-dialog .quote-source', label, true);
+        await assertVisible(page, '#sisyphus-dialog .quote-actions', label);
+        assert.deepEqual(
+          await page.$eval('#sisyphus-dialog .quote-source', (source) => ({
+            title: source.textContent.trim(),
+            href: source.href,
+            target: source.target,
+            rel: [...source.relList].sort(),
+          })),
+          {
+            title: 'The Myth of Sisyphus',
+            href: 'https://www.penguin.co.uk/books/56970/the-myth-of-sisyphus-by-albert-camus-trans-justin-obrien-intro-james-wood/9780141182001',
+            target: '_blank',
+            rel: ['noopener', 'noreferrer'],
+          },
+          `${label}: the source links to the publisher in a protected new tab`,
+        );
+        assert.equal(
+          await page.$eval('#sisyphus-dialog .quote-actions', (actions) =>
+            actions.textContent.trim(),
+          ),
+          'Justin O’Brien translation · Penguin Modern Classics, 2013',
+          `${label}: the citation identifies the translation and edition`,
+        );
+        await page.click('#sisyphus-dialog .quote-close');
+        assert.equal(
+          await page.$eval('#sisyphus-dialog', (dialog) => dialog.open),
+          false,
+          `${label}: the statue dialog closes`,
+        );
+        assert.equal(
+          await page.$eval('.sisyphus-toggle', (button) => button === document.activeElement),
+          true,
+          `${label}: closing returns focus to the statue`,
+        );
+      }
+      if (width === 1440) {
+        await page.keyboard.press('Enter');
+        assert.equal(
+          await page.$eval('#sisyphus-dialog', (dialog) => dialog.open),
+          true,
+          'Enter opens the focused statue',
+        );
+        await page.keyboard.press('Escape');
+        assert.equal(
+          await page.$eval('#sisyphus-dialog', (dialog) => dialog.open),
+          false,
+          'Escape closes the statue dialog',
+        );
+        assert.equal(
+          await page.$eval('.sisyphus-toggle', (button) => button === document.activeElement),
+          true,
+          'Escape restores statue focus',
+        );
+        await page.click('.painting-toggle');
+        await page.click('.sisyphus-toggle');
+        await page.keyboard.press('Escape');
+        assert.equal(
+          await page.$eval('#sisyphus-dialog', (dialog) => dialog.open),
+          false,
+          'Escape dismisses the statue quote above the open safe',
+        );
+        assert.equal(
+          await page.$eval('.painting-toggle', (button) => button.getAttribute('aria-expanded')),
+          'true',
+          'The same Escape leaves the safe open',
+        );
+        await page.keyboard.press('Escape');
+        assert.equal(
+          await page.$eval('.painting-toggle', (button) => button.getAttribute('aria-expanded')),
+          'false',
+          'The next Escape closes the safe',
+        );
+        await page.click('.sisyphus-toggle');
+        const backdrop = await page.$eval('#sisyphus-dialog', (dialog) => {
+          const bounds = dialog.getBoundingClientRect();
+          return { x: bounds.left - 8, y: bounds.top + bounds.height / 2 };
+        });
+        await page.mouse.click(backdrop.x, backdrop.y);
+        assert.equal(
+          await page.$eval('#sisyphus-dialog', (dialog) => dialog.open),
+          false,
+          'The backdrop dismisses the statue dialog',
+        );
+        assert.equal(
+          await page.$eval('.sisyphus-toggle', (button) => button === document.activeElement),
+          true,
+          'Backdrop dismissal restores statue focus',
+        );
+      }
+      await page.click('#name button');
+      await assertVisible(page, '#business-card-dialog', label);
+      await assertVisible(page, '.business-card-close', label, true);
+      await assertVisible(page, '.business-card-website', label, true);
+      await assertVisible(page, '.business-card-email', label, true);
+      await page.click('.business-card-close');
+      await page.click('.camera-toggle');
+      // Exercise every image aspect ratio where available space is most constrained.
+      const photos = width === 320 || height === 320 || height === 600 ? 6 : 1;
+      let previous = '';
+      for (let i = 0; i < photos; i++) {
+        if (i) await page.click('.polaroid-next');
+        await page.waitForFunction(
+          (previous) => {
+            const photo = document.querySelector('.polaroid-photo');
+            return (
+              photo.complete &&
+              photo.naturalWidth > 0 &&
+              photo.currentSrc &&
+              photo.currentSrc !== previous
+            );
+          },
+          {},
+          previous,
+        );
+        previous = await page.$eval('.polaroid-photo', (element) => element.currentSrc);
+        for (const selector of ['#polaroid-dialog', '.polaroid-frame', '.polaroid-photo']) {
+          await assertVisible(page, selector, label);
+        }
+        await assertVisible(page, '.polaroid-close', label, true);
+        await assertVisible(page, '.polaroid-next', label, true);
+      }
+      await page.click('.polaroid-close');
     }
-    assert.deepEqual(errors, [], 'No runtime errors across responsive home and desk layouts');
+    assert.deepEqual(errors, [], 'No runtime errors across responsive homepage layouts');
     console.log(
-      `PASS: homepage/alternate desk at ${viewports.length} phone, tablet and laptop sizes; scene targets, Sisyphus quote/modal controls, business card and Polaroids remain reachable.`,
+      `PASS: homepage at ${viewports.length} phone, tablet and laptop sizes; scene targets, Sisyphus quote/modal controls, business card and Polaroids remain reachable.`,
     );
   } finally {
     await closeBrowser(browser);

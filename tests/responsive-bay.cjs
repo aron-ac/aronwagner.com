@@ -1,7 +1,7 @@
 const { test } = require('node:test');
 /* Browser layout regression: compact phones, tablets, and laptop viewports. */
 const assert = require('node:assert/strict');
-const { launchBrowser, closeBrowser, artifactPath } = require('./helpers/browser.cjs');
+const { launchBrowser, loadGame, closeBrowser, artifactPath } = require('./helpers/browser.cjs');
 
 const url = new URL(
   process.env.GAME_URL ||
@@ -101,8 +101,7 @@ test('responsive bay', { timeout: 300_000 }, async () => {
         isMobile: touch,
         deviceScaleFactor: 1,
       });
-      await page.goto(url.href, { waitUntil: 'networkidle0' });
-      await page.waitForFunction(() => window.bayDebug);
+      await loadGame(page, url.href, 'bayDebug');
       if (safeArea)
         await page.addStyleTag({
           content: `:root { ${Object.entries(safeArea)

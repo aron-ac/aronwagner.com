@@ -8,6 +8,10 @@ Amazon CDN thumbnails, 500–522 pixels tall, totaling about 254 KB.
 All eleven downloaded images were visually checked against their titles, authors, and editions.
 Book cover artwork remains the property of its respective publisher or rights holder.
 
+On September 28, 2026, Mark confirmed the decision to keep these self-hosted thumbnails for the
+favorite-books carousel, with each title linking to its Amazon purchase page. This records the
+site owner's choice; the source and ownership notes above remain unchanged.
+
 | Catalog ID                      | ASIN / ISBN-10                                     | Linked edition                                | Amazon image source                                                                            |
 | ------------------------------- | -------------------------------------------------- | --------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | universal-principles-of-design  | [076037516X](https://www.amazon.com/dp/076037516X) | Updated and expanded third edition            | [Cover](https://m.media-amazon.com/images/I/81uMnSMfnIL._SY522_.jpg)                           |

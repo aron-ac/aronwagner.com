@@ -49,5 +49,59 @@ test('local production server applies build headers and redirects without exposi
     assert.ok([403, 404].includes((await fetch(`${base}/${route}`)).status), `${route} is private`);
   }
   assert.equal((await fetch(`${base}/%ZZ`)).status, 400);
+  assert.equal((await fetch(`${base}/missing.html`)).status, 404);
   assert.equal((await fetch(base, { method: 'POST' })).status, 405);
+});
+
+test('invalid server rules fail synchronously before a server can listen', async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), 'mark-site-invalid-rules-'));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  for (const [filename, contents, message] of [
+    ['_headers', '/*\n  Missing colon\n', /Unsupported _headers line:.*Missing colon/],
+    ['_headers', '/*\n  Invalid Header: value\n', /Invalid _headers line:.*Invalid Header/],
+    ['_redirects', '/old.html\n', /Unsupported _redirects rule: \/old.html/],
+    ['_redirects', '/old.html /new.html 999\n', /Unsupported _redirects rule:.*999/],
+  ]) {
+    await writeFile(join(directory, filename), contents);
+    assert.throws(() => createSiteServer({ root: directory }), message);
+    await rm(join(directory, filename));
+  }
+});
+
+test('internal serving failures return 500 and retain useful diagnostics', async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), 'mark-site-internal-error-'));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  await writeFile(join(directory, 'index.html'), '<script src="unknown.js" data-inline></script>');
+  const diagnostics = t.mock.method(console, 'error', () => {});
+  const server = createSiteServer({ root: directory });
+  t.after(async () => {
+    server.closeAllConnections();
+    await new Promise((done) => server.close(done));
+  });
+  server.listen(0, '127.0.0.1');
+  await once(server, 'listening');
+  const response = await fetch(`http://127.0.0.1:${server.address().port}`);
+  assert.equal(response.status, 500);
+  assert.equal(await response.text(), 'Internal server error');
+  assert.equal(diagnostics.mock.callCount(), 1);
+  assert.match(diagnostics.mock.calls[0].arguments[1].message, /Unknown inline script source/);
+});
+
+test('source server redirects retired pages while preserving query strings', async (t) => {
+  const server = createSiteServer();
+  t.after(async () => {
+    server.closeAllConnections();
+    await new Promise((done) => server.close(done));
+  });
+  server.listen(0, '127.0.0.1');
+  await once(server, 'listening');
+  const base = `http://127.0.0.1:${server.address().port}`;
+  for (const [path, destination] of [
+    ['desk.html', '/'],
+    ['cr-surf-rides.html', '/surf-riders.html'],
+  ]) {
+    const response = await fetch(`${base}/${path}?debug=1&return=a%2Fb`, { redirect: 'manual' });
+    assert.equal(response.status, 301);
+    assert.equal(response.headers.get('location'), `${destination}?debug=1&return=a%2Fb`);
+  }
 });

@@ -1,5 +1,5 @@
-import { createServer } from 'node:http';
-import { createReadStream } from 'node:fs';
+import { createServer, validateHeaderName, validateHeaderValue } from 'node:http';
+import { createReadStream, readFileSync } from 'node:fs';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -25,22 +25,23 @@ const mimeTypes = {
 // Local development/test server, deliberately bound to loopback by default.
 export function createSiteServer({ root: directory = projectRoot } = {}) {
   const root = resolve(directory);
-  const rules = Promise.all(
-    ['_headers', '_redirects'].map(async (name) => {
-      try {
-        return await readFile(resolve(root, name), 'utf8');
-      } catch (error) {
-        if (error.code === 'ENOENT') return '';
-        throw error;
-      }
-    }),
-  ).then(([headers, redirects]) => ({
-    headers: parseHeaders(headers),
-    redirects: parseRedirects(
-      redirects ||
-        (root === resolve(projectRoot) ? '/cr-surf-rides.html /surf-riders.html 301\n' : ''),
-    ),
-  }));
+  // Read the two small configuration files before listening. A bad rule must fail
+  // startup instead of becoming a misleading 404 or an unhandled rejection.
+  function readRules(name) {
+    try {
+      return readFileSync(resolve(root, name), 'utf8');
+    } catch (error) {
+      if (error.code === 'ENOENT') return '';
+      throw new Error(`Could not read ${name}: ${error.message}`, { cause: error });
+    }
+  }
+  const headers = parseHeaders(readRules('_headers'));
+  const redirects = parseRedirects(
+    readRules('_redirects') ||
+      (root === resolve(projectRoot)
+        ? '/cr-surf-rides.html /surf-riders.html 301\n/desk.html / 301\n'
+        : ''),
+  );
   return createServer(async (request, response) => {
     if (!['GET', 'HEAD'].includes(request.method)) {
       response.writeHead(405, { Allow: 'GET, HEAD' }).end();
@@ -50,7 +51,6 @@ export function createSiteServer({ root: directory = projectRoot } = {}) {
       const url = new URL(request.url, 'http://localhost');
       const originalPath = decodeURIComponent(url.pathname);
       let pathname = originalPath;
-      const { headers, redirects } = await rules;
       if (['/_headers', '/_redirects'].includes(pathname)) {
         response.writeHead(404).end('Not found');
         return;
@@ -88,7 +88,14 @@ export function createSiteServer({ root: directory = projectRoot } = {}) {
       let html;
       if (extname(filename) === '.html') {
         const { inlineHomepage } = await import('./lib/inline-homepage.js');
-        html = Buffer.from(await inlineHomepage(await readFile(filename, 'utf8')));
+        const source = await readFile(filename, 'utf8');
+        try {
+          html = Buffer.from(inlineHomepage(source));
+        } catch (error) {
+          // A missing template dependency is an internal failure, even if its
+          // filesystem error is ENOENT; the requested page itself exists.
+          throw new Error(`Could not render ${originalPath}: ${error.message}`, { cause: error });
+        }
       }
       const configuredHeaders = Object.assign(
         {},
@@ -110,7 +117,14 @@ export function createSiteServer({ root: directory = projectRoot } = {}) {
           .on('error', () => response.destroy())
           .pipe(response);
     } catch (error) {
-      response.writeHead(error instanceof URIError ? 400 : 404).end('Not found');
+      if (error instanceof URIError || error.code === 'ERR_INVALID_URL')
+        response.writeHead(400).end('Bad request');
+      else if (['ENOENT', 'ENOTDIR'].includes(error.code)) response.writeHead(404).end('Not found');
+      else if (['EACCES', 'EPERM'].includes(error.code)) response.writeHead(403).end('Forbidden');
+      else {
+        console.error(`Failed to serve ${request.url}:`, error);
+        response.writeHead(500).end('Internal server error');
+      }
     }
   });
 }
@@ -146,6 +160,12 @@ function parseHeaders(text) {
     if (/^\s/.test(line)) {
       const match = line.trim().match(/^([^:]+):\s*(.*)$/);
       if (!current || !match) throw new Error(`Unsupported _headers line: ${line}`);
+      try {
+        validateHeaderName(match[1]);
+        validateHeaderValue(match[1], match[2]);
+      } catch (error) {
+        throw new Error(`Invalid _headers line: ${line}`, { cause: error });
+      }
       current.headers[match[1]] = match[2];
     } else {
       if (!/^\/[^*]*(?:\*)?$/.test(line)) throw new Error(`Unsupported _headers route: ${line}`);
@@ -164,8 +184,8 @@ function parseRedirects(text) {
       const status = Number(code);
       if (
         extra ||
-        !source.startsWith('/') ||
-        !target.startsWith('/') ||
+        !source?.startsWith('/') ||
+        !target?.startsWith('/') ||
         ![200, 301, 302, 303, 307, 308].includes(status) ||
         source.includes('*')
       ) {
