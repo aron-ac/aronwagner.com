@@ -1565,6 +1565,21 @@ footer span {
   }
 }
 @media (hover: none) {
+  /* Missed taps must not zoom the page. Keep native vertical scrolling. */
+  html,
+  body {
+    touch-action: pan-y;
+  }
+  body,
+  body * {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .scene,
+  .scene * {
+    -webkit-touch-callout: none;
+    -webkit-user-drag: none;
+  }
   /* Spread crowded targets as the scene shrinks. Each pin stays part of its
      original control, with a short leader connecting it to the artwork. */
   .scene {
@@ -1608,16 +1623,6 @@ footer span {
     --pin-y: calc(18 / 1536 * 100cqw);
     --pin-dx: -0.963;
     --pin-dy: 0.256;
-  }
-  .candle-toggle {
-    --pin-dx: -0.138;
-    --pin-dy: 1.124;
-  }
-  .monitor {
-    /* Keep the original screen anchor when its phone target expands upward. */
-    --pin-y: calc(100% - var(--h) / 1536 * 50cqw);
-    --pin-dx: 0.586;
-    --pin-dy: -0.988;
   }
   .left-screen {
     --pin-dx: -0.027;

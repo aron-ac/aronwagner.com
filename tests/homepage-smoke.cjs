@@ -3,6 +3,83 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { launchBrowser, closeBrowser, artifactPath, settlePage } = require('./helpers/browser.cjs');
 const site = process.env.SITE_URL || 'http://localhost:8000/';
+
+async function assertMobileGestures(page) {
+  const client = await page.createCDPSession();
+  try {
+    const point = await page.$eval('.scene', (scene) => {
+      scene.scrollIntoView({ block: 'start', behavior: 'instant' });
+      const bounds = scene.getBoundingClientRect();
+      const x = bounds.left + 10;
+      const y = bounds.top + bounds.height / 4;
+      return { x, y, control: Boolean(document.elementFromPoint(x, y)?.closest('a, button')) };
+    });
+    assert.equal(point.control, false, 'The missed-tap fixture falls outside interactive objects');
+    await client.send('Input.synthesizeTapGesture', {
+      x: point.x,
+      y: point.y,
+      tapCount: 2,
+      gestureSourceType: 'touch',
+    });
+    assert.ok(
+      Math.abs((await page.evaluate(() => visualViewport.scale)) - 1) < 0.01,
+      'Repeated taps outside hotspots do not zoom the illustration',
+    );
+    await client.send('Input.synthesizePinchGesture', {
+      x: 190,
+      y: 150,
+      scaleFactor: 2,
+      relativeSpeed: 800,
+      gestureSourceType: 'touch',
+    });
+    assert.ok(
+      Math.abs((await page.evaluate(() => visualViewport.scale)) - 1) < 0.01,
+      'A two-finger pinch does not zoom the mobile homepage',
+    );
+    const text = await page.$eval('.intro p', (paragraph) => {
+      paragraph.scrollIntoView({ block: 'center', behavior: 'instant' });
+      const nodes = document.createTreeWalker(paragraph, NodeFilter.SHOW_TEXT);
+      let node;
+      while ((node = nodes.nextNode())) {
+        const start = node.textContent.indexOf('Welcome');
+        if (start < 0) continue;
+        const range = document.createRange();
+        range.setStart(node, start);
+        range.setEnd(node, start + 'Welcome'.length);
+        const bounds = range.getBoundingClientRect();
+        return { x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2 };
+      }
+    });
+    assert.ok(text, 'The selection gesture targets visible homepage text');
+    await client.send('Input.synthesizeTapGesture', {
+      ...text,
+      duration: 900,
+      gestureSourceType: 'touch',
+    });
+    assert.equal(
+      await page.evaluate(() => getSelection().toString()),
+      '',
+      'Long presses do not select mobile homepage content',
+    );
+    await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
+    await client.send('Input.synthesizeScrollGesture', {
+      x: point.x,
+      y: point.y + 100,
+      yDistance: -160,
+      speed: 400,
+      preventFling: true,
+      gestureSourceType: 'touch',
+    });
+    assert.ok(
+      await page.evaluate(() => scrollY > 100),
+      'A vertical touch drag still scrolls the homepage',
+    );
+    await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
+  } finally {
+    await client.detach();
+  }
+}
+
 test('homepage smoke', { timeout: 300_000 }, async () => {
   const browser = await launchBrowser();
   try {
@@ -392,15 +469,23 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
             }),
           })),
         );
-        assert.equal(pins.length, 11, 'Scene objects have touch pins except Mark and CiCi');
+        assert.equal(pins.length, 9, 'Nine scene objects have touch pins');
         assert.equal(
-          await page.$$eval('.portrait .hotspot-pin, .dog .hotspot-pin', (pins) => pins.length),
+          await page.$$eval(
+            '.portrait .hotspot-pin, .dog .hotspot-pin, .candle-toggle .hotspot-pin, .monitor .hotspot-pin',
+            (pins) => pins.length,
+          ),
           0,
-          'Mark and CiCi remain free of pin dots',
+          'Mark, CiCi, the candle and the main monitor remain free of pin dots',
         );
         for (const pin of pins) {
           assert.equal(pin.pulsing, true, `${pin.control} pin pulses with normal motion`);
         }
+        assert.ok(
+          await page.$$eval('.scene img', (images) => images.every((image) => !image.draggable)),
+          'Illustration images do not start native drag gestures',
+        );
+        await assertMobileGestures(page);
       }
       for (const [href, label] of links) {
         assert.ok(
@@ -435,7 +520,7 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
           dogStatus,
           'Tapping CiCi still pets her without a pin',
         );
-        await tapPin('.candle-toggle');
+        await tapRegion('.candle-toggle');
       } else await page.click('.candle-toggle');
       assert.equal(await pressed(), 'false', 'Mobile candle toggle');
       if (width === 390) await tapPin('.painting-toggle');
@@ -463,6 +548,22 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
         await settlePage(page);
       }
       await page.screenshot({ path: artifactPath(`homepage-${width}.png`), fullPage: true });
+      if (width === 390) {
+        await tapRegion('.monitor');
+        await page.waitForFunction(() => {
+          const projects = document.querySelector('#projects');
+          const top = projects.getBoundingClientRect().top;
+          const anchorTop =
+            parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) +
+            parseFloat(getComputedStyle(projects).scrollMarginTop);
+          return location.hash === '#projects' && Math.abs(top - anchorTop) < 1;
+        });
+        assert.equal(
+          new URL(page.url()).hash,
+          '#projects',
+          'The main monitor still opens projects without a pin',
+        );
+      }
     }
     for (const viewport of [
       { width: 390, height: 844 },
