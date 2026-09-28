@@ -1,0 +1,42 @@
+name: Check website
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    env:
+      # Install one exact browser pinned by our locked Puppeteer version below.
+      PUPPETEER_SKIP_DOWNLOAD: 'true'
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Install pinned Chrome and Linux dependencies
+        run: sudo env "PATH=$PATH" "PUPPETEER_CACHE_DIR=$HOME/.cache/puppeteer" npm run setup:browser -- --install-deps
+      - run: npm run check
+      - name: Test source website and interactions
+        run: npm run test:browser
+      - name: Test production build and response policies
+        run: npm run test:browser:production
+      - name: Upload browser screenshots
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: browser-screenshots
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 7

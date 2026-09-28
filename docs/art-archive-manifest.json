@@ -1,0 +1,225 @@
+{
+  "version": 1,
+  "archived_at": "2026-09-28T19:55:34.548275+00:00",
+  "repository_head": "02216d7914bbb6d99de6c8ea1c1d428c9e72ca0f",
+  "archive_directory": "../markhammonds-art-archive",
+  "file_count": 43,
+  "total_bytes": 32989271,
+  "files": [
+    {
+      "path": "assets/characters/mark-hammonds.png",
+      "bytes": 1551110,
+      "sha256": "c16333cb2119d168de10667debcf8337123d7d45201c3490ad7301ca5d01ebc0"
+    },
+    {
+      "path": "assets/characters/mark-hammonds.webp",
+      "bytes": 67102,
+      "sha256": "b051a15765cdd556577121187783721dcb350bf170e80f8656a5644f1f1db36f"
+    },
+    {
+      "path": "assets/characters/pomsky-white.png",
+      "bytes": 1542730,
+      "sha256": "8354d9c1cf743b8029b90d405b3771adf4c08ee13d5e9662529a9a475b5b4fb4"
+    },
+    {
+      "path": "assets/characters/pomsky-white.webp",
+      "bytes": 58764,
+      "sha256": "49365ab356b9a55a4b321c541fd9f2dfc50372ce549dc0dcde1eeef637cc24ba"
+    },
+    {
+      "path": "assets/characters/pomsky.png",
+      "bytes": 1777629,
+      "sha256": "aadc17b42d0855045d1243c51cb4583f587e162287c474064fac0aec2dee8e4c"
+    },
+    {
+      "path": "assets/characters/pomsky.webp",
+      "bytes": 68544,
+      "sha256": "ecfc7f2b28f7f4e8523b4ca50f412229ba53675ac77a9126bc2ad11e83a1ecea"
+    },
+    {
+      "path": "assets/scene/books@2x.webp",
+      "bytes": 15408,
+      "sha256": "5540e8d903a8bb0550d0e71ab18b7824c2972e95c8fb81bec9ffbe6c72ef4edb"
+    },
+    {
+      "path": "assets/scene/desk@2x.webp",
+      "bytes": 4138,
+      "sha256": "e717f2311a7bbb09672c79ff555673d108945cd3ae1215c3c7dbfd3e481a0416"
+    },
+    {
+      "path": "assets/scene/dribbble@2x.webp",
+      "bytes": 2628,
+      "sha256": "a80554d75642b41815a864f6be391d81bc29290395a224d341d006f02a12e1b2"
+    },
+    {
+      "path": "assets/scene/github@2x.webp",
+      "bytes": 5486,
+      "sha256": "6dcb2e88903a4845b33d918fadb2942aebe58bcb3c567e24062d5f81c7816d5b"
+    },
+    {
+      "path": "assets/scene/headphones@2x.webp",
+      "bytes": 8632,
+      "sha256": "f837249b5108aae19f1e86e97b1cc517bc6961fe741022c87d7017db0024ddb3"
+    },
+    {
+      "path": "assets/scene/instagram@2x.webp",
+      "bytes": 6104,
+      "sha256": "a32560a9f517b5c99b29e359af13128840ecdecef0212a99c0d1673e96270bb5"
+    },
+    {
+      "path": "assets/scene/laptop@2x.webp",
+      "bytes": 11546,
+      "sha256": "a449331e45c9df727d29390c76fea309a1d4f8aba35233544b6ae55930450561"
+    },
+    {
+      "path": "assets/scene/map@2x.webp",
+      "bytes": 15026,
+      "sha256": "173c5ddd67f12fad8d7f56b7ff008da55638b930edf4e0dcf21799e3f8801f80"
+    },
+    {
+      "path": "assets/scene/mug@2x.webp",
+      "bytes": 4852,
+      "sha256": "5e69d48b96ca10c12182822b164b99f44318f1d73a8a18ff34a53823bda702a6"
+    },
+    {
+      "path": "assets/scene/warsaw-palace.png",
+      "bytes": 2059266,
+      "sha256": "32991f8c4e101672593e2f2e74502d45f1663eac51e4011adab04569811c9b64"
+    },
+    {
+      "path": "assets/scene/warsaw-palace.webp",
+      "bytes": 97240,
+      "sha256": "ace363d0de825bc1ab0140ff5574613e25e2896b46d3345c4df83347451d226f"
+    },
+    {
+      "path": "assets/scene/whiteboard@2x.webp",
+      "bytes": 70008,
+      "sha256": "ef4676b240a431ca93948af5229dc7318e7177adc59a3196a71e9abec80ba8c2"
+    },
+    {
+      "path": "assets/scene/window-cloud@2x.webp",
+      "bytes": 23368,
+      "sha256": "285e1b7f68fe773461f28d1d7784f2e3c73625e67aaae70160521a275eb93ea9"
+    },
+    {
+      "path": "assets/scene/window-ggb@2x.webp",
+      "bytes": 36614,
+      "sha256": "316fdfbbc41523e06169b724e5c3286f35b99eed4fa74b33e18ae151c1f05105"
+    },
+    {
+      "path": "assets/scene/window-row1-dark@2x.webp",
+      "bytes": 275144,
+      "sha256": "b8eb489ab389d614897846ead814d55f6aa4f53330ebc3fd604bb80c8e750ffc"
+    },
+    {
+      "path": "assets/scene/window-row1@2x.webp",
+      "bytes": 434634,
+      "sha256": "c521865fcef28ad54071eb5a35657eb7f5c2e5068812de8d65ef445c601fff3c"
+    },
+    {
+      "path": "assets/scene/window-row2@2x.webp",
+      "bytes": 213458,
+      "sha256": "72cd2c224b3afb63797d01865b87fe1bd3d42437458c206bfda04a7932ee9dda"
+    },
+    {
+      "path": "assets/scene/window-row3@2x.webp",
+      "bytes": 304312,
+      "sha256": "36047b71d1e36c5da266a76db504a40d13d76f6ff4c69a7a9b09908607b59edf"
+    },
+    {
+      "path": "assets/scene/window@2x.webp",
+      "bytes": 5326,
+      "sha256": "29c95a643621a4162b1484d7f8f498783117a704915dbce9e4818fe339b61063"
+    },
+    {
+      "path": "assets/scene/writing@2x.webp",
+      "bytes": 4782,
+      "sha256": "0f0076b95d10f82d451367170e87b0bf7093cd51197dbe8c51dca968ec13335a"
+    },
+    {
+      "path": "assets/workstation/avatar-day-v3-source.png",
+      "bytes": 2042829,
+      "sha256": "06433052e0410830302d94d3e1cb73f2db9cabc85169e48068b740f74a24cff5"
+    },
+    {
+      "path": "assets/workstation/avatar-day-v3.webp",
+      "bytes": 53758,
+      "sha256": "efbeee3d0c1ffdcab8afd7e432d3f15960e47c130bccc34a5ce99b8462dfc913"
+    },
+    {
+      "path": "assets/workstation/avatar-day-v4-source.png",
+      "bytes": 2099518,
+      "sha256": "213ef8c763fc1330970504149e4c449e5473ac15a5c153e1581b1afe8e5b2ab7"
+    },
+    {
+      "path": "assets/workstation/avatar-night-v3-source.png",
+      "bytes": 1834753,
+      "sha256": "42d6883041e80364ac92d60f091db58b29458ce3ed11fbc0a00a845743b35f4a"
+    },
+    {
+      "path": "assets/workstation/avatar-night-v3.webp",
+      "bytes": 46770,
+      "sha256": "d829d3f064f95892b7108fe2a6f669cc828e98d8f9dad82c217c1c603c89e96a"
+    },
+    {
+      "path": "assets/workstation/avatar-night-v4-source.png",
+      "bytes": 2144824,
+      "sha256": "0e28a9c4eaab8d562dd1f9f640ee45e051c1dbb2c44377ce11d6407e85e4e990"
+    },
+    {
+      "path": "assets/workstation/bitmotive-panorama.svg",
+      "bytes": 5885,
+      "sha256": "d8c33459d0aa9ab2f1cfee8721cb0df77653eb96ba6422de20141bd268ac2c1a"
+    },
+    {
+      "path": "assets/workstation/office-day-v2.png",
+      "bytes": 2197841,
+      "sha256": "9c3a525ad397b67697a52894c9d108b3135a3207de337139f5a32e2eaf25450d"
+    },
+    {
+      "path": "assets/workstation/office-day.png",
+      "bytes": 2512932,
+      "sha256": "1d5defc6695d2f1ac980032c066496bbbf5129241d9cf1793abaf71c3b951b0d"
+    },
+    {
+      "path": "assets/workstation/office-night-small.webp",
+      "bytes": 104196,
+      "sha256": "25a1c3863b4c7e9d14aba3cf0b899148acbd427ae64e646084e904fb4b0d2f57"
+    },
+    {
+      "path": "assets/workstation/office-night-v2.png",
+      "bytes": 2280434,
+      "sha256": "adc2d6dc8f66bd05a7d9d53500b6b99792940c4e369eb4c1a66b842159c48413"
+    },
+    {
+      "path": "assets/workstation/office-night.png",
+      "bytes": 2311587,
+      "sha256": "d48048138cf931fc2643c86e7a7556003fb0e289f8af5226f9a8fb5c2c8c7ea9"
+    },
+    {
+      "path": "assets/workstation/office-night.webp",
+      "bytes": 309324,
+      "sha256": "6f939e308dc5f69f68c107379889743d9f32acede0ace1e6553c014e3969668f"
+    },
+    {
+      "path": "assets/workstation/tampa-bay-source.png",
+      "bytes": 2159459,
+      "sha256": "928efaaadff087dc322a5316225a1b14bc22f1eba0df242d82320acf086c26ef"
+    },
+    {
+      "path": "assets/workstation/tattoo-day-v5-source.png",
+      "bytes": 2091087,
+      "sha256": "b5c36fb94ed745918101b0a70055af3bc90cff4e710d8b6042919a3933c11b5b"
+    },
+    {
+      "path": "assets/workstation/tattoo-night-v5-source.png",
+      "bytes": 2125883,
+      "sha256": "1d78ce779120954f1ae280c0909b108a0a0d30ec79f66acb366212ce4d3fae89"
+    },
+    {
+      "path": "assets/workstation/tattoo-night-v5.webp",
+      "bytes": 4340,
+      "sha256": "4bd1e423970df00779a6ed2832fc04950376dc15b5223b9f80619d9999d75c5a"
+    }
+  ]
+}

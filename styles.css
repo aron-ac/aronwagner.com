@@ -1,0 +1,1565 @@
+@font-face {
+  font-family: Merriweather;
+  src: url('assets/fonts/merriweather-light.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Caveat Brush';
+  src: url('assets/fonts/caveat-brush.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: Caveat;
+  src: url('assets/fonts/caveat.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+* {
+  box-sizing: border-box;
+}
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 40px;
+}
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: Merriweather, Georgia, serif;
+  font-weight: 300;
+  transition:
+    background-color 0.3s,
+    color 0.3s;
+}
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+button {
+  font: inherit;
+}
+button:disabled {
+  cursor: default;
+}
+[hidden] {
+  display: none !important;
+}
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 6px;
+  border-radius: 3px;
+}
+.page-border {
+  position: fixed;
+  inset: 0;
+  border: 5px solid var(--border);
+  pointer-events: none;
+  z-index: 100;
+}
+.skip-link {
+  position: fixed;
+  left: 18px;
+  top: 14px;
+  background: var(--paper);
+  padding: 12px;
+  transform: translateY(-180%);
+  z-index: 200;
+}
+.skip-link:focus {
+  transform: translateY(0);
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.theme-toggle {
+  position: absolute;
+  top: 11px;
+  right: 11px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 7px;
+  border: 0;
+  background: transparent;
+  color: #d2cec4;
+  cursor: pointer;
+  z-index: 30;
+  transition:
+    color 0.2s,
+    transform 0.2s;
+}
+.theme-toggle:hover {
+  color: var(--ink);
+  transform: rotate(12deg);
+}
+.theme-toggle svg {
+  width: 30px;
+  height: 30px;
+}
+.moon-icon {
+  display: none;
+}
+main {
+  padding: 0 30px;
+}
+.hero {
+  width: 1000px;
+  max-width: 100%;
+  margin: 36px auto 0;
+  container-type: inline-size;
+}
+.scene {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  isolation: isolate;
+}
+.scene-art {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+  mask-image: url('assets/workstation/office-day.webp');
+  mask-mode: alpha;
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+}
+/* Both sides of each themed layer are explicit: delayed art must never reveal
+   the opposite theme underneath it. Keep these rules together. */
+.scene-night,
+.avatar-night,
+.safe-night,
+.crop-night {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.scene-day,
+.avatar-day,
+.safe-day,
+.crop-day {
+  opacity: 1;
+  transition: opacity 0.4s ease;
+}
+.night .scene-day,
+.night .avatar-day,
+.night .safe-day,
+.night .crop-day {
+  opacity: 0;
+}
+.night .scene-night,
+.night .avatar-night,
+.night .safe-night,
+.night .crop-night {
+  opacity: 1;
+}
+.avatar-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+.tattoo-art {
+  transition: filter 0.4s ease;
+}
+.night .tattoo-art {
+  filter: saturate(1.12) hue-rotate(-6deg) brightness(0.98);
+}
+.screen-wallpapers {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+  transition: filter 0.4s ease;
+}
+.night .screen-wallpapers {
+  filter: brightness(0.9) saturate(1.1);
+}
+.candle-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+.candle-unlit,
+.candle-dark-halo {
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.scene:not(.candle-lit) .candle-unlit {
+  opacity: 1;
+}
+.night .scene:not(.candle-lit) .candle-dark-halo {
+  opacity: 1;
+}
+.night .candle-unlit {
+  filter: brightness(0.62) saturate(0.55);
+}
+.scene-hotspot {
+  position: absolute;
+  left: calc(var(--x) / 1536 * 100%);
+  top: calc(var(--y) / 1024 * 100%);
+  width: calc(var(--w) / 1536 * 100%);
+  height: calc(var(--h) / 1024 * 100%);
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  z-index: 2;
+}
+.scene-hotspot:disabled {
+  cursor: default;
+}
+.scene-hotspot:focus-visible {
+  outline: 2px dashed var(--accent);
+  outline-offset: 5px;
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+}
+.label {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 12px);
+  padding: 7px 12px;
+  color: var(--accent);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  box-shadow: 0 3px 10px #0000000c;
+  font-family: 'Caveat Brush', cursive;
+  font-size: 20px;
+  font-size: 2cqw;
+  line-height: 1.1;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, 5px);
+  transition:
+    opacity 0.18s,
+    transform 0.18s;
+}
+.scene-hotspot:hover,
+.scene-hotspot:focus-visible {
+  z-index: 3;
+}
+.scene-hotspot:hover .label,
+.scene-hotspot:focus-visible .label {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.arrow {
+  position: absolute;
+  right: 10px;
+  bottom: -24px;
+  font-size: 1.8em;
+  line-height: 0.8;
+  text-shadow: 0 1px var(--paper);
+}
+.laptop .label {
+  bottom: auto;
+  top: calc(100% + 30px);
+}
+.laptop .arrow {
+  bottom: auto;
+  top: -20px;
+  transform: rotate(180deg);
+}
+.screen-link {
+  pointer-events: none;
+  border-radius: 0;
+}
+.screen-link::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+}
+.left-screen::before {
+  clip-path: polygon(7% 0, 100% 5%, 91% 94%, 0 87%);
+}
+.laptop::before {
+  clip-path: polygon(14% 0, 100% 5%, 96% 74%, 72% 100%, 0 82%, 13% 64%);
+}
+.right-screen::before {
+  clip-path: polygon(23% 0, 100% 14%, 76% 100%, 0 77%);
+}
+.left-screen .label,
+.right-screen .label {
+  bottom: auto;
+  top: calc(100% + 22px);
+}
+.left-screen .arrow,
+.right-screen .arrow {
+  bottom: auto;
+  top: -20px;
+  transform: rotate(180deg);
+}
+.candle-toggle .label {
+  left: 45%;
+}
+.camera-toggle::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: max(100%, 44px);
+  height: max(100%, 44px);
+  transform: translate(-50%, -50%);
+}
+.portrait .label {
+  left: 15%;
+}
+/* Keep nearby objects distinct even when the illustration shrinks on phones. */
+.katana-toggle {
+  min-height: 24px;
+}
+@media (max-width: 650px) {
+  .meditations-toggle {
+    min-width: 24px;
+    min-height: 24px;
+    left: calc((var(--x) + var(--w) / 2) / 1536 * 100%);
+    transform: translateX(-50%);
+    top: auto;
+    bottom: calc((1024 - 330) / 1024 * 100%);
+  }
+  .katana-toggle {
+    height: calc(80 / 1024 * 100%);
+    top: auto;
+    bottom: calc((1024 - 430) / 1024 * 100%);
+  }
+  .camera-toggle::before {
+    width: max(100%, 24px);
+    height: max(100%, 24px);
+    top: auto;
+    bottom: 1px;
+    transform: translateX(-50%);
+  }
+}
+.books-toggle {
+  min-width: 44px;
+  left: calc((var(--x) + var(--w) / 2) / 1536 * 100%);
+  transform: translateX(-50%);
+}
+/* The statue sits in front of the painting; only its silhouette receives clicks. */
+.scene-hotspot.sisyphus-toggle {
+  z-index: 5;
+  min-width: 24px;
+  min-height: 24px;
+  pointer-events: none;
+}
+.sisyphus-toggle::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+  clip-path: polygon(
+    72% 0,
+    90% 12%,
+    100% 32%,
+    98% 55%,
+    90% 72%,
+    100% 91%,
+    100% 100%,
+    0 100%,
+    0 75%,
+    15% 65%,
+    25% 59%,
+    34% 43%,
+    44% 38%,
+    46% 24%,
+    57% 11%
+  );
+}
+.books-toggle .label,
+.sisyphus-toggle .label {
+  left: auto;
+  right: 0;
+  transform: translateY(5px);
+}
+.books-toggle:hover .label,
+.books-toggle:focus-visible .label,
+.sisyphus-toggle:hover .label,
+.sisyphus-toggle:focus-visible .label {
+  transform: translateY(0);
+}
+.dog .label {
+  left: 100%;
+}
+.dog-heart {
+  position: absolute;
+  left: 60%;
+  top: 12%;
+  font-family: Arial, sans-serif;
+  font-size: 30px;
+  font-size: 3cqw;
+  color: #e86984;
+  filter: drop-shadow(0 1px 2px #fff9);
+  opacity: 0;
+  pointer-events: none;
+}
+.dog.is-petted .dog-heart {
+  animation: heart-float 1.25s ease-out forwards;
+}
+
+/* The picture is a separate hinged layer over the original scene. */
+.wall-secret {
+  position: absolute;
+  left: calc(var(--x) / 1536 * 100%);
+  top: calc(var(--y) / 1024 * 100%);
+  width: calc(var(--w) / 1536 * 100%);
+  height: calc(var(--h) / 1024 * 100%);
+  z-index: 4;
+  perspective: 700px;
+  isolation: isolate;
+}
+.clip-definitions {
+  position: absolute;
+  pointer-events: none;
+}
+.safe-panel,
+.safe-panel img,
+.painting-toggle,
+.painting-door,
+.painting-front,
+.painting-back,
+.wall-crop,
+.frame-foreground {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.safe-panel {
+  pointer-events: none;
+}
+.safe-panel img {
+  display: block;
+}
+.painting-toggle {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: none;
+  cursor: pointer;
+  color: var(--accent);
+  overflow: visible;
+  perspective: 700px;
+  touch-action: manipulation;
+}
+.painting-toggle::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  min-width: 44px;
+  min-height: 44px;
+}
+.painting-toggle:focus-visible {
+  outline: 2px dashed var(--accent);
+  outline-offset: 5px;
+}
+.painting-door {
+  transform-origin: 1.5625% 50%;
+  transform-style: preserve-3d;
+  transition: transform 0.75s cubic-bezier(0.22, 0.8, 0.22, 1);
+  pointer-events: auto;
+}
+.painting-front,
+.painting-back {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.painting-front {
+  background: #292b2d;
+  clip-path: polygon(1.6% 12.9%, 95.8% 0, 99.5% 2.6%, 99.5% 92.3%, 1.6% 98.9%);
+}
+.painting-front .wall-crop {
+  clip-path: url(#painting-front-clip);
+}
+.wall-crop {
+  background-image: url('assets/workstation/office-day-v2.webp');
+  background-size: calc(1536 / var(--w) * 100%) calc(1024 / var(--h) * 100%);
+  background-position: calc(var(--x) / (1536 - var(--w)) * 100%)
+    calc(var(--y) / (1024 - var(--h)) * 100%);
+  background-repeat: no-repeat;
+}
+.wall-crop.crop-night {
+  background-image: url('assets/workstation/office-night-v2.webp');
+}
+.painting-back {
+  transform: rotateY(180deg);
+}
+.painting-back svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform: scaleX(-1);
+}
+.wall-secret.is-open .painting-door {
+  transform: rotateY(-112deg);
+}
+.painting-toggle .label {
+  left: auto;
+  right: 0;
+  transform: translateY(5px);
+}
+.painting-toggle:hover .label,
+.painting-toggle:focus-visible .label {
+  opacity: 1;
+  transform: translateY(0);
+}
+.frame-foreground {
+  clip-path: url(#painting-statue-clip);
+  pointer-events: none;
+}
+.night .painting-front {
+  background: #0a142b;
+}
+.night .painting-back {
+  filter: brightness(0.52) saturate(0.7);
+}
+
+.intro {
+  padding-top: 10px;
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.intro > p {
+  font-size: 17px;
+  line-height: 1.6;
+  margin: 20px 0 27px;
+}
+.intro strong {
+  font-weight: 300;
+  color: var(--strong);
+}
+.intro p a {
+  border-bottom: 2px solid var(--line);
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+.intro p a:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.signature {
+  font-family: Caveat, cursive;
+  font-weight: 400;
+  font-size: 46px;
+  line-height: 1.4;
+  letter-spacing: -2px;
+  margin: 14px auto 9px;
+  transform: rotate(-7deg);
+  width: fit-content;
+  color: var(--ink);
+}
+.signature span {
+  margin-left: 4px;
+}
+.name-trigger {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+.name-trigger:hover {
+  color: var(--accent);
+}
+.business-card {
+  position: fixed;
+  width: min(470px, calc(100vw - 40px));
+  max-width: none;
+  margin: auto;
+  padding: 36px 36px 0;
+  border: 1px solid #426250;
+  border-radius: 15px;
+  background: linear-gradient(135deg, #1b2a24, #101a18 75%);
+  color: #f5f6ee;
+  box-shadow: 0 24px 85px #0006;
+  text-align: left;
+  border-top: 4px solid #009951;
+}
+.business-card::backdrop {
+  background: #12162580;
+  backdrop-filter: blur(3px);
+}
+.business-card-logo {
+  display: inline-block;
+  width: 205px;
+  max-width: 80%;
+  margin-bottom: 30px;
+  border-radius: 3px;
+}
+.business-card-logo img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.business-card h2 {
+  margin: 0 0 10px;
+  font:
+    300 28px/1.3 Merriweather,
+    Georgia,
+    serif;
+  letter-spacing: -0.5px;
+}
+.business-card-title {
+  margin: 0;
+  color: #b9cabc;
+  font:
+    13px/1.5 Arial,
+    sans-serif;
+  letter-spacing: 0.6px;
+}
+.business-card-contact {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 12px 0;
+  color: #b5e5c5;
+  font:
+    13px/1.5 Arial,
+    sans-serif;
+  letter-spacing: 0.3px;
+}
+.business-card-email {
+  margin-top: 20px;
+  border-top: 1px solid #b9d0be33;
+}
+.business-card-website {
+  padding-bottom: 22px;
+}
+.business-card-contact:hover {
+  color: #fff;
+}
+.business-card-contact > span:last-child {
+  font-size: 22px;
+  line-height: 1;
+}
+.business-card-close {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #b9cabc;
+  font:
+    26px/1 Arial,
+    sans-serif;
+  cursor: pointer;
+}
+.business-card-close:hover {
+  color: #fff;
+  background: #ffffff0a;
+}
+.business-card :focus-visible {
+  outline-color: #a6e5bc;
+  outline-offset: 4px;
+}
+@media (max-width: 420px) {
+  .business-card {
+    padding: 30px 25px 0;
+  }
+  .business-card-logo {
+    width: 180px;
+    margin-bottom: 27px;
+  }
+  .business-card h2 {
+    font-size: 24px;
+  }
+  .business-card-contact {
+    font-size: 12px;
+  }
+}
+@media (max-height: 420px) {
+  .business-card {
+    padding-top: 20px;
+  }
+  .business-card-logo {
+    margin-bottom: 16px;
+  }
+  .business-card-email {
+    margin-top: 12px;
+  }
+  .business-card-website {
+    padding-bottom: 16px;
+  }
+}
+
+/* A quiet reading card, with room to scroll on short landscape screens. */
+.quote-dialog,
+.books-dialog {
+  width: min(600px, calc(100vw - 32px));
+  max-width: none;
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: clamp(24px, 5vw, 42px);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--card);
+  color: var(--strong);
+  box-shadow: 0 25px 90px #0006;
+  text-align: left;
+}
+.quote-dialog::backdrop,
+.books-dialog::backdrop {
+  background: #101b2c99;
+  backdrop-filter: blur(5px);
+}
+.quote-dialog[open],
+.books-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+.quote-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink);
+  font:
+    28px/1 Arial,
+    sans-serif;
+  cursor: pointer;
+}
+.quote-close:hover {
+  background: color-mix(in srgb, var(--strong) 8%, transparent);
+}
+.quote-heading {
+  flex-shrink: 0;
+  padding-right: 20px;
+}
+.quote-heading > p {
+  margin: 0 0 7px;
+  color: var(--ink);
+  font:
+    10px/1.5 Arial,
+    sans-serif;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.quote-heading h2 {
+  margin: 0;
+  font:
+    400 36px/1.1 'Caveat Brush',
+    cursive;
+}
+.quote-passage {
+  min-height: 0;
+  margin: 26px 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.sisyphus-dialog .quote-passage {
+  margin-bottom: 0;
+}
+.quote-passage blockquote {
+  margin: 0 0 22px;
+  padding-left: 20px;
+  border-left: 3px solid color-mix(in srgb, var(--accent) 45%, var(--line));
+}
+.quote-passage blockquote p {
+  margin: 0;
+  font-size: clamp(18px, 3vw, 23px);
+  line-height: 1.65;
+}
+.quote-author {
+  margin: 0 0 7px;
+  font:
+    700 12px/1.5 Arial,
+    sans-serif;
+  letter-spacing: 0.4px;
+}
+.quote-source {
+  display: inline-block;
+  padding: 5px 0;
+  color: var(--accent);
+  font:
+    12px/1.5 Arial,
+    sans-serif;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.quote-dialog .quote-actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0;
+  padding: 20px 0 0;
+  border-top: 1px solid var(--line);
+  color: var(--ink);
+  font:
+    11px/1.5 Arial,
+    sans-serif;
+  text-align: left;
+}
+.quote-next {
+  min-height: 44px;
+  padding: 10px 15px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--paper);
+  color: var(--strong);
+  font:
+    12px/1.5 Arial,
+    sans-serif;
+  cursor: pointer;
+}
+.quote-next:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.quote-next span {
+  margin-left: 8px;
+  font-size: 18px;
+}
+@media (max-height: 500px) {
+  .quote-dialog {
+    padding: 22px 30px;
+  }
+  .quote-heading > p {
+    display: none;
+  }
+  .quote-heading h2 {
+    font-size: 28px;
+  }
+  .quote-passage {
+    margin: 14px 0;
+  }
+  .quote-passage blockquote {
+    margin-bottom: 12px;
+  }
+  .quote-passage blockquote p {
+    font-size: 17px;
+    line-height: 1.5;
+  }
+  .quote-author {
+    display: inline;
+    margin: 0 12px 0 0;
+  }
+  .quote-dialog .quote-actions {
+    padding-top: 12px;
+  }
+}
+
+/* A single, user-controlled book slide: no autoplay or off-screen focus targets. */
+.books-dialog {
+  width: min(740px, calc(100vw - 32px));
+  padding: 32px;
+}
+.books-status {
+  margin: 30px 0 12px;
+  font-size: 15px;
+  line-height: 1.7;
+}
+.book-carousel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin-top: 26px;
+}
+.book-slide {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  align-items: center;
+  gap: 36px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  padding: 8px;
+}
+.book-cover-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 290px;
+  min-width: 0;
+  touch-action: pan-y;
+}
+.book-cover {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  filter: drop-shadow(0 8px 6px #0003);
+}
+.book-cover-fallback {
+  padding: 32px 20px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--ink);
+  font-size: 14px;
+  text-align: center;
+}
+.book-eyebrow {
+  margin: 0 0 12px;
+  color: var(--ink);
+  font:
+    10px/1.6 Arial,
+    sans-serif;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+.book-title {
+  margin: 0;
+  font:
+    300 clamp(21px, 3vw, 27px)/1.45 Merriweather,
+    Georgia,
+    serif;
+  overflow-wrap: anywhere;
+}
+.book-author {
+  margin: 14px 0 24px;
+  color: var(--ink);
+  font:
+    14px/1.65 Arial,
+    sans-serif;
+}
+.book-amazon {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 44px;
+  padding: 11px 16px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--paper);
+  color: var(--accent);
+  font:
+    13px/1.5 Arial,
+    sans-serif;
+}
+.book-amazon:hover {
+  border-color: var(--accent);
+}
+.book-controls {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 26px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.book-position {
+  margin: 0;
+  min-width: 52px;
+  color: var(--ink);
+  font:
+    13px/1.5 Arial,
+    sans-serif;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.book-prev,
+.book-next,
+.books-retry {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--paper);
+  color: var(--strong);
+  font:
+    24px/1 Arial,
+    sans-serif;
+  cursor: pointer;
+}
+.books-retry {
+  align-self: flex-start;
+  font-size: 13px;
+}
+.book-prev:hover,
+.book-next:hover,
+.books-retry:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+@media (max-width: 600px) {
+  .books-dialog {
+    padding: 26px 20px 20px;
+  }
+  .books-dialog .quote-heading h2 {
+    font-size: 30px;
+  }
+  .book-carousel {
+    margin-top: 16px;
+  }
+  .book-slide {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+    text-align: center;
+  }
+  .book-cover-link {
+    height: clamp(130px, 28dvh, 220px);
+  }
+  .book-eyebrow {
+    display: none;
+  }
+  .book-title {
+    font-size: 21px;
+  }
+  .book-author {
+    margin: 8px 0 12px;
+    font-size: 13px;
+  }
+  .book-controls {
+    margin-top: 18px;
+    padding-top: 14px;
+  }
+}
+@media (max-width: 600px) and (max-height: 650px) {
+  .book-cover-link {
+    height: clamp(96px, 22dvh, 150px);
+  }
+  .book-slide {
+    gap: 14px;
+  }
+}
+@media (max-height: 500px) {
+  .books-dialog {
+    padding: 20px 28px;
+  }
+  .books-dialog .quote-heading h2 {
+    font-size: 28px;
+  }
+  .book-carousel {
+    margin-top: 10px;
+  }
+  .book-slide {
+    grid-template-columns: minmax(70px, 30%) minmax(0, 1fr);
+    gap: 22px;
+    text-align: left;
+  }
+  .book-cover-link {
+    height: 128px;
+  }
+  .book-eyebrow {
+    display: none;
+  }
+  .book-title {
+    font-size: 18px;
+    line-height: 1.4;
+  }
+  .book-author {
+    margin: 6px 0 8px;
+    font-size: 12px;
+  }
+  .book-controls {
+    margin-top: 10px;
+    padding-top: 10px;
+  }
+}
+
+/* The print border is HTML/CSS, so each original photo stays intact. */
+.polaroid-dialog {
+  position: fixed;
+  width: fit-content;
+  max-width: calc(100vw - 48px);
+  max-height: none;
+  margin: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #39342d;
+  overflow: visible;
+}
+.polaroid-dialog::backdrop {
+  background: #101723b8;
+  backdrop-filter: blur(5px);
+}
+.polaroid-frame {
+  width: fit-content;
+  margin: 0;
+  padding: 14px 14px 0;
+  background: #fffef8;
+  border: 1px solid #e2ddd2;
+  box-shadow:
+    0 24px 70px #0007,
+    0 2px 6px #0003;
+  transform: rotate(-1.5deg);
+}
+.polaroid-dialog[open] .polaroid-frame {
+  animation: polaroid-appear 0.3s ease-out both;
+}
+.polaroid-media {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 160px;
+  min-height: 100px;
+  background: #e7e2d8;
+  box-shadow: inset 0 0 0 1px #0001;
+}
+.polaroid-photo {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: min(560px, calc(100vw - 84px));
+  /* Reserve room for the caption, next button and the raised close control. */
+  max-height: min(66dvh, calc(100dvh - 226px));
+  object-fit: contain;
+}
+.polaroid-status {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 16px;
+  background: #f2eee7e8;
+  color: #5b554b;
+  text-align: center;
+  font:
+    14px/1.5 Arial,
+    sans-serif;
+}
+.polaroid-status:empty {
+  display: none;
+}
+.polaroid-caption {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-height: 72px;
+  padding: 12px 3px 17px;
+  font:
+    24px/1.1 Caveat,
+    cursive;
+}
+.polaroid-count {
+  font:
+    10px/1 Arial,
+    sans-serif;
+  letter-spacing: 1px;
+  color: #91897c;
+  white-space: nowrap;
+}
+.polaroid-close {
+  position: absolute;
+  z-index: 1;
+  top: -22px;
+  right: -20px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid #ffffff70;
+  border-radius: 50%;
+  background: #252a30;
+  color: #fff;
+  font:
+    28px/1 Arial,
+    sans-serif;
+  box-shadow: 0 3px 12px #0003;
+  cursor: pointer;
+}
+.polaroid-controls {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+.polaroid-next {
+  min-height: 44px;
+  padding: 10px 19px;
+  border: 1px solid #fff7;
+  border-radius: 25px;
+  background: #1b222ac9;
+  color: #fff;
+  font:
+    13px/1.5 Arial,
+    sans-serif;
+  cursor: pointer;
+}
+.polaroid-next > span {
+  margin-right: 6px;
+  font-size: 20px;
+  vertical-align: -1px;
+}
+.polaroid-next:hover,
+.polaroid-close:hover {
+  background: #38414b;
+}
+.polaroid-next:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.polaroid-dialog :focus-visible {
+  outline-color: #fff;
+  outline-offset: 4px;
+}
+@media (max-width: 420px), (max-height: 500px) {
+  .polaroid-photo {
+    max-height: min(66dvh, calc(100dvh - 190px));
+  }
+  .polaroid-caption {
+    min-height: 58px;
+    font-size: 20px;
+    padding-bottom: 14px;
+    gap: 8px;
+  }
+  .polaroid-frame {
+    padding: 10px 10px 0;
+  }
+  .polaroid-controls {
+    margin-top: 20px;
+  }
+}
+@keyframes polaroid-appear {
+  from {
+    opacity: 0;
+    transform: translateY(12px) rotate(1deg) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(-1.5deg) scale(1);
+  }
+}
+.quick-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 28px;
+  font:
+    12px/1.6 Arial,
+    sans-serif;
+  color: var(--ink);
+}
+.quick-links a:hover {
+  color: var(--accent);
+}
+.quick-links > span {
+  color: #b7afa3;
+}
+.projects {
+  max-width: 800px;
+  margin: 74px auto 0;
+  scroll-margin-top: 30px;
+}
+.section-heading {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 23px;
+}
+.section-heading > span {
+  height: 1px;
+  background: var(--line);
+  flex: 1;
+}
+.section-heading h2 {
+  font:
+    400 24px/1.3 'Caveat Brush',
+    cursive;
+  text-align: center;
+  margin: 0;
+}
+.project-card {
+  display: block;
+  max-width: 580px;
+  margin: 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  overflow: hidden;
+  background: var(--card);
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+.project-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px #302c2610;
+}
+.project-card + .project-card {
+  margin-top: 24px;
+}
+.game-preview {
+  position: relative;
+  background: #163b35;
+  color: #eff8df;
+  font:
+    11px/1.5 'Courier New',
+    monospace;
+  overflow: hidden;
+}
+.game-preview img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2 / 1;
+  object-fit: cover;
+}
+.game-preview .game-terminal {
+  position: absolute;
+  top: 15px;
+  left: 17px;
+  z-index: 1;
+  opacity: 1;
+  padding: 5px 8px;
+  border-radius: 4px;
+  background: #122c28bf;
+}
+.game-preview .game-prompt {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 95%;
+  padding: 6px 11px;
+  border-radius: 4px;
+  background: #122c28bf;
+}
+.game-terminal {
+  opacity: 0.7;
+  font-size: 10px;
+}
+.game-prompt {
+  display: block;
+  text-align: center;
+  letter-spacing: 3px;
+  font-size: 10px;
+}
+.project-card:hover .game-prompt > span {
+  animation: blink 1s steps(2, start) infinite;
+}
+.project-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  gap: 16px;
+}
+.project-caption h3 {
+  font:
+    400 25px 'Caveat Brush',
+    cursive;
+  margin: 0 0 5px;
+  color: var(--strong);
+}
+.project-caption p {
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 0;
+}
+.project-arrow {
+  font:
+    26px Arial,
+    sans-serif;
+  color: var(--ink);
+}
+footer {
+  text-align: center;
+  margin: 65px 24px 30px;
+  font:
+    11px/1.7 Arial,
+    sans-serif;
+  color: var(--ink);
+  opacity: 0.8;
+}
+footer span {
+  padding: 0 8px;
+}
+
+/* The same artwork and coordinates remain visible at every viewport size. */
+@media (max-width: 650px) {
+  main {
+    padding: 0 15px;
+  }
+  .hero {
+    margin-top: 32px;
+  }
+  .scene-art {
+    mask-image: url('assets/workstation/office-day-small.webp');
+  }
+  .wall-crop {
+    background-image: url('assets/workstation/office-day-v2-small.webp');
+  }
+  .wall-crop.crop-night {
+    background-image: url('assets/workstation/office-night-v2-small.webp');
+  }
+  .intro {
+    max-width: 480px;
+    padding-top: 8px;
+  }
+  .intro > p {
+    font-size: 14px;
+    line-height: 1.85;
+    margin: 20px 10px 21px;
+  }
+  .signature {
+    font-size: 40px;
+  }
+  .theme-toggle {
+    top: 8px;
+    right: 8px;
+  }
+  .theme-toggle svg {
+    width: 24px;
+    height: 24px;
+  }
+  .quick-links {
+    gap: 12px;
+    font-size: 11px;
+    margin-top: 26px;
+  }
+  .projects {
+    margin: 50px auto 0;
+    max-width: 480px;
+  }
+  .section-heading {
+    gap: 12px;
+  }
+  .section-heading h2 {
+    font-size: 21px;
+  }
+  .project-caption {
+    padding: 18px;
+  }
+  .project-caption p {
+    font-size: 11px;
+  }
+  .game-terminal {
+    font-size: 8px;
+  }
+  .game-preview .game-terminal {
+    top: 10px;
+    left: 10px;
+  }
+  .game-preview .game-prompt {
+    bottom: 11px;
+    font-size: 8px;
+    letter-spacing: 2px;
+  }
+  .scene-hotspot.monitor,
+  .scene-hotspot.dog {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .scene-hotspot.monitor {
+    top: auto;
+    bottom: calc((1024 - var(--y) - var(--h)) / 1024 * 100%);
+  }
+  .label {
+    font-size: 14px;
+  }
+  .laptop .label {
+    top: calc(100% + 12px);
+  }
+}
+@media (hover: none) {
+  .scene-hotspot:not(:focus-visible) .label,
+  .painting-toggle:not(:focus-visible) .label {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *:before,
+  *:after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .dog.is-petted .dog-heart {
+    opacity: 1;
+  }
+}
+
+.night .theme-toggle {
+  color: #c9d0ec;
+}
+.night .sun-icon {
+  display: none;
+}
+.night .moon-icon {
+  display: block;
+}
+@keyframes heart-float {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.5);
+  }
+  25% {
+    opacity: 1;
+    transform: translateY(-18px) scale(1);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-55px) scale(1.15);
+  }
+}
+@keyframes blink {
+  to {
+    visibility: hidden;
+  }
+}
+
+body:has(dialog[open]) {
+  overflow: hidden;
+}

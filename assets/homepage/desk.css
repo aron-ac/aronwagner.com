@@ -1,0 +1,872 @@
+@font-face {
+  font-family: 'Merriweather';
+  src: url('../fonts/merriweather-light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Caveat Brush';
+  src: url('../fonts/caveat-brush.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Caveat';
+  src: url('../fonts/caveat.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+:root {
+  --elastic-075: linear(
+    0,
+    0.296 4%,
+    0.57 8%,
+    0.79 12%,
+    0.945 17%,
+    1.041 21%,
+    1.088 25%,
+    1.101 29%,
+    1.093 33%,
+    1.074 38%,
+    1.052 42%,
+    1.032 46%,
+    1.016 50%,
+    1.004 54%,
+    0.997 58%,
+    0.993 62%,
+    0.992 67%,
+    0.993 71%,
+    0.994 75%,
+    0.996 79%,
+    0.998 83%,
+    0.999 88%,
+    1 92%,
+    1 96%,
+    1
+  );
+  --elastic-1: linear(
+    0,
+    0.276 4%,
+    0.514 8%,
+    0.703 12%,
+    0.843 17%,
+    0.939 21%,
+    1 25%,
+    1.034 29%,
+    1.05 33%,
+    1.053 38%,
+    1.048 42%,
+    1.04 46%,
+    1.031 50%,
+    1.023 54%,
+    1.015 58%,
+    1.009 62%,
+    1.005 67%,
+    1.002 71%,
+    1 75%,
+    0.999 79%,
+    0.998 83%,
+    0.998 88%,
+    0.998 92%,
+    0.999 96%,
+    1
+  );
+  --label: #01a4fa;
+}
+html,
+body {
+  background: #f8f3ec;
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  font:
+    300 14px 'Merriweather',
+    Georgia,
+    serif;
+  background: #f8f3ec;
+  transition: background 0.3s ease-out;
+  -webkit-font-smoothing: antialiased;
+}
+.nightmode body {
+  background: #1c2a62;
+}
+
+/* Thin frame around the whole viewport, like a picture mat */
+.border {
+  pointer-events: none;
+  z-index: 1000;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border: 5px solid rgba(195, 184, 157, 0.22);
+  transition: border-color 0.3s ease-out;
+}
+.nightmode .border {
+  border-color: #555e86;
+}
+
+/* Sun / moon toggle in the top-right corner */
+#night {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  padding: 8px;
+  overflow: hidden;
+  opacity: 0.7;
+  z-index: 1100;
+  cursor: pointer;
+  display: block;
+  transition: 0.2s ease-out;
+}
+#night:hover {
+  opacity: 1;
+}
+#night .sun {
+  background: #d2cec4;
+  width: 16px;
+  height: 16px;
+  border-radius: 20px;
+  position: relative;
+  transition: 0.3s ease-out;
+}
+#night .sun .ray {
+  width: 2px;
+  height: 5px;
+  border-radius: 3px;
+  background: #d2cec4;
+  position: absolute;
+  top: -7px;
+  left: 7px;
+  z-index: 2;
+  transform-origin: 1px 15px;
+  transition: 0.3s ease-out;
+}
+#night .sun .ray2 {
+  transform: rotate(45deg);
+}
+#night .sun .ray3 {
+  transform: rotate(90deg);
+}
+#night .sun .ray4 {
+  transform: rotate(135deg);
+}
+#night .sun .ray5 {
+  transform: rotate(180deg);
+}
+#night .sun .ray6 {
+  transform: rotate(225deg);
+}
+#night .sun .ray7 {
+  transform: rotate(270deg);
+}
+#night .sun .ray8 {
+  transform: rotate(315deg);
+}
+.nightmode #night .sun {
+  background: #fff;
+  transform: rotate(55deg);
+}
+.nightmode #night .sun .ray {
+  height: 2px;
+  background: rgba(255, 255, 255, 0.25);
+}
+#night .sun .moon {
+  background: #f8f3ec;
+  width: 16px;
+  height: 16px;
+  border-radius: 20px;
+  position: relative;
+  z-index: 3;
+  transform: translate(0, -17px);
+  transition: 0.3s ease-out;
+}
+.nightmode #night .sun .moon {
+  transform: translate(0, -7px);
+  background: #1c2a62;
+}
+
+#content {
+  position: relative;
+  padding: 0 30px 0;
+}
+@media only screen and (max-width: 600px) {
+  #content {
+    padding: 10px;
+  }
+}
+
+/* ---------- The desk scene (918 x 509, scaled down on narrow screens) ---------- */
+.scene-wrap {
+  width: 918px;
+  height: 509px;
+  margin: 0 auto;
+  position: relative;
+}
+.scene {
+  width: 918px;
+  height: 509px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+}
+.scene-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+.scene svg {
+  display: block;
+  overflow: visible;
+}
+.inside {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Everything above the desk lives in here, so it can rise up from behind the desk */
+#above {
+  width: 100%;
+  height: 405px;
+  overflow: hidden;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.me-and-dog {
+  position: absolute;
+  top: 104px;
+  left: 119px;
+  width: 420px;
+  height: 0;
+  z-index: 10;
+}
+.me-parent {
+  width: 235px;
+  height: 285px;
+  overflow: hidden;
+  position: absolute;
+  top: 15px;
+  left: 182px;
+  z-index: 10;
+  pointer-events: none;
+  padding-top: 30px;
+}
+.me-body {
+  width: 235px;
+  height: 324px;
+  transform: translateY(260px);
+  transform-origin: 50% 100%;
+  transition: transform 0.4s ease-in;
+}
+.dog-parent {
+  width: 206px;
+  height: 213px;
+  position: absolute;
+  z-index: 10;
+  top: 87px;
+  left: 10px;
+  overflow: hidden;
+}
+.dog {
+  width: 176px;
+  height: 254px;
+  top: 25px;
+  left: 15px;
+  position: relative;
+  display: block;
+  transform: translateY(260px);
+  transition: transform 0.4s ease-in;
+  cursor: pointer;
+}
+.me-body.up,
+.dog.up {
+  transform: translateY(0);
+}
+
+.board-parent {
+  width: 350px;
+  height: 390px;
+  z-index: 9;
+  top: 54px;
+  left: 41px;
+  padding-top: 30px;
+  padding-left: 10px;
+  position: absolute;
+  overflow: hidden;
+}
+.board {
+  width: 330px;
+  height: 214px;
+  position: absolute;
+  display: block;
+  transform: translateY(360px);
+  opacity: 0;
+}
+.window-parent {
+  left: 446px;
+  padding-left: 10px;
+  top: 83px;
+  padding-top: 10px;
+  width: 385px;
+  height: 385px;
+  overflow: hidden;
+  position: absolute;
+  z-index: 9;
+}
+.window-bounce {
+  transform: translateY(360px);
+  opacity: 0;
+}
+.window {
+  width: 375px;
+  height: 273px;
+  position: absolute;
+  transform: scale(0.8);
+  transform-origin: 50% 30%;
+  transition:
+    transform 0.3s ease-out,
+    filter 0.3s ease-out;
+}
+.window:hover {
+  transform: scale(0.8) translateY(-5px);
+  filter: drop-shadow(2px 2px 0 #fff) drop-shadow(-2px -2px 0 #fff) drop-shadow(-2px 2px 0 #fff)
+    drop-shadow(2px -2px 0 #fff);
+}
+.board.up,
+.window-bounce.up {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.desk {
+  width: 830px;
+  height: 76px;
+  position: absolute;
+  top: 404px;
+  left: 27px;
+  z-index: 9;
+}
+.fingers {
+  width: 52px;
+  height: 22px;
+  position: absolute;
+  top: 398px;
+  left: 436px;
+  z-index: 101;
+  opacity: 0;
+  pointer-events: none;
+}
+.fingers.on {
+  transition: opacity 0.1s linear 0.45s;
+  opacity: 1;
+}
+
+/* Things sitting on the desk */
+.item {
+  position: absolute;
+  display: block;
+  transform: scale(0.5);
+  opacity: 0;
+  transform-origin: 50% 100%;
+  text-decoration: none;
+}
+.item.done {
+  opacity: 1;
+  transform: scale(1);
+}
+.books {
+  width: 166px;
+  height: 115px;
+  top: 349px;
+  left: 15px;
+  z-index: 100;
+}
+.headphones {
+  width: 65px;
+  height: 93px;
+  top: 364px;
+  left: 163px;
+  z-index: 120;
+}
+.mug {
+  width: 80px;
+  height: 64px;
+  top: 386px;
+  left: 256px;
+  z-index: 120;
+}
+.notebook {
+  width: 83px;
+  height: 44px;
+  top: 411px;
+  left: 328px;
+  z-index: 100;
+}
+.laptop {
+  width: 203px;
+  height: 114px;
+  top: 341px;
+  left: 430px;
+  z-index: 100;
+}
+.ball {
+  width: 42px;
+  height: 43px;
+  top: 413px;
+  left: 591px;
+  z-index: 110;
+}
+.camera {
+  width: 66px;
+  height: 63px;
+  top: 366px;
+  left: 647px;
+  z-index: 120;
+}
+.octocat {
+  width: 54px;
+  height: 72px;
+  top: 352px;
+  left: 730px;
+  z-index: 100;
+}
+.map {
+  width: 180px;
+  height: 104px;
+  top: 405px;
+  left: 656px;
+  z-index: 110;
+}
+
+.hover .inside {
+  transition:
+    transform 0.15s ease-out,
+    filter 0.15s ease-out;
+}
+.hover:hover .inside,
+.hover.preview .inside {
+  filter: drop-shadow(2px 2px 0 #fff) drop-shadow(-2px -2px 0 #fff) drop-shadow(-2px 2px 0 #fff)
+    drop-shadow(2px -2px 0 #fff);
+  transform: translateY(-5px);
+}
+.nightmode .hover:hover .inside,
+.nightmode .window:hover {
+  filter: drop-shadow(2px 2px 0 #aecbe4) drop-shadow(-2px -2px 0 #aecbe4)
+    drop-shadow(-2px 2px 0 #aecbe4) drop-shadow(2px -2px 0 #aecbe4);
+}
+
+/* Intro animations */
+.rise {
+  animation: rise 1s var(--elastic-075) forwards;
+}
+.rise-slow {
+  animation: riseSlow 1s var(--elastic-1) forwards;
+}
+.bounce {
+  animation: bounceDown 0.4s ease-in forwards;
+}
+.wiggle {
+  animation: wiggle 0.5s ease-in-out;
+}
+@keyframes rise {
+  from {
+    transform: translateY(260px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes riseSlow {
+  from {
+    transform: translateY(360px);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@keyframes bounceDown {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  80% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  25% {
+    transform: rotate(-6deg);
+  }
+  75% {
+    transform: rotate(6deg);
+  }
+}
+
+/* Hand-written labels with a doodled arrow, shown on hover */
+.label {
+  position: absolute;
+  z-index: 1000;
+  display: none;
+  pointer-events: none;
+}
+.label.show {
+  display: block;
+}
+.label .label-text {
+  font-family: 'Caveat Brush', cursive;
+  color: var(--label);
+  font-size: 20px;
+  white-space: nowrap;
+  line-height: 1.05;
+}
+.label .label-text-b {
+  padding-left: 14px;
+}
+.nightmode .label .label-text {
+  color: #fff;
+}
+.label .label-arrow {
+  position: absolute;
+  width: 30px;
+  height: 44px;
+}
+.label .label-arrow svg {
+  width: 30px;
+  height: 44px;
+  overflow: visible;
+  display: block;
+}
+.label .arrow-body {
+  stroke: var(--label);
+  stroke-width: 3;
+  fill: none;
+  stroke-linecap: round;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+}
+.label .arrow-head {
+  stroke: var(--label);
+  stroke-width: 3;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+  transform-origin: 12px 5px;
+}
+.nightmode .label .arrow-body,
+.nightmode .label .arrow-head {
+  stroke: #aecbe4;
+}
+.label.show .arrow-body {
+  animation: drawArrow 0.3s linear forwards;
+}
+.label.show .arrow-head {
+  animation: popHead 0.15s ease-out 0.24s forwards;
+}
+@keyframes drawArrow {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes popHead {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ---------- Night mode art swaps (inside the SVGs) ---------- */
+.night-only {
+  display: none;
+}
+.nightmode .night-only {
+  display: inline;
+}
+.nightmode .day-only {
+  display: none;
+}
+.nightmode .me-body .blazer {
+  fill: #7cc4ee;
+}
+.nightmode .me-body .lapel {
+  fill: #5fb0e6;
+}
+.nightmode .me-body .head {
+  transform: rotate(7deg);
+  transform-origin: 118px 190px;
+}
+.zz {
+  font-family: 'Caveat Brush', cursive;
+  fill: #fff;
+  opacity: 0;
+}
+.nightmode .zz {
+  animation: floatZ 2.4s ease-in-out infinite;
+}
+.nightmode .zz.z2 {
+  animation-delay: 0.8s;
+}
+.nightmode .zz.z3 {
+  animation-delay: 1.6s;
+}
+@keyframes floatZ {
+  0% {
+    opacity: 0;
+    transform: translate(0, 6px);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(10px, -22px);
+  }
+}
+/* window: sky, lights, sun & moon */
+.window .sky-n,
+.window .stars,
+.window .moon-g {
+  opacity: 0;
+  transition: opacity 0.5s ease-out;
+}
+.window .sun-g,
+.window .birds {
+  opacity: 1;
+  transition: opacity 0.5s ease-out;
+}
+.window .land {
+  transition: filter 0.5s ease-out;
+}
+.window .lit {
+  fill: #a9cbe6;
+  transition: fill 0.5s ease-out;
+}
+.nightmode .window .sky-n,
+.nightmode .window .stars,
+.nightmode .window .moon-g {
+  opacity: 1;
+}
+.nightmode .window .sun-g,
+.nightmode .window .birds {
+  opacity: 0;
+}
+.nightmode .window .land {
+  filter: brightness(0.55) saturate(0.8);
+}
+.nightmode .window .lit {
+  fill: #ffe07a;
+}
+.nightmode .window .cloud {
+  fill: #9aa7c9;
+}
+.window .cloud {
+  fill: #fff;
+  transition: fill 0.5s ease-out;
+}
+/* dog reactions */
+.dog .tail {
+  transform-origin: 128px 178px;
+}
+.dog .ear-l {
+  transform-origin: 56px 60px;
+}
+.dog .ear-r {
+  transform-origin: 120px 60px;
+}
+.dog.excited .tail {
+  animation: wag 0.25s ease-in-out 6;
+}
+.dog.excited .ear-l {
+  animation: perkL 0.5s ease-out 3;
+}
+.dog.excited .ear-r {
+  animation: perkR 0.5s ease-out 3;
+}
+.dog.excited .tongue {
+  animation: pant 0.3s ease-in-out 5;
+  transform-origin: 88px 128px;
+}
+@keyframes wag {
+  0%,
+  100% {
+    transform: rotate(-14deg);
+  }
+  50% {
+    transform: rotate(14deg);
+  }
+}
+@keyframes perkL {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  50% {
+    transform: rotate(-12deg);
+  }
+}
+@keyframes perkR {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  50% {
+    transform: rotate(12deg);
+  }
+}
+@keyframes pant {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.25);
+  }
+}
+
+/* ---------- Below the desk ---------- */
+#mobile {
+  display: none;
+}
+@media only screen and (max-width: 600px) {
+  #mobile {
+    display: block;
+  }
+}
+#mobile .links {
+  margin-top: 22px;
+  text-align: center;
+  font:
+    13px/1.6 Arial,
+    Helvetica,
+    sans-serif;
+}
+#mobile .links a {
+  display: inline-block;
+  text-decoration: none;
+  color: #67625c;
+  margin: 0 10px;
+  padding: 4px 0;
+  border-bottom: 2px solid #e5e0d9;
+}
+.nightmode #mobile .links a {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+#bio {
+  padding-top: 10px;
+}
+#bio p {
+  font-family: 'Merriweather', serif;
+  font-weight: 300;
+  color: #66625c;
+  margin: 20px auto 30px;
+  max-width: 600px;
+  text-align: center;
+  line-height: 1.6em;
+  font-size: 17px;
+  transition: color 0.3s ease-out;
+}
+#bio p .lite {
+  color: #66625c;
+  font-weight: bold;
+  border-bottom: 2px solid #e5e0d9;
+  transition: 0.15s ease-out;
+  text-decoration: none;
+}
+#bio p .lite:hover {
+  color: #388fea;
+}
+.nightmode #bio p {
+  color: rgba(255, 255, 255, 0.7);
+}
+.nightmode #bio p .lite {
+  color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+.nightmode #bio p .lite:hover {
+  color: #fff;
+}
+@media only screen and (max-width: 600px) {
+  #bio p {
+    font-size: 13px;
+    margin: 20px 20px;
+  }
+}
+#bio h1 {
+  text-align: center;
+  width: 260px;
+  height: 80px;
+  margin: 0 auto 60px;
+  position: relative;
+  font-family: 'Caveat', cursive;
+  font-weight: 400;
+  font-size: 46px;
+  line-height: 80px;
+  letter-spacing: -2px;
+  white-space: nowrap;
+  color: #4a4540;
+  transform: rotate(-7deg);
+  transition: color 0.3s ease-out;
+}
+.nightmode #bio h1 {
+  color: #fff;
+}
+#bio h1 .sig {
+  display: inline-block;
+  clip-path: inset(-20% 100% -20% 0);
+}
+.go #bio h1 .sig {
+  animation: reveal 1.6s ease-in-out 2.1s forwards;
+}
+@keyframes reveal {
+  to {
+    clip-path: inset(-20% -10% -20% 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise,
+  .rise-slow,
+  .bounce,
+  .go #bio h1 .sig,
+  .label.show .arrow-body,
+  .label.show .arrow-head {
+    animation-duration: 0.01s !important;
+    animation-delay: 0s !important;
+  }
+  .me-body,
+  .dog,
+  .window {
+    transition: none !important;
+  }
+}

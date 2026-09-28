@@ -1,0 +1,374 @@
+const { test } = require('node:test');
+/* Optional SITE_URL, PUPPETEER_MODULE and CHROME_BIN. No game-specific test hooks added. */
+const assert = require('node:assert/strict');
+const { setTimeout: delay } = require('node:timers/promises');
+const { launchBrowser, closeBrowser } = require('./helpers/browser.cjs');
+
+const baseURL = process.env.SITE_URL || 'http://localhost:8000/';
+const games = [
+  {
+    page: 'surf-riders.html',
+    debug: 'surfDebug',
+    start: 'startGame',
+    active: ['playing'],
+    touch: 'gas',
+  },
+  {
+    page: 'bay-racer.html',
+    debug: 'bayDebug',
+    start: 'startRace',
+    active: ['countdown', 'racing'],
+    touch: 'gas',
+  },
+  {
+    page: 'cici-treat-trail.html',
+    debug: 'ciciDebug',
+    start: 'startGame',
+    active: ['playing'],
+    touch: 'right',
+  },
+];
+
+async function checkGame(browser, game) {
+  const page = await browser.newPage();
+  const url = new URL(game.page, baseURL);
+  url.searchParams.set('debug', '1');
+  const errors = [];
+  const expectedErrors = [];
+  let blockingDependency = false;
+  let blockedRequests = 0;
+
+  page.on('pageerror', (error) => errors.push(error.message));
+  page.on('console', (message) => {
+    if (message.type() !== 'error') return;
+    (blockingDependency ? expectedErrors : errors).push(message.text());
+  });
+  page.on('response', (response) => {
+    if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`);
+  });
+  page.on('requestfailed', (request) => {
+    if (!blockingDependency) errors.push(`${request.failure()?.errorText} ${request.url()}`);
+  });
+
+  try {
+    await page.setViewport({ width: 1000, height: 800, hasTouch: true });
+    await page.setCacheEnabled(false);
+    await page.evaluateOnNewDocument(() => {
+      const request = window.requestAnimationFrame.bind(window);
+      const cancel = window.cancelAnimationFrame.bind(window);
+      const pending = new Set();
+      const frames = {
+        pending,
+        callbacks: 0,
+        renders: 0,
+        timestamp: -1,
+        callbacksAtTimestamp: 0,
+        maxCallbacksPerFrame: 0,
+      };
+      window.__gameFrames = frames;
+      window.requestAnimationFrame = (callback) => {
+        const id = request((timestamp) => {
+          pending.delete(id);
+          frames.callbacks++;
+          frames.callbacksAtTimestamp =
+            frames.timestamp === timestamp ? frames.callbacksAtTimestamp + 1 : 1;
+          frames.timestamp = timestamp;
+          frames.maxCallbacksPerFrame = Math.max(
+            frames.maxCallbacksPerFrame,
+            frames.callbacksAtTimestamp,
+          );
+          callback(timestamp);
+        });
+        pending.add(id);
+        return id;
+      };
+      window.cancelAnimationFrame = (id) => {
+        pending.delete(id);
+        cancel(id);
+      };
+    });
+
+    await page.goto(url.href, { waitUntil: 'networkidle0' });
+    // Numeric polling uses timers, so the test itself never contributes RAF callbacks.
+    await page.waitForFunction((name) => Boolean(window[name]), { polling: 50 }, game.debug);
+    assert.deepEqual(
+      await page.$$eval('[data-control]', (buttons) =>
+        buttons
+          .filter(
+            (button) =>
+              button.getAttribute('type') !== 'button' || !button.getAttribute('aria-label'),
+          )
+          .map((button) => button.outerHTML),
+      ),
+      [],
+      `${game.page}: every driving control is an explicitly typed, named button`,
+    );
+    assert.equal(
+      await page.$eval('#touch-controls', (element) => element.getAttribute('role')),
+      'group',
+    );
+    if (game.debug !== 'ciciDebug') {
+      assert.equal(
+        await page.$eval('#viewport', (element) => element.getAttribute('role')),
+        'group',
+      );
+      assert.equal(await page.$eval('#minimap', (element) => element.getAttribute('role')), 'img');
+    }
+    await page.evaluate(({ debug, start }) => {
+      const game = window[debug];
+      if (game.renderer) {
+        const render = game.renderer.render.bind(game.renderer);
+        game.renderer.render = (...args) => {
+          window.__gameFrames.renders++;
+          return render(...args);
+        };
+      } else {
+        const context = game.canvas.getContext('2d');
+        const clear = context.clearRect.bind(context);
+        context.clearRect = (...args) => {
+          window.__gameFrames.renders++;
+          return clear(...args);
+        };
+      }
+      game[start]();
+    }, game);
+    await page.waitForFunction(() => window.__gameFrames.renders >= 2, { polling: 50 });
+    assert.ok(
+      game.active.includes(await page.evaluate((name) => window[name].state.mode, game.debug)),
+      `${game.page}: starting enters active gameplay`,
+    );
+
+    const client = await page.createCDPSession();
+    const point = await page.$eval(`[data-control="${game.touch}"]`, (button) => {
+      const rect = button.getBoundingClientRect();
+      return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+    });
+    await client.send('Input.dispatchTouchEvent', {
+      type: 'touchStart',
+      touchPoints: [{ ...point, id: 1 }],
+    });
+    await page.keyboard.down('ArrowRight');
+    assert.equal(
+      await page.evaluate((name) => window[name].keys.has('ArrowRight'), game.debug),
+      true,
+    );
+    assert.equal(await page.$$eval('[data-control].pressed', (buttons) => buttons.length), 1);
+
+    const hidden = await page.evaluate((name) => {
+      const previousMode = window[name].state.mode;
+      window.dispatchEvent(new PageTransitionEvent('pagehide', { persisted: true }));
+      return {
+        mode: window[name].state.mode,
+        previousMode,
+        elapsed: window[name].state.elapsed,
+        keys: window[name].keys.size,
+        pressed: document.querySelectorAll('[data-control].pressed').length,
+        pending: window.__gameFrames.pending.size,
+        renders: window.__gameFrames.renders,
+        callbacks: window.__gameFrames.callbacks,
+      };
+    }, game.debug);
+    assert.equal(hidden.mode, 'paused', `${game.page}: persisted pagehide pauses active play`);
+    assert.equal(hidden.keys, 0, `${game.page}: held keyboard input is cleared`);
+    assert.equal(hidden.pressed, 0, `${game.page}: held touch input is cleared`);
+    assert.equal(hidden.pending, 0, `${game.page}: pagehide cancels the scheduled frame`);
+    // This bounded observation period is intentional: no frames may run while suspended.
+    await delay(200);
+    const stopped = await page.evaluate(
+      (name) => ({
+        elapsed: window[name].state.elapsed,
+        renders: window.__gameFrames.renders,
+        callbacks: window.__gameFrames.callbacks,
+        pending: window.__gameFrames.pending.size,
+      }),
+      game.debug,
+    );
+    assert.deepEqual(
+      stopped,
+      {
+        elapsed: hidden.elapsed,
+        renders: hidden.renders,
+        callbacks: hidden.callbacks,
+        pending: 0,
+      },
+      `${game.page}: neither simulation nor drawing continues while hidden`,
+    );
+
+    await page.keyboard.up('ArrowRight');
+    await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await client.detach();
+    const restored = await page.evaluate((name) => {
+      // Repeated restore notifications must be idempotent, including before the first frame.
+      for (let i = 0; i < 8; i++) {
+        window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true }));
+      }
+      return { mode: window[name].state.mode, pending: window.__gameFrames.pending.size };
+    }, game.debug);
+    assert.equal(restored.mode, 'paused', `${game.page}: restoring does not resume gameplay`);
+    assert.equal(
+      restored.pending,
+      1,
+      `${game.page}: repeated pageshow starts only one frame chain`,
+    );
+    await page.waitForFunction(
+      (renders) => window.__gameFrames.renders >= renders + 3,
+      { polling: 50 },
+      hidden.renders,
+    );
+    const rendering = await page.evaluate(
+      (name) => ({
+        mode: window[name].state.mode,
+        elapsed: window[name].state.elapsed,
+        pending: window.__gameFrames.pending.size,
+        maximum: window.__gameFrames.maxCallbacksPerFrame,
+      }),
+      game.debug,
+    );
+    assert.deepEqual(
+      rendering,
+      {
+        mode: 'paused',
+        elapsed: hidden.elapsed,
+        pending: 1,
+        maximum: 1,
+      },
+      `${game.page}: rendering resumes once per frame while the simulation stays paused`,
+    );
+    await page.evaluate(() => document.getElementById('start').click());
+    assert.equal(
+      await page.evaluate((name) => window[name].state.mode, game.debug),
+      hidden.previousMode,
+      `${game.page}: user resume restores the paused mode`,
+    );
+    assert.deepEqual(errors, [], `${game.page}: normal lifecycle reports no browser errors`);
+
+    // Abort a real transitive module import, not the entrypoint or the error reporter itself.
+    await page.setRequestInterception(true);
+    page.on('request', (request) => {
+      if (
+        blockingDependency &&
+        new URL(request.url()).pathname.endsWith('/assets/shared/audio.js')
+      ) {
+        blockedRequests++;
+        void request.abort('failed');
+      } else void request.continue();
+    });
+    blockingDependency = true;
+    await page.reload({ waitUntil: 'networkidle0' });
+    await page.waitForFunction(
+      () => /could not load.*refresh/i.test(document.getElementById('load-state').textContent),
+      { polling: 50 },
+    );
+    assert.ok(blockedRequests > 0, `${game.page}: dependency failure was actually injected`);
+    const failed = await page.evaluate((name) => {
+      const status = document.getElementById('load-state');
+      const style = getComputedStyle(status);
+      return {
+        initialized: Boolean(window[name]),
+        visible:
+          !status.classList.contains('hidden') &&
+          style.display !== 'none' &&
+          style.visibility !== 'hidden' &&
+          Number(style.opacity) > 0,
+      };
+    }, game.debug);
+    assert.equal(
+      failed.initialized,
+      false,
+      `${game.page}: failed dependencies cannot partially launch the game`,
+    );
+    assert.equal(failed.visible, true, `${game.page}: loader failure is visible`);
+    assert.ok(
+      expectedErrors.some((message) => message.includes('Unable to initialize game')),
+      `${game.page}: loader reports its caught failure`,
+    );
+
+    blockingDependency = false;
+    await page.reload({ waitUntil: 'networkidle0' });
+    await page.waitForFunction((name) => Boolean(window[name]), { polling: 50 }, game.debug);
+    assert.equal(
+      await page.$eval('#load-state', (status) => status.classList.contains('hidden')),
+      true,
+    );
+    await page.evaluate(() => document.getElementById('start').click());
+    assert.ok(
+      game.active.includes(await page.evaluate((name) => window[name].state.mode, game.debug)),
+      `${game.page}: starting enters active gameplay`,
+    );
+    assert.deepEqual(errors, [], `${game.page}: normal reload recovers without browser errors`);
+    if (game.debug !== 'ciciDebug') {
+      const initialFrames = await page.evaluate(() => {
+        document.getElementById('viewport').style.display = 'none';
+        return window.__gameFrames.callbacks;
+      });
+      await page.waitForFunction(
+        (count) => window.__gameFrames.callbacks > count + 2,
+        { polling: 50 },
+        initialFrames,
+      );
+      assert.ok(
+        await page.evaluate((name) => {
+          const { camera, renderer } = window[name];
+          return (
+            Number.isFinite(camera.aspect) &&
+            camera.aspect > 0 &&
+            camera.projectionMatrix.elements.every(Number.isFinite) &&
+            renderer.domElement.width > 0 &&
+            renderer.domElement.height > 0
+          );
+        }, game.debug),
+        `${game.page}: a zero-size viewport preserves a finite camera and usable render buffer`,
+      );
+      await page.evaluate(() => {
+        document.getElementById('viewport').style.display = '';
+      });
+      await page.waitForFunction(
+        (name) => {
+          const viewport = document.getElementById('viewport');
+          return (
+            Math.abs(window[name].camera.aspect - viewport.clientWidth / viewport.clientHeight) <
+            0.0001
+          );
+        },
+        {},
+        game.debug,
+      );
+
+      await page.evaluateOnNewDocument(() => {
+        const getContext = HTMLCanvasElement.prototype.getContext;
+        HTMLCanvasElement.prototype.getContext = function (type, ...args) {
+          if (this.id === 'minimap' && type === '2d') return null;
+          return getContext.call(this, type, ...args);
+        };
+      });
+      await page.reload({ waitUntil: 'networkidle0' });
+      await page.waitForFunction((name) => Boolean(window[name]), {}, game.debug);
+      assert.equal(
+        await page.$eval('#map-panel', (panel) => getComputedStyle(panel).display),
+        'none',
+        `${game.page}: unavailable optional minimap is hidden`,
+      );
+      await page.click('#start');
+      await page.waitForFunction((name) => window[name].state.elapsed > 0, {}, game.debug);
+      assert.deepEqual(
+        errors,
+        [],
+        `${game.page}: missing minimap does not stop gameplay or report runtime errors`,
+      );
+    }
+    console.log(
+      `PASS: ${game.page} lifecycle, render loop, input cleanup, loader recovery, accessible controls and optional render targets.`,
+    );
+  } finally {
+    await page.close();
+  }
+}
+
+test('game lifecycle', { timeout: 300_000 }, async () => {
+  const browser = await launchBrowser();
+  try {
+    for (const game of games) await checkGame(browser, game);
+  } finally {
+    await closeBrowser(browser);
+  }
+});

@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="theme-color" content="#17372f" />
+    <meta
+      name="description"
+      content="Small paws, big adventure. Help CiCi the pomsky collect treats, hop past squirrels, and find her way to the picnic in this little side-scrolling platformer."
+    />
+    <title>CiCi’s Treat Trail · Mark Hammonds</title>
+    <link rel="canonical" href="https://markhammonds.com/cici-treat-trail.html" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Mark Hammonds" />
+    <meta property="og:title" content="CiCi’s Treat Trail · Mark Hammonds" />
+    <meta
+      property="og:description"
+      content="Small paws, big adventure. Help CiCi the pomsky collect treats, hop past squirrels, and find her way to the picnic in this little side-scrolling platformer."
+    />
+    <meta property="og:url" content="https://markhammonds.com/cici-treat-trail.html" />
+    <meta
+      property="og:image"
+      content="https://markhammonds.com/assets/social/cici-treat-trail-og.jpg"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta
+      property="og:image:alt"
+      content="CiCi’s Treat Trail: CiCi the pomsky in a colorful platforming adventure."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="CiCi’s Treat Trail · Mark Hammonds" />
+    <meta
+      name="twitter:description"
+      content="Small paws, big adventure. Help CiCi the pomsky collect treats, hop past squirrels, and find her way to the picnic in this little side-scrolling platformer."
+    />
+    <meta
+      name="twitter:image"
+      content="https://markhammonds.com/assets/social/cici-treat-trail-og.jpg"
+    />
+    <meta
+      name="twitter:image:alt"
+      content="CiCi’s Treat Trail: CiCi the pomsky in a colorful platforming adventure."
+    />
+    <meta name="twitter:creator" content="@markhammonds" />
+    <link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48" />
+    <link rel="icon" href="assets/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="icon" href="assets/favicon-48.png" type="image/png" sizes="48x48" />
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" sizes="any" />
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" sizes="180x180" />
+    <link rel="stylesheet" href="assets/shared/arcade.css" />
+    <link rel="stylesheet" href="assets/cici-treat-trail/style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a href="index.html" target="_blank" rel="noopener noreferrer">← MARK'S ARCADE</a
+      ><span class="terminal">./cici-treat-trail <span aria-hidden="true">▌</span></span
+      ><button id="sound" type="button" aria-pressed="false">SOUND OFF</button>
+    </header>
+    <main id="game-shell">
+      <div id="viewport">
+        <canvas
+          role="img"
+          id="canvas"
+          tabindex="0"
+          aria-label="CiCi's side-scrolling adventure. Arrow keys or A and D to run; Space, W or Up to jump."
+          >Help CiCi collect treats and jump past squirrels. This game needs Canvas and
+          JavaScript.</canvas
+        >
+      </div>
+      <section class="hud" aria-label="Adventure statistics">
+        <div class="game-brand">
+          <span class="eyebrow">CICI'S GREAT LITTLE ADVENTURE</span>
+          <h1>TREAT TRAIL <span aria-hidden="true">🐾</span></h1>
+        </div>
+        <div class="stats">
+          <div><span>TREATS</span><strong id="treats">0 / 75</strong></div>
+          <div><span>SCORE</span><strong id="score">0</strong></div>
+          <div>
+            <span>HEARTS</span
+            ><strong id="hearts" class="hearts" role="img" aria-label="3 hearts">♥♥♥</strong>
+          </div>
+        </div>
+      </section>
+      <div id="trail-progress" class="trail-progress hidden">
+        <div><span id="zone">MEADOW MUNCHIES</span><span id="progress-label">0%</span></div>
+        <progress id="progress" value="0" max="100" aria-label="Progress to the picnic">0%</progress
+        ><small id="checkpoint-label">Next stop: a picnic!</small>
+      </div>
+      <div id="toast" role="status" aria-live="polite"></div>
+      <div class="bottom-bar">
+        <span class="keyboard-help"
+          ><kbd>A D</kbd> / <kbd>← →</kbd> RUN <b>·</b> <kbd>SPACE</kbd> / <kbd>↑</kbd> JUMP
+          <b>·</b> <kbd>P</kbd> PAUSE</span
+        ><button id="pause" class="hidden" type="button">Ⅱ PAUSE</button>
+      </div>
+      <div
+        role="group"
+        id="touch-controls"
+        class="touch-controls hidden"
+        aria-label="Touch platformer controls"
+      >
+        <div>
+          <button type="button" data-control="left" aria-label="Run left">◀</button
+          ><button type="button" data-control="right" aria-label="Run right">▶</button>
+        </div>
+        <button
+          type="button"
+          data-control="jump"
+          class="jump"
+          aria-label="Jump; hold for a higher jump"
+        >
+          JUMP ↑
+        </button>
+      </div>
+      <section id="overlay" class="overlay" aria-label="Adventure menu">
+        <div class="menu-card">
+          <span id="menu-eyebrow" class="eyebrow">A VERY GOOD DOG. A VERY BIG DAY.</span>
+          <h2 id="menu-title">Small paws.<br />Big adventure.</h2>
+          <p id="menu-description">
+            Follow CiCi's nose through a world full of treats and a few cheeky squirrels.
+          </p>
+          <div id="intro-details" class="intro-details">
+            <div>
+              <span>01</span>
+              <p><strong>Follow the treats.</strong>Run, hop and sniff out the higher paths.</p>
+            </div>
+            <div>
+              <span>02</span>
+              <p>
+                <strong>Mind the squirrels.</strong>Hop over them, or land on top for a gentle
+                bounce.
+              </p>
+            </div>
+            <div>
+              <span>03</span>
+              <p><strong>Find the picnic.</strong>Paw flags save your place and restore a heart.</p>
+            </div>
+          </div>
+          <div id="results" class="results hidden"></div>
+          <button id="start" class="primary" type="button">
+            LET'S GO, CICI <span aria-hidden="true">↗</span></button
+          ><button id="restart" class="secondary hidden" type="button">
+            START A NEW ADVENTURE
+          </button>
+          <p id="menu-note" class="menu-note">
+            Arrow keys / A D to run · Space / W / ↑ to jump<br />Hold jump for more height · Touch
+            controls on mobile<br />Best picnic score: <span id="best">0</span>
+          </p>
+        </div>
+      </section>
+      <div id="load-state" class="load-state" role="status">Following CiCi's nose…</div>
+    </main>
+    <footer>
+      <span
+        >A tiny arcade adventure by
+        <a href="index.html" target="_blank" rel="noopener noreferrer">Mark Hammonds</a></span
+      ><span>Made for CiCi · Treats encouraged</span>
+    </footer>
+    <noscript><p class="no-script">This adventure needs JavaScript.</p></noscript>
+    <script
+      defer
+      src="assets/shared/game-loader.js"
+      data-entry="assets/cici-treat-trail/game.js"
+    ></script>
+  </body>
+</html>

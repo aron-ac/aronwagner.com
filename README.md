@@ -1,0 +1,204 @@
+# markhammonds.com
+
+A static personal homepage and three browser games, built with HTML, CSS, and JavaScript. Runtime
+assets are local; the 3D games share a pinned copy of Three.js. There is no application framework or
+runtime npm dependency. A small build script prepares the production asset graph and Cloudflare
+configuration.
+
+## Local development
+
+Use Node.js 24 or newer:
+
+```sh
+npm ci
+npm run dev
+```
+
+Visit http://localhost:8000. Use `npm run dev -- --port 8080` for another port. The development
+server assembles the homepage's critical theme fragments before returning its HTML. Use this
+server instead of opening HTML directly or serving the raw source through a generic file server.
+Browsers also require HTTP for game ES modules and the homepage's CSS image masks.
+
+## Working on the code
+
+- `index.html`, `styles.css`, and `script.js` contain the main homepage. Script features use
+  independent initializers so an unavailable optional feature does not prevent the others from
+  starting.
+- `assets/homepage/theme-bootstrap.js` and `theme-critical.css` are maintained as separate source
+  files and inserted into the HTML head by the development server and production build. They
+  select the theme before first paint without waiting for a separate theme request. Keep the
+  palette in `theme-critical.css` as the single source of colors: the full stylesheet consumes
+  those tokens, and the bootstrap reads the active background token for the browser theme color.
+- `assets/shared/` holds shared arcade styles, input, audio, numeric storage, DOM updates, loading,
+  camera positioning, and rendering-loop lifecycle. Games provide their own controls and events.
+- `assets/surf-rides/ride-session.js`, `assets/bay-racer/race.js`, and
+  `assets/cici-treat-trail/adventure.js` contain gameplay state and rules without DOM or drawing
+  dependencies. Each `game.js` connects its simulation to UI, art, audio, and controls.
+- `assets/vendor/three/` contains the local Three.js distribution and license. Keep its module and
+  core files on the same version when intentionally upgrading.
+- `desk.html` and `assets/homepage/desk*` preserve an earlier SVG prototype for local development.
+  It has a separate saved theme and unfinished destinations; it is excluded from production.
+  The public `/desk.html` route redirects to `/`.
+
+The theme follows `America/New_York`, including daylight saving time: night begins at 7 p.m. and
+day begins at 6 a.m. A manual choice lasts until the next scheduled boundary. Theme checks refresh
+on the minute and when the page is focused or restored. First-paint tests exercise delayed assets,
+blocked storage, and saved or expired preferences.
+
+## Checks and generated previews
+
+```sh
+npm run check                     # formatting, lint, unit and build-policy tests
+npm run test:browser              # starts a source-site server and runs browser suites
+npm run test:browser:production   # builds dist and checks the packaged site
+npm run format                   # apply repository formatting
+npm run render:previews           # regenerate the three game thumbnails
+npm run render:branding           # regenerate favicons and social sharing cards
+```
+
+Browser checks use Puppeteer. If Chromium was not downloaded during installation, run
+`npm run setup:browser`, or set `CHROME_BIN` to an existing Chrome executable.
+GitHub Actions runs the locked install, pinned Chrome setup, static/unit checks, and both source
+and production browser suites on pushes and pull requests.
+For example, on macOS:
+
+```sh
+CHROME_BIN='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' npm run test:browser
+```
+
+The browser runner discovers smoke, responsive, theme-load, and lifecycle suites. It accepts suite
+filenames to run a focused subset and `--root dist` to serve an existing production build. Every
+run gets its own artifact directory under ignored `test-results/`; `TEST_ARTIFACT_DIR` can change
+that parent directory. Individual suites accept `SITE_URL` or `GAME_URL` for an existing server.
+`PUPPETEER_MODULE` remains an optional dependency override.
+
+Coverage includes dialogs and focus return, shuffled quotes and photos, book browsing, theme
+first paint, touch controls, saved scores, gameplay, and page hide/restore. Responsive suites
+include 320×568 phones, 568×320 landscape screens, portrait/landscape tablets, and laptops starting
+at 1024×600. These are Chromium viewport simulations; physical-device and Safari checks remain
+separate. Game debug hooks are available only with `?debug=1`.
+
+Preview generators live under `tools/render-*-preview.cjs` and use the actual game art/models.
+They start a local source server automatically. Use `--output` or `PREVIEW_OUTPUT` to save a review
+copy elsewhere, and `--site-url` or `SITE_URL` to use an existing server. Ordinary checks never
+overwrite artwork.
+`assets/favicon.svg` is the favicon source; `render:branding` produces its browser/Apple raster
+exports, `favicon.ico`, and four 1200×630 JPG sharing cards in `assets/social/`.
+
+## Homepage and games
+
+The hero is a responsive 3:2 illustrated office based on Mark's workstation, with day/night art,
+his cartoon avatar, CiCi, and a Warsaw picture centered on the Palace of Culture and Science.
+All four monitors use the Tampa panorama; the lower three display adjoining crops. The original
+Bitmotive monitor treatment is historical. The official logo remains on the business card.
+
+- The ultrawide opens the project section. The left screen links to Twitter, the laptop to
+  LinkedIn, and the right screen to GitHub. The submenu contains those same profiles.
+- Mark's name and portrait open a business card with his “CEO, Bitmotive” title, official logo,
+  and links to the company website and `mark@bitmotive.com`.
+- The candle toggles, CiCi responds to pets, and the Warsaw painting opens to reveal the safe.
+- The camera opens one of six local photos in a dynamically framed Polaroid. “Another photo”
+  exhausts a shuffled collection before repeating and avoids an immediate repeat between batches.
+- The small left bookshelf opens _Meditations_; the katana opens _The Art of War_. Each reading
+  dialog shuffles twelve verified passages and links to the source book/chapter/section. The quotes
+  use the public-domain [George Long translation of Meditations](https://en.wikisource.org/wiki/The_Thoughts_of_the_Emperor_Marcus_Aurelius_Antoninus)
+  and [Lionel Giles's 1910 Art of War translation](https://www.gutenberg.org/cache/epub/17405/pg17405-images.html).
+  `tests/meditations-smoke.cjs` covers their shared native-dialog behavior, focus return, citations,
+  and responsive layouts.
+- The right bookshelf opens an eleven-title favorite-books carousel. Its catalog and local covers
+  live in `assets/books/`; [cover provenance](assets/books/README.md) records the editions. Previous/
+  next buttons, arrow keys, Home/End, and cover swipes navigate it. Cover links and “View on Amazon”
+  open Mark's supplied product URLs. `tests/books-smoke.cjs` covers browsing and failure recovery.
+- The Sisyphus statue opens Mark's chosen Albert Camus quote in a matching reading dialog.
+
+All dialogs support Escape, the close button, backdrop dismissal, and focus restoration. Navigation
+links open in a new tab with `noopener noreferrer`; scene controls and section jumps stay on the
+current page. Download links retain their download behavior.
+
+| Game               | Behavior                                                                                                                                                | Documentation                                                                                                 |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Surf Riders        | Drive Mark's olive Jeep around a Nosara-inspired map, collect coconuts, pick up surfers, and deliver them to Playa Guiones during a three-minute shift. | [Controls and mechanics](assets/surf-rides/README.md), [Jeep model](assets/surf-rides/MODEL.md)               |
+| Bay Racer          | Race the photo-inspired Sea-Doo Wake 230 through eight ordered buoy gates over three laps; clean lines refill boost and collisions add time.            | [Controls and mechanics](assets/bay-racer/README.md), [boat model](assets/bay-racer/MODEL.md)                 |
+| CiCi's Treat Trail | Collect 75 treats, dodge eight squirrels, use checkpoints, and reach the picnic doghouse in an original Canvas side-scroller.                           | [Controls and mechanics](assets/cici-treat-trail/README.md), [level design](assets/cici-treat-trail/LEVEL.md) |
+
+Each game supports keyboard/touch controls, pause, optional audio, and locally saved best results.
+The old `/cr-surf-rides.html` path redirects to `/surf-riders.html`; Asteroids is not shipped.
+
+## Artwork and private references
+
+The current workstation files are the WebP scene variants, v4 avatar crops, single daytime tattoo
+crop, Tampa screen crop, and SVG safe overlays in `assets/workstation/`. Both themes use the same
+tattoo drawing and position; a CSS filter changes its nighttime lighting. The original
+`office-day.webp` and `office-day-small.webp` remain necessary alpha masks.
+
+Generation prompts and placement details remain in the workstation Markdown files. Historical
+references to Bitmotive screens or superseded clothing inside exact prompts describe the image
+being edited at that time. [TAMPA-BAY.md](assets/workstation/TAMPA-BAY.md) and
+[CARTOON-REVISION.md](assets/workstation/CARTOON-REVISION.md) describe the current treatments.
+
+Unused full-size source renders and earlier scene/character exports were moved to the external
+[art archive](docs/art-archive.md). Its manifest records paths, sizes, and SHA-256 hashes after
+byte-for-byte verification. Runtime files and render-tool inputs remain here. This reduces the
+current checkout's artwork by 31.46 MiB; historical Git blobs remain unchanged.
+
+Personal reference photographs remain in the owner's private `Mark Hammonds Photos` collection,
+including its `Jeep`, `Boat`, `Tattoos`, and `Polaroids` subfolders. They are not build dependencies.
+The six public Polaroid JPGs are optimized exports with baked-in orientation, an sRGB color space,
+a maximum 1600px long edge, and no EXIF/GPS metadata. To add a photo, add its web export and a
+matching descriptive entry in the homepage photo list. Fonts are self-hosted in `assets/fonts/`
+with their SIL Open Font Licenses.
+
+[maintenance-audit.md](docs/maintenance-audit.md) distinguishes verified current findings from
+outdated review notes and records the archive limitations.
+
+## Cloudflare deployment
+
+`wrangler.jsonc` deploys Workers Static Assets to `markhammonds.com` as `markhammonds-site`.
+Wrangler is pinned as a development dependency. Authenticate with `npx wrangler login` when
+needed, then:
+
+```sh
+npm run deploy
+```
+
+Wrangler runs `npm run build:site` first. That script selects runtime files, assembles the theme
+fragments, and prepares ignored `dist/`; source notes, historical art, tests, development tools,
+and the legacy desk prototype are excluded. Build output reports the current file count and size;
+`dist/asset-manifest.json` maps source asset paths to their production URLs. Keep the workstation
+allowlist in `tools/lib/site-build.js` synchronized with artwork changes.
+`npm run preview:cloudflare` runs the packaged site locally;
+`npx wrangler deploy --dry-run` validates deployment without publishing.
+
+Production assets use content-derived URLs under `/immutable/` with long-lived caching; HTML
+and stable metadata aliases revalidate. The build rewrites references consistently, so routine
+asset changes do not require hand-edited query version tokens. Small application scripts/styles
+share a version derived from their graph and referenced assets; large images, fonts, and the
+vendored library retain independent versions across unrelated code changes.
+
+HTML uses Cloudflare's default `public, max-age=0, must-revalidate` caching. Only `/immutable/*`
+gets an explicit one-year immutable cache policy. Avoid setting the same header in overlapping
+rules: Cloudflare combines matching values instead of overriding them. See the
+[Static Assets header documentation](https://developers.cloudflare.com/workers/static-assets/headers/).
+Stable asset aliases use temporary redirects to their current immutable versions.
+
+The build hashes inline scripts for its Content Security Policy instead of allowing arbitrary
+inline JavaScript. The policy permits local assets and Cloudflare analytics, prevents framing,
+and disables object embeds and form submissions. Inline styles remain allowed for the illustrated
+scene and dynamic game UI. Referrer, MIME-sniffing, and browser-permission headers are also emitted.
+Test the packaged site when changing loading behavior, headers, asset references, or redirects.
+
+The [Worker route](https://developers.cloudflare.com/workers/configuration/routing/routes/)
+serves every apex-domain path through its existing proxied Cloudflare DNS record. Keep that
+record proxied; its previous origin is not needed by the static site. HTTPS uses the zone's
+Cloudflare certificate. The root serves `index.html`; the desk and former game filename use
+server redirects.
+
+`www.markhammonds.com/*` uses the separate `markhammonds-www-redirect` Worker in
+`wrangler.redirect.jsonc`. It permanently redirects HTTP and HTTPS requests to
+`https://markhammonds.com`, preserving paths and query parameters. Keep the `www` DNS record
+proxied. Deploy redirect changes with `npm run deploy:redirect`; ordinary `npm run deploy`
+updates the main site independently.
+
+Credentials stay in Wrangler's local authentication store and are never copied into public
+assets. GitHub pushes do not deploy automatically; run `npm run deploy` after validating the
+changes you intend to publish.

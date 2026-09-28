@@ -1,0 +1,946 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="" />
+    <style data-inline="assets/homepage/theme-critical.css"></style>
+    <script data-inline="assets/homepage/theme-bootstrap.js"></script>
+    <meta
+      name="description"
+      content="Welcome to Mark Hammonds's little corner of the internet. Explore the desk, play a few arcade games, and meet a fluffy sidekick."
+    />
+    <title>Mark Hammonds</title>
+    <link rel="canonical" href="https://markhammonds.com/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Mark Hammonds" />
+    <meta property="og:title" content="Mark Hammonds" />
+    <meta
+      property="og:description"
+      content="Welcome to Mark Hammonds's little corner of the internet. Explore the desk, play a few arcade games, and meet a fluffy sidekick."
+    />
+    <meta property="og:url" content="https://markhammonds.com/" />
+    <meta
+      property="og:image"
+      content="https://markhammonds.com/assets/social/mark-hammonds-og.jpg"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:alt" content="Mark Hammonds and CiCi in an illustrated home office." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Mark Hammonds" />
+    <meta
+      name="twitter:description"
+      content="Welcome to Mark Hammonds's little corner of the internet. Explore the desk, play a few arcade games, and meet a fluffy sidekick."
+    />
+    <meta
+      name="twitter:image"
+      content="https://markhammonds.com/assets/social/mark-hammonds-og.jpg"
+    />
+    <meta
+      name="twitter:image:alt"
+      content="Mark Hammonds and CiCi in an illustrated home office."
+    />
+    <meta name="twitter:creator" content="@markhammonds" />
+    <link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48" />
+    <link rel="icon" href="assets/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="icon" href="assets/favicon-48.png" type="image/png" sizes="48x48" />
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" sizes="any" />
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" sizes="180x180" />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <div class="page-border" aria-hidden="true"></div>
+    <a class="skip-link" href="#about">Skip to introduction</a>
+
+    <button
+      class="theme-toggle"
+      type="button"
+      aria-label="Night mode"
+      aria-pressed="false"
+      title="Switch to night mode"
+      hidden
+    >
+      <svg class="sun-icon" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <circle cx="16" cy="16" r="7" fill="currentColor" />
+        <path
+          d="M16 2v4m0 20v4M2 16h4m20 0h4M6.1 6.1l2.8 2.8m14.2 14.2 2.8 2.8M6.1 25.9l2.8-2.8M23.1 8.9l2.8-2.8"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+      </svg>
+      <svg class="moon-icon" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
+        <path d="M25.6 21.7A12 12 0 0 1 10.3 6.4a12 12 0 1 0 15.3 15.3Z" />
+      </svg>
+    </button>
+
+    <main>
+      <section class="hero" aria-label="Mark's illustrated home office">
+        <div class="scene candle-lit">
+          <img
+            class="scene-art scene-day"
+            src="assets/workstation/office-day-v2.webp"
+            srcset="
+              assets/workstation/office-day-v2-small.webp  768w,
+              assets/workstation/office-day-v2.webp       1536w
+            "
+            sizes="(max-width:650px) calc(100vw - 30px), (max-width:1060px) calc(100vw - 60px), 1000px"
+            width="1536"
+            height="1024"
+            alt="Mark in a fitted black V-neck T-shirt, black jeans, his sailing-ship forearm tattoo, a black watch and black-and-white Nike sneakers, seated beside CiCi, his little white pomsky. His home office has a black L-shaped standing desk, a Tampa skyline across the monitors, floating shelves, a wood bookcase, cassette and The World Is Yours posters, and a framed picture of Warsaw's Palace of Culture and Science."
+          />
+          <img
+            class="scene-art scene-night"
+            src="assets/workstation/office-night-v2.webp"
+            srcset="
+              assets/workstation/office-night-v2-small.webp  768w,
+              assets/workstation/office-night-v2.webp       1536w
+            "
+            sizes="(max-width:650px) calc(100vw - 30px), (max-width:1060px) calc(100vw - 60px), 1000px"
+            width="1536"
+            height="1024"
+            alt=""
+            aria-hidden="true"
+            decoding="sync"
+          />
+
+          <!-- Replace only the avatar/chair area; retain the approved room and CiCi artwork. -->
+          <svg class="avatar-layer" viewBox="0 0 1536 1024" aria-hidden="true" focusable="false">
+            <defs>
+              <filter id="avatar-edge-blend" x="-5%" y="-5%" width="110%" height="110%">
+                <feMorphology operator="dilate" radius="1" />
+                <feGaussianBlur stdDeviation="1.5" />
+              </filter>
+              <filter id="tattoo-edge-blend" x="-5%" y="-5%" width="110%" height="110%">
+                <feGaussianBlur stdDeviation=".7" />
+              </filter>
+              <mask
+                id="tattoo-outline"
+                maskUnits="userSpaceOnUse"
+                x="428"
+                y="544"
+                width="112"
+                height="72"
+                mask-type="alpha"
+              >
+                <path
+                  fill="white"
+                  filter="url(#tattoo-edge-blend)"
+                  d="M441 550 Q448 547 462 553 L486 567 L515 581 Q530 586 534 595 L528 607 Q520 610 508 606 L449 595 Q439 592 435 586 L433 576 L434 564 Q436 554 441 550 Z"
+                />
+              </mask>
+              <mask
+                id="avatar-outline"
+                maskUnits="userSpaceOnUse"
+                x="380"
+                y="314"
+                width="350"
+                height="572"
+                mask-type="alpha"
+              >
+                <path
+                  fill="white"
+                  filter="url(#avatar-edge-blend)"
+                  d="M515 435 Q509 405 518 375 Q518 340 554 330 Q602 321 625 350 Q634 382 613 429 L607 443 Q640 471 671 520 Q689 546 672 575 L651 586 L647 607 Q677 619 688 640 Q698 659 682 688 L657 734 L646 769 Q656 780 665 789 Q692 787 699 815 L694 822 Q708 838 706 856 Q704 866 685 867 Q651 871 605 844 L601 816 L586 814 L583 805 L587 782 L576 761 L559 715 Q551 695 533 688 Q508 683 479 674 L453 671 L444 658 L452 633 L455 610 Q437 604 427 589 L414 592 L395 543 Q387 513 410 505 L427 501 Q434 470 453 458 Z"
+                />
+              </mask>
+            </defs>
+            <g mask="url(#avatar-outline)">
+              <image
+                class="avatar-day"
+                href="assets/workstation/avatar-day-v4.webp"
+                x="390"
+                y="324"
+                width="330"
+                height="552"
+              />
+              <image
+                class="avatar-night"
+                href="assets/workstation/avatar-night-v4.webp"
+                x="390"
+                y="324"
+                width="330"
+                height="552"
+              />
+              <!-- One tattoo drawing in both themes; only its lighting changes in CSS. -->
+              <g mask="url(#tattoo-outline)">
+                <image
+                  class="tattoo-art"
+                  href="assets/workstation/tattoo-day-v5.webp"
+                  x="428"
+                  y="544"
+                  width="112"
+                  height="72"
+                />
+              </g>
+            </g>
+          </svg>
+
+          <!-- Clip the new wallpaper to the display interiors, preserving bezels and foreground devices. -->
+          <svg
+            class="screen-wallpapers"
+            viewBox="0 0 1536 1024"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <defs>
+              <clipPath id="ultrawide-interior" clipPathUnits="userSpaceOnUse">
+                <path
+                  d="M663 342 L1073 327 L1076 472 L980 453 Q975 451 973 457 L970 468 L917 465 L917 455 Q917 450 911 449 L819 446 Q813 446 812 452 L811 461 L777 459 L778 453 Q778 449 772 448 L691 446 Q685 445 684 451 L683 454 L671 454 Z"
+                />
+              </clipPath>
+              <clipPath id="tablet-interior" clipPathUnits="userSpaceOnUse">
+                <path d="M690 453 L770 457 L764 509 C756 507 749 509 746 516 L683 511 Z" />
+              </clipPath>
+              <clipPath id="laptop-interior" clipPathUnits="userSpaceOnUse">
+                <path d="M818 455 L909 459 L905 527 L814 521 Z" />
+              </clipPath>
+              <clipPath id="side-display-interior" clipPathUnits="userSpaceOnUse">
+                <path d="M980 460 L1067 478 L1042 579 L954 550 Z" />
+              </clipPath>
+            </defs>
+            <image
+              href="assets/workstation/tampa-bay-screens.webp"
+              x="660"
+              y="324"
+              width="420"
+              height="258"
+              clip-path="url(#ultrawide-interior)"
+            />
+
+            <!-- Three crops of one continuous composition, aligned to each screen's perspective. -->
+            <g clip-path="url(#tablet-interior)">
+              <rect x="680" y="450" width="100" height="80" fill="#061a22" />
+              <g transform="matrix(.1 .005 -.011666667 .096666667 690 453)">
+                <svg width="800" height="600" viewBox="0 0 800 600">
+                  <svg width="2400" height="600" viewBox="14 10 393 118" preserveAspectRatio="none">
+                    <image
+                      href="assets/workstation/tampa-bay-screens.webp"
+                      width="420"
+                      height="258"
+                    />
+                  </svg>
+                </svg>
+              </g>
+            </g>
+            <g clip-path="url(#laptop-interior)">
+              <rect x="810" y="450" width="110" height="85" fill="#061a22" />
+              <g transform="matrix(.11375 .005 -.006666667 .113333333 818 455)">
+                <svg width="800" height="600" viewBox="800 0 800 600">
+                  <svg width="2400" height="600" viewBox="14 10 393 118" preserveAspectRatio="none">
+                    <image
+                      href="assets/workstation/tampa-bay-screens.webp"
+                      width="420"
+                      height="258"
+                    />
+                  </svg>
+                </svg>
+              </g>
+            </g>
+            <g clip-path="url(#side-display-interior)">
+              <rect x="950" y="455" width="125" height="130" fill="#061a22" />
+              <g transform="matrix(.10875 .0225 -.043333333 .168333333 980 460)">
+                <svg width="800" height="600" viewBox="1600 0 800 600">
+                  <svg width="2400" height="600" viewBox="14 10 393 118" preserveAspectRatio="none">
+                    <image
+                      href="assets/workstation/tampa-bay-screens.webp"
+                      width="420"
+                      height="258"
+                    />
+                  </svg>
+                </svg>
+              </g>
+            </g>
+          </svg>
+
+          <!-- An unlit version of the glass candle replaces its painted flame. -->
+          <svg class="candle-art" viewBox="0 0 1536 1024" aria-hidden="true" focusable="false">
+            <defs>
+              <linearGradient id="candle-glass" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#4a4032" />
+                <stop offset=".55" stop-color="#65513a" />
+                <stop offset="1" stop-color="#21272b" />
+              </linearGradient>
+              <linearGradient id="candle-wax" x1="0" y1="0" x2="0" y2="1">
+                <stop stop-color="#b9a67f" />
+                <stop offset="1" stop-color="#766344" />
+              </linearGradient>
+              <filter id="candle-soft-edge"><feGaussianBlur stdDeviation=".35" /></filter>
+              <radialGradient id="candle-halo-mask">
+                <stop offset="0" stop-color="white" />
+                <stop offset=".45" stop-color="white" />
+                <stop offset="1" stop-color="black" />
+              </radialGradient>
+              <mask
+                id="candle-halo"
+                maskUnits="userSpaceOnUse"
+                x="238"
+                y="362"
+                width="166"
+                height="145"
+              >
+                <ellipse cx="321" cy="434" rx="82" ry="71" fill="url(#candle-halo-mask)" />
+              </mask>
+              <mask
+                id="candle-reflection"
+                maskUnits="userSpaceOnUse"
+                x="272"
+                y="555"
+                width="78"
+                height="40"
+              >
+                <ellipse cx="311" cy="575" rx="39" ry="20" fill="url(#candle-halo-mask)" />
+              </mask>
+              <filter id="candle-cool-light" color-interpolation-filters="sRGB">
+                <feColorMatrix
+                  type="matrix"
+                  values=".10 .05 .025 0 0 .15 .10 .05 0 0 .30 .20 .10 0 0 0 0 0 1 0"
+                />
+              </filter>
+              <filter id="candle-cool-reflection" color-interpolation-filters="sRGB">
+                <feColorMatrix
+                  type="matrix"
+                  values=".13 .10 .05 0 0 .21 .16 .06 0 0 .58 .30 .15 0 0 0 0 0 1 0"
+                />
+              </filter>
+            </defs>
+            <image
+              class="candle-dark-halo"
+              href="assets/workstation/office-night-v2.webp"
+              width="1536"
+              height="1024"
+              mask="url(#candle-halo)"
+              filter="url(#candle-cool-light)"
+            />
+            <image
+              class="candle-dark-halo"
+              href="assets/workstation/office-night-v2.webp"
+              width="1536"
+              height="1024"
+              mask="url(#candle-reflection)"
+              filter="url(#candle-cool-reflection)"
+            />
+            <g class="candle-unlit" filter="url(#candle-soft-edge)">
+              <path
+                d="M291.5 447Q292 442 321 442Q347 442 350.5 446L350.5 477Q348 486 322 486Q295 485 292 478Z"
+                fill="url(#candle-glass)"
+                stroke="#29261f"
+                stroke-width="1.4"
+              />
+              <path
+                d="M295 447V476Q299 481 315 482"
+                fill="none"
+                stroke="#aa8e66"
+                stroke-width="1.5"
+                opacity=".6"
+              />
+              <ellipse
+                cx="321"
+                cy="447"
+                rx="27"
+                ry="4"
+                fill="#342e25"
+                stroke="#987e59"
+                stroke-width="1"
+              />
+              <path
+                d="M303 456Q321 453 339 456V473Q322 477 303 473Z"
+                fill="url(#candle-wax)"
+                opacity=".8"
+              />
+              <ellipse cx="321" cy="456" rx="18" ry="2.5" fill="#c7b58e" />
+              <path d="m321 456-.5-4" stroke="#302d2a" stroke-width="1.5" stroke-linecap="round" />
+              <path
+                d="M296 477Q321 484 347 477"
+                fill="none"
+                stroke="#b9aa8d"
+                stroke-width="1"
+                opacity=".5"
+              />
+              <path d="M344 449V473" stroke="#aec4cc" stroke-width="1.5" opacity=".22" />
+            </g>
+          </svg>
+          <button
+            class="scene-hotspot candle-toggle"
+            type="button"
+            aria-label="Blow out the candle"
+            aria-pressed="true"
+            aria-describedby="candle-status"
+            disabled
+            style="--x: 287; --y: 434; --w: 69; --h: 55"
+          >
+            <span class="label" aria-hidden="true"
+              ><span class="candle-hint">Blow out the candle</span>
+              <span class="arrow">↴</span></span
+            >
+          </button>
+          <p class="sr-only" id="candle-status" role="status" aria-live="polite"></p>
+
+          <div class="wall-secret" style="--x: 1174; --y: 38; --w: 192; --h: 272" hidden>
+            <svg class="clip-definitions" width="0" height="0" aria-hidden="true">
+              <defs>
+                <clipPath id="painting-front-clip" clipPathUnits="objectBoundingBox">
+                  <path
+                    clip-rule="evenodd"
+                    d="M .016 .129 L .958 0 L .995 .026 L .995 .923 L .016 .989 Z M 1 .852 C .91 .835 .79 .899 .776 1 L 1 1 Z"
+                  />
+                </clipPath>
+                <clipPath id="painting-statue-clip" clipPathUnits="objectBoundingBox">
+                  <path d="M 1 .852 C .91 .835 .79 .899 .776 1 L 1 1 Z" />
+                </clipPath>
+              </defs>
+            </svg>
+            <div
+              class="safe-panel"
+              id="wall-safe"
+              role="img"
+              aria-label="A hidden steel wall safe with a combination dial and handle"
+              aria-hidden="true"
+            >
+              <img
+                class="safe-day"
+                src="assets/workstation/wall-safe-day.svg"
+                width="192"
+                height="272"
+                alt=""
+              />
+              <img
+                class="safe-night"
+                src="assets/workstation/wall-safe-night.svg"
+                width="192"
+                height="272"
+                alt=""
+              />
+            </div>
+            <button
+              class="painting-toggle"
+              type="button"
+              aria-label="Move the Warsaw painting to reveal a hidden safe"
+              aria-expanded="false"
+              aria-controls="wall-safe"
+            >
+              <span class="painting-door" aria-hidden="true">
+                <span class="painting-front">
+                  <span class="wall-crop crop-day"></span>
+                  <span class="wall-crop crop-night"></span>
+                </span>
+                <span class="painting-back">
+                  <svg viewBox="0 0 192 272" fill="none">
+                    <path
+                      d="M3 35 184 0 191 7 191 251 3 269Z"
+                      fill="#49382c"
+                      stroke="#1c1917"
+                      stroke-width="3"
+                    />
+                    <path
+                      d="M15 44 177 14 177 239 15 254Z"
+                      fill="#9c7752"
+                      stroke="#292322"
+                      stroke-width="2"
+                    />
+                    <path
+                      d="M25 69 164 44M25 89 166 64M24 215 164 197M24 233 166 216"
+                      stroke="#795a3e"
+                      stroke-width="1.5"
+                      opacity=".6"
+                    />
+                    <path d="M36 96 99 131 155 75" stroke="#c3b9a3" stroke-width="2" />
+                    <path
+                      d="m35 91 2 11m115-31 3 10"
+                      stroke="#383531"
+                      stroke-width="5"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                </span>
+              </span>
+              <span class="label" aria-hidden="true"
+                ><span class="painting-hint">A little secret…</span>
+                <span class="arrow">↴</span></span
+              >
+            </button>
+            <span class="frame-foreground" aria-hidden="true">
+              <span class="wall-crop crop-day"></span>
+              <span class="wall-crop crop-night"></span>
+            </span>
+          </div>
+          <p class="sr-only" id="safe-status" role="status" aria-live="polite"></p>
+
+          <button
+            class="scene-hotspot camera-toggle"
+            type="button"
+            aria-label="Show a random photo from my camera roll"
+            aria-haspopup="dialog"
+            aria-controls="polaroid-dialog"
+            style="--x: 263; --y: 232; --w: 86; --h: 76"
+            disabled
+          >
+            <span class="label" aria-hidden="true"
+              >A little snapshot <span class="arrow">↴</span></span
+            >
+          </button>
+          <button
+            class="scene-hotspot meditations-toggle"
+            type="button"
+            aria-label="Read a random quote from Meditations"
+            aria-haspopup="dialog"
+            aria-controls="meditations-dialog"
+            style="--x: 412; --y: 263; --w: 68; --h: 66"
+            disabled
+          >
+            <span class="label" aria-hidden="true">Meditations <span class="arrow">↴</span></span>
+          </button>
+          <button
+            class="scene-hotspot katana-toggle"
+            type="button"
+            aria-label="Read a random quote from The Art of War"
+            aria-haspopup="dialog"
+            aria-controls="art-of-war-dialog"
+            style="--x: 230; --y: 350; --w: 140; --h: 50"
+            disabled
+          >
+            <span class="label" aria-hidden="true"
+              >The Art of War <span class="arrow">↴</span></span
+            >
+          </button>
+          <a
+            class="scene-hotspot monitor"
+            href="#projects"
+            style="--x: 657; --y: 315; --w: 428; --h: 125"
+            aria-label="Explore my projects on the large monitor"
+          >
+            <span class="label" aria-hidden="true"
+              >Stuff I've built <span class="arrow">↴</span></span
+            >
+          </a>
+          <a
+            class="scene-hotspot screen-link left-screen"
+            href="https://x.com/markhammonds"
+            target="_blank"
+            rel="noopener noreferrer"
+            style="--x: 681; --y: 449; --w: 97; --h: 73"
+            aria-label="Mark Hammonds on Twitter"
+          >
+            <span class="label" aria-hidden="true">Twitter <span class="arrow">↴</span></span>
+          </a>
+          <a
+            class="scene-hotspot screen-link laptop"
+            href="https://www.linkedin.com/in/mhammonds/"
+            target="_blank"
+            rel="noopener noreferrer"
+            style="--x: 793; --y: 450; --w: 128; --h: 112"
+            aria-label="Mark Hammonds on LinkedIn"
+          >
+            <span class="label" aria-hidden="true">LinkedIn <span class="arrow">↴</span></span>
+          </a>
+          <a
+            class="scene-hotspot screen-link right-screen"
+            href="https://github.com/mhammonds"
+            target="_blank"
+            rel="noopener noreferrer"
+            style="--x: 948; --y: 454; --w: 127; --h: 131"
+            aria-label="Mark Hammonds on GitHub"
+          >
+            <span class="label" aria-hidden="true">GitHub <span class="arrow">↴</span></span>
+          </a>
+          <button
+            class="scene-hotspot sisyphus-toggle"
+            type="button"
+            aria-label="Read Albert Camus’s quote about Sisyphus"
+            aria-haspopup="dialog"
+            aria-controls="sisyphus-dialog"
+            style="--x: 1250; --y: 258; --w: 165; --h: 127"
+            disabled
+          >
+            <span class="label" aria-hidden="true">Sisyphus <span class="arrow">↴</span></span>
+          </button>
+          <button
+            class="scene-hotspot books-toggle"
+            type="button"
+            aria-label="Browse my favorite books"
+            aria-haspopup="dialog"
+            aria-controls="books-dialog"
+            style="--x: 1204; --y: 393; --w: 200; --h: 250"
+            disabled
+          >
+            <span class="label" aria-hidden="true"
+              >Favorite books <span class="arrow">↴</span></span
+            >
+          </button>
+          <button
+            class="scene-hotspot portrait"
+            type="button"
+            data-business-card
+            aria-haspopup="dialog"
+            aria-controls="business-card-dialog"
+            style="--x: 430; --y: 330; --w: 242; --h: 310"
+            aria-label="Open Mark’s business card"
+          >
+            <span class="label" aria-hidden="true"
+              >My business card <span class="arrow">↴</span></span
+            >
+          </button>
+          <button
+            class="scene-hotspot dog"
+            style="--x: 724; --y: 698; --w: 143; --h: 195"
+            type="button"
+            aria-label="Pet CiCi"
+            aria-describedby="dog-status"
+            disabled
+          >
+            <span class="label" aria-hidden="true">CiCi <span class="arrow">↴</span></span>
+            <span class="dog-heart" aria-hidden="true">♥</span>
+          </button>
+          <p class="sr-only" id="dog-status" role="status" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <section class="intro" id="about" aria-labelledby="name">
+        <p>
+          I'm
+          <strong
+            ><button
+              class="name-trigger"
+              type="button"
+              data-business-card
+              aria-haspopup="dialog"
+              aria-controls="business-card-dialog"
+            >
+              Mark Hammonds.
+            </button></strong
+          >
+          Welcome to my little corner of the internet. That fluffy face beside me? That's my trusty
+          sidekick, Cici. Make yourself at home. Take a look around my desk and browse The Art of
+          War or The Meditations. Or if you feel like being active you can
+          <a href="cici-treat-trail.html" target="_blank" rel="noopener noreferrer"
+            >take CiCi for a walk</a
+          >,
+          <a href="bay-racer.html" target="_blank" rel="noopener noreferrer"
+            >go racing in Tampa Bay in my boat</a
+          >, or
+          <a href="surf-riders.html" target="_blank" rel="noopener noreferrer"
+            >use my Jeep to help surfers catch the waves</a
+          >!
+        </p>
+        <h1 id="name" class="signature">
+          <button
+            class="name-trigger"
+            type="button"
+            data-business-card
+            aria-haspopup="dialog"
+            aria-controls="business-card-dialog"
+          >
+            Mark Hammonds<span aria-hidden="true">.</span>
+          </button>
+        </h1>
+        <nav class="quick-links" aria-label="Social profiles">
+          <a href="https://x.com/markhammonds" target="_blank" rel="noopener noreferrer">Twitter</a>
+          <span aria-hidden="true">·</span>
+          <a href="https://www.linkedin.com/in/mhammonds/" target="_blank" rel="noopener noreferrer"
+            >LinkedIn</a
+          >
+          <span aria-hidden="true">·</span>
+          <a href="https://github.com/mhammonds" target="_blank" rel="noopener noreferrer"
+            >GitHub</a
+          >
+        </nav>
+      </section>
+
+      <section class="projects" id="projects" aria-labelledby="projects-title">
+        <div class="section-heading">
+          <span></span>
+          <h2 id="projects-title">A little something I've built</h2>
+          <span></span>
+        </div>
+        <a class="project-card" href="surf-riders.html" target="_blank" rel="noopener noreferrer">
+          <div class="game-preview surf-rides-preview" aria-hidden="true">
+            <span class="game-terminal">~/arcade $ ./surf-riders</span>
+            <img
+              src="assets/surf-rides/preview.webp"
+              width="1200"
+              height="600"
+              alt=""
+              loading="lazy"
+            />
+            <span class="game-prompt">NEXT STOP: THE BEACH <span>_</span></span>
+          </div>
+          <div class="project-caption">
+            <div>
+              <h3>Surf Riders</h3>
+              <p>Pick up surfers. Chase the swell to Playa Guiones.</p>
+            </div>
+            <span class="project-arrow" aria-hidden="true">↗</span>
+          </div>
+        </a>
+        <a class="project-card" href="bay-racer.html" target="_blank" rel="noopener noreferrer">
+          <div class="game-preview bay-racer-preview" aria-hidden="true">
+            <span class="game-terminal">~/arcade $ ./bay-racer</span>
+            <img
+              src="assets/bay-racer/preview.webp"
+              width="1200"
+              height="600"
+              alt=""
+              loading="lazy"
+            />
+            <span class="game-prompt">FULL THROTTLE. SALT AIR. <span>_</span></span>
+          </div>
+          <div class="project-caption">
+            <div>
+              <h3>Bay Racer</h3>
+              <p>Three laps. Your Sea-Doo. One more shot at your best time.</p>
+            </div>
+            <span class="project-arrow" aria-hidden="true">↗</span>
+          </div>
+        </a>
+        <a
+          class="project-card"
+          href="cici-treat-trail.html"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <div class="game-preview cici-preview" aria-hidden="true">
+            <span class="game-terminal">~/arcade $ ./cici-treat-trail</span>
+            <img
+              src="assets/cici-treat-trail/preview.webp"
+              width="1200"
+              height="600"
+              alt=""
+              loading="lazy"
+            />
+            <span class="game-prompt">SMALL PAWS. BIG ADVENTURE. <span>_</span></span>
+          </div>
+          <div class="project-caption">
+            <div>
+              <h3>CiCi’s Treat Trail</h3>
+              <p>Chase treats. Hop past squirrels. Be a very good dog.</p>
+            </div>
+            <span class="project-arrow" aria-hidden="true">↗</span>
+          </div>
+        </a>
+      </section>
+    </main>
+    <footer>
+      <button
+        class="name-trigger"
+        type="button"
+        data-business-card
+        aria-haspopup="dialog"
+        aria-controls="business-card-dialog"
+      >
+        Mark Hammonds
+      </button>
+      <span aria-hidden="true">·</span> A little corner of the internet.
+    </footer>
+    <dialog
+      id="business-card-dialog"
+      class="business-card"
+      aria-labelledby="business-card-name"
+      aria-describedby="business-card-title"
+    >
+      <button
+        class="business-card-close"
+        type="button"
+        aria-label="Close business card"
+        data-dialog-close
+        autofocus
+      >
+        ×
+      </button>
+      <a
+        class="business-card-logo"
+        href="https://www.bitmotive.com/"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Visit Bitmotive (opens in a new tab)"
+      >
+        <img src="assets/brand/bitmotive-logo.svg" width="327" height="78" alt="Bitmotive" />
+      </a>
+      <h2 id="business-card-name">Mark Hammonds</h2>
+      <p id="business-card-title" class="business-card-title">CEO, Bitmotive</p>
+      <a
+        class="business-card-contact business-card-email"
+        href="mailto:mark@bitmotive.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Email Mark at mark@bitmotive.com (opens your email app)"
+      >
+        <span>mark@bitmotive.com</span><span aria-hidden="true">✉</span>
+      </a>
+      <a
+        class="business-card-contact business-card-website"
+        href="https://www.bitmotive.com/"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="www.bitmotive.com (opens in a new tab)"
+      >
+        <span>www.bitmotive.com</span><span aria-hidden="true">↗</span>
+      </a>
+    </dialog>
+    <dialog
+      id="meditations-dialog"
+      class="quote-dialog"
+      aria-labelledby="meditations-title"
+      aria-describedby="meditations-quote"
+    >
+      <button class="quote-close" type="button" aria-label="Close Meditations" data-dialog-close>
+        <span aria-hidden="true">×</span>
+      </button>
+      <header class="quote-heading">
+        <p>From the bookshelf</p>
+        <h2 id="meditations-title">Meditations</h2>
+      </header>
+      <div
+        class="quote-passage"
+        role="region"
+        aria-label="Quote and citation"
+        aria-live="polite"
+        aria-atomic="true"
+        tabindex="0"
+      >
+        <blockquote><p id="meditations-quote"></p></blockquote>
+        <p class="quote-author">Marcus Aurelius</p>
+        <a
+          class="quote-source"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Read the source passage from Meditations"
+        ></a>
+      </div>
+      <div class="quote-actions">
+        <span>George Long translation</span>
+        <button class="quote-next" type="button">
+          Another quote <span aria-hidden="true">↻</span>
+        </button>
+      </div>
+    </dialog>
+    <dialog
+      id="art-of-war-dialog"
+      class="quote-dialog"
+      aria-labelledby="art-of-war-title"
+      aria-describedby="art-of-war-quote"
+    >
+      <button class="quote-close" type="button" aria-label="Close The Art of War" data-dialog-close>
+        <span aria-hidden="true">×</span>
+      </button>
+      <header class="quote-heading">
+        <p>A little strategy</p>
+        <h2 id="art-of-war-title">The Art of War</h2>
+      </header>
+      <div
+        class="quote-passage"
+        role="region"
+        aria-label="Quote and citation"
+        aria-live="polite"
+        aria-atomic="true"
+        tabindex="0"
+      >
+        <blockquote><p id="art-of-war-quote"></p></blockquote>
+        <p class="quote-author">Sun Tzu</p>
+        <a
+          class="quote-source"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Read the source passage from The Art of War"
+        ></a>
+      </div>
+      <div class="quote-actions">
+        <span>Lionel Giles translation, 1910</span>
+        <button class="quote-next" type="button">
+          Another quote <span aria-hidden="true">↻</span>
+        </button>
+      </div>
+    </dialog>
+    <dialog
+      id="sisyphus-dialog"
+      class="quote-dialog sisyphus-dialog"
+      aria-labelledby="sisyphus-title"
+      aria-describedby="sisyphus-quote"
+    >
+      <button class="quote-close" type="button" aria-label="Close Sisyphus quote" data-dialog-close>
+        <span aria-hidden="true">×</span>
+      </button>
+      <header class="quote-heading">
+        <h2 id="sisyphus-title">Sisyphus</h2>
+      </header>
+      <div class="quote-passage" role="region" aria-label="Quote and attribution" tabindex="0">
+        <blockquote>
+          <p id="sisyphus-quote">
+            The struggle itself towards the heights is enough to fill a man's heart. One must
+            imagine Sisyphus happy.
+          </p>
+        </blockquote>
+        <p class="quote-author">Albert Camus</p>
+      </div>
+    </dialog>
+    <dialog id="books-dialog" class="books-dialog" aria-labelledby="books-title">
+      <button class="quote-close" type="button" aria-label="Close favorite books" data-dialog-close>
+        <span aria-hidden="true">×</span>
+      </button>
+      <header class="quote-heading">
+        <p>From my bookshelf</p>
+        <h2 id="books-title">A few favorite books</h2>
+      </header>
+      <p class="books-status" role="status" aria-live="polite"></p>
+      <button class="books-retry" type="button" hidden>Try again</button>
+      <section
+        class="book-carousel"
+        aria-label="Favorite books"
+        aria-roledescription="carousel"
+        hidden
+      >
+        <div class="book-slide" role="group" aria-roledescription="slide">
+          <a class="book-cover-link" target="_blank" rel="noopener noreferrer">
+            <img class="book-cover" alt="" width="240" height="320" decoding="async" hidden />
+            <span class="book-cover-fallback" hidden>Cover unavailable</span>
+          </a>
+          <div class="book-details">
+            <p class="book-eyebrow">Worth a place on the shelf</p>
+            <h3 class="book-title"></h3>
+            <p class="book-author"></p>
+            <a class="book-amazon" target="_blank" rel="noopener noreferrer">
+              View on Amazon <span aria-hidden="true">↗</span>
+            </a>
+          </div>
+        </div>
+        <div class="book-controls">
+          <button class="book-prev" type="button" aria-label="Previous book">
+            <span aria-hidden="true">←</span>
+          </button>
+          <p class="book-position" aria-live="polite" aria-atomic="true"></p>
+          <button class="book-next" type="button" aria-label="Next book">
+            <span aria-hidden="true">→</span>
+          </button>
+        </div>
+      </section>
+    </dialog>
+    <dialog id="polaroid-dialog" class="polaroid-dialog" aria-labelledby="polaroid-title">
+      <h2 id="polaroid-title" class="sr-only">From my camera roll</h2>
+      <button
+        class="polaroid-close"
+        type="button"
+        aria-label="Close photo"
+        data-dialog-close
+        autofocus
+      >
+        ×
+      </button>
+      <figure class="polaroid-frame">
+        <div class="polaroid-media">
+          <img class="polaroid-photo" alt="" hidden />
+          <p id="polaroid-status" class="polaroid-status" role="status" aria-live="polite"></p>
+        </div>
+        <figcaption class="polaroid-caption">
+          <span>From my camera roll</span><span class="polaroid-count" aria-hidden="true"></span>
+        </figcaption>
+      </figure>
+      <div class="polaroid-controls">
+        <button class="polaroid-next" type="button">
+          <span aria-hidden="true">↻</span> Another photo
+        </button>
+      </div>
+    </dialog>
+  </body>
+</html>

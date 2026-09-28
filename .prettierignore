@@ -1,0 +1,12 @@
+node_modules/
+assets/vendor/
+assets/characters/
+assets/scene/
+assets/workstation/
+assets/brand/
+assets/fonts/
+assets/polaroids/
+output/
+dist/
+.wrangler/
+package-lock.json

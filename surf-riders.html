@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="theme-color" content="#101f24" />
+    <meta
+      name="description"
+      content="A tiny 3D surf taxi adventure in Nosara. Drive Mark's custom Jeep, pick up surfers, and chase the perfect shift at Playa Guiones."
+    />
+    <title>Surf Riders · Mark Hammonds</title>
+    <link rel="canonical" href="https://markhammonds.com/surf-riders.html" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Mark Hammonds" />
+    <meta property="og:title" content="Surf Riders · Mark Hammonds" />
+    <meta
+      property="og:description"
+      content="A tiny 3D surf taxi adventure in Nosara. Drive Mark's custom Jeep, pick up surfers, and chase the perfect shift at Playa Guiones."
+    />
+    <meta property="og:url" content="https://markhammonds.com/surf-riders.html" />
+    <meta property="og:image" content="https://markhammonds.com/assets/social/surf-riders-og.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta
+      property="og:image:alt"
+      content="Surf Riders: a custom Jeep on a sunny beach in Nosara."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Surf Riders · Mark Hammonds" />
+    <meta
+      name="twitter:description"
+      content="A tiny 3D surf taxi adventure in Nosara. Drive Mark's custom Jeep, pick up surfers, and chase the perfect shift at Playa Guiones."
+    />
+    <meta
+      name="twitter:image"
+      content="https://markhammonds.com/assets/social/surf-riders-og.jpg"
+    />
+    <meta
+      name="twitter:image:alt"
+      content="Surf Riders: a custom Jeep on a sunny beach in Nosara."
+    />
+    <meta name="twitter:creator" content="@markhammonds" />
+    <link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48" />
+    <link rel="icon" href="assets/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="icon" href="assets/favicon-48.png" type="image/png" sizes="48x48" />
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" sizes="any" />
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" sizes="180x180" />
+    <link rel="stylesheet" href="assets/shared/arcade.css" />
+    <link rel="stylesheet" href="assets/surf-rides/style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a
+        class="back"
+        href="index.html"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Back to Mark's website"
+        >← MARK'S ARCADE</a
+      ><span class="terminal">./surf-riders <span class="cursor">▌</span></span
+      ><button type="button" id="sound" aria-pressed="false" title="Toggle synthesized game sounds">
+        SOUND OFF
+      </button>
+    </header>
+    <main id="game-shell">
+      <div role="group" id="viewport" aria-label="3D surf taxi driving game"></div>
+      <div class="vignette" aria-hidden="true"></div>
+      <section class="hud" aria-label="Shift statistics">
+        <div class="game-brand">
+          <span class="eyebrow">NOSARA, COSTA RICA</span>
+          <h1>SURF RIDERS<span>☀</span></h1>
+        </div>
+        <div class="stats">
+          <div><span>SHIFT</span><strong id="time">3:00</strong></div>
+          <div><span>FARES + TIPS</span><strong id="cash">$0</strong></div>
+          <div><span>RIDES</span><strong id="rides">00</strong></div>
+        </div>
+      </section>
+      <div
+        role="group"
+        id="coconut-hud"
+        class="coconut-hud hidden"
+        aria-label="Score and coconut collection"
+      >
+        <div><span>SCORE</span><strong id="score">0 pts</strong></div>
+        <div class="coconut-total">
+          <span aria-hidden="true">🥥</span><strong id="coconut-count">0</strong
+          ><small>+25 EACH</small>
+        </div>
+      </div>
+      <div id="coconut-pop" class="coconut-pop" role="status" aria-live="polite"></div>
+      <aside id="dispatch" class="dispatch hidden" aria-label="Ride request">
+        <div class="radio-label">
+          <i></i><span id="radio-title">SURF DISPATCH</span><span id="streak"></span>
+        </div>
+        <h2 id="request-name">Ready for a ride?</h2>
+        <p id="request-detail">A little driving. A lot of pura vida.</p>
+        <div class="meter-label">
+          <span id="meter-label">PATIENCE</span><span id="meter-value">100%</span>
+        </div>
+        <div class="meter"><div id="meter-fill"></div></div>
+        <div id="boarding" class="boarding">Follow the yellow pickup beacon.</div>
+      </aside>
+      <div id="target" class="target hidden">
+        <span id="target-arrow" aria-hidden="true">↑</span>
+        <div><small id="target-label">PICKUP</small><strong id="target-distance">0 m</strong></div>
+      </div>
+      <div id="toast" role="status" aria-live="polite"></div>
+      <aside id="map-panel" class="map-panel">
+        <div class="map-title"><span>PLAYA GUIONES</span><span>↟ N</span></div>
+        <canvas
+          role="img"
+          id="minimap"
+          width="400"
+          height="380"
+          aria-label="Map: yellow marker is pickup, coral marker is beach, white arrow is your Jeep, small cream dots are coconuts"
+        ></canvas>
+        <div class="map-legend">
+          <span><i class="yellow"></i> PICKUP</span><span><i class="coral"></i> BEACH</span
+          ><span><i class="coconut-dot"></i> NUTS</span>
+        </div>
+      </aside>
+      <div id="speedometer" class="speedometer hidden">
+        <strong id="speed">0</strong><span>KM/H</span><small id="surface">DIRT ROAD</small>
+      </div>
+      <div class="bottom-bar">
+        <span class="keyboard-help"
+          ><kbd>WASD</kbd> / <kbd>↑↓←→</kbd> DRIVE <b>·</b> <kbd>SPACE</kbd> BRAKE <b>·</b>
+          <kbd>P</kbd> PAUSE</span
+        >
+        <div>
+          <button
+            type="button"
+            id="recover"
+            class="hidden"
+            title="Return to the nearest road for a 5-second penalty"
+          >
+            ↺ UNSTUCK</button
+          ><button type="button" id="pause" class="hidden">Ⅱ PAUSE</button>
+        </div>
+      </div>
+      <div
+        role="group"
+        id="touch-controls"
+        class="touch-controls hidden"
+        aria-label="Touch driving controls"
+      >
+        <div>
+          <button type="button" data-control="left" aria-label="Steer left">◀</button
+          ><button type="button" data-control="right" aria-label="Steer right">▶</button>
+        </div>
+        <div>
+          <button type="button" data-control="reverse" aria-label="Reverse">REV</button
+          ><button type="button" data-control="brake" aria-label="Brake">■</button
+          ><button type="button" data-control="gas" class="gas" aria-label="Accelerate">
+            GO ↑
+          </button>
+        </div>
+      </div>
+      <section id="overlay" class="overlay" aria-label="Game menu">
+        <div class="menu-card" id="menu-card">
+          <span class="eyebrow" id="menu-eyebrow">A LITTLE ARCADE ESCAPE</span>
+          <h2 id="menu-title">Good waves.<br />Great rides.</h2>
+          <p id="menu-description">
+            Your Jeep. A few surfers. Three minutes to get everyone to the break.
+          </p>
+          <div id="intro-details" class="intro-details">
+            <div>
+              <span>01</span>
+              <p><strong>Find your surfer.</strong>Follow the yellow beacon or the map.</p>
+            </div>
+            <div>
+              <span>02</span>
+              <p>
+                <strong>Roll in. Slow down.</strong>Stop inside the ring to pick up and drop off.
+              </p>
+            </div>
+            <div>
+              <span>03</span>
+              <p>
+                <strong>Keep it smooth.</strong>Earn tips on rides. Grab coconuts for +25 points.
+              </p>
+            </div>
+          </div>
+          <div id="results" class="results hidden"></div>
+          <button type="button" id="start" class="primary">LET'S RIDE <span>↗</span></button
+          ><button type="button" id="restart" class="secondary hidden">START A NEW SHIFT</button>
+          <p class="menu-note" id="menu-note">
+            WASD / arrow keys to drive · Space to brake<br />Stop in the rings to pick up / drop
+            off.<br />Touch controls on mobile · Best score: <span id="best">0 pts</span>
+          </p>
+        </div>
+      </section>
+      <div id="load-state" class="load-state" role="status">Warming up the Jeep…</div>
+    </main>
+    <footer>
+      <div>
+        A tiny 3D arcade experiment by
+        <a href="index.html" target="_blank" rel="noopener noreferrer">Mark Hammonds</a>
+      </div>
+      <a href="assets/surf-rides/mark-jeep.glb" target="_blank" rel="noopener noreferrer" download
+        >DOWNLOAD JEEP MODEL ↓</a
+      ><span>Playa Guiones · Pura vida</span>
+    </footer>
+    <noscript
+      ><p class="no-script">
+        This game needs JavaScript and a browser with WebGL 2 enabled.
+      </p></noscript
+    >
+    <script
+      defer
+      src="assets/shared/game-loader.js"
+      data-entry="assets/surf-rides/game.js"
+    ></script>
+  </body>
+</html>

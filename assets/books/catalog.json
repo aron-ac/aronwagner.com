@@ -1,0 +1,90 @@
+[
+  {
+    "id": "zero-to-one",
+    "title": "Zero to One",
+    "author": "Peter Thiel with Blake Masters",
+    "amazonUrl": "https://a.co/d/08ZYfY6i",
+    "cover": "assets/books/zero-to-one.jpg",
+    "alt": "Cover of Zero to One: Notes on Startups, or How to Build the Future"
+  },
+  {
+    "id": "principles",
+    "title": "Principles: Life and Work",
+    "author": "Ray Dalio",
+    "amazonUrl": "https://a.co/d/0j2K7eR1",
+    "cover": "assets/books/principles.jpg",
+    "alt": "Cover of Principles: Life and Work"
+  },
+  {
+    "id": "on-intelligence",
+    "title": "On Intelligence",
+    "author": "Jeff Hawkins with Sandra Blakeslee",
+    "amazonUrl": "https://a.co/d/04LBqDny",
+    "cover": "assets/books/on-intelligence.jpg",
+    "alt": "Cover of On Intelligence"
+  },
+  {
+    "id": "godel-escher-bach",
+    "title": "Gödel, Escher, Bach",
+    "author": "Douglas R. Hofstadter",
+    "amazonUrl": "https://a.co/d/0buxonBn",
+    "cover": "assets/books/godel-escher-bach.jpg",
+    "alt": "Cover of Gödel, Escher, Bach: An Eternal Golden Braid"
+  },
+  {
+    "id": "code",
+    "title": "Code",
+    "author": "Charles Petzold",
+    "amazonUrl": "https://a.co/d/0ghl0E2O",
+    "cover": "assets/books/code.jpg",
+    "alt": "Cover of Code: The Hidden Language of Computer Hardware and Software, second edition"
+  },
+  {
+    "id": "elements-of-computing-systems",
+    "title": "The Elements of Computing Systems",
+    "author": "Noam Nisan & Shimon Schocken",
+    "amazonUrl": "https://a.co/d/09gJFhOm",
+    "cover": "assets/books/elements-of-computing-systems.jpg",
+    "alt": "Cover of The Elements of Computing Systems: Building a Modern Computer from First Principles"
+  },
+  {
+    "id": "art-of-computer-programming",
+    "title": "The Art of Computer Programming",
+    "author": "Donald E. Knuth",
+    "amazonUrl": "https://a.co/d/0gaaLZOF",
+    "cover": "assets/books/art-of-computer-programming.jpg",
+    "alt": "The Art of Computer Programming, Volumes 1–4B boxed set"
+  },
+  {
+    "id": "universal-principles-of-design",
+    "title": "Universal Principles of Design",
+    "author": "William Lidwell, Kritina Holden & Jill Butler",
+    "amazonUrl": "https://a.co/d/016NmFzw",
+    "cover": "assets/books/universal-principles-of-design.jpg",
+    "alt": "Cover of Universal Principles of Design, updated and expanded third edition"
+  },
+  {
+    "id": "design-for-hackers",
+    "title": "Design for Hackers",
+    "author": "David Kadavy",
+    "amazonUrl": "https://a.co/d/0g5VbXwR",
+    "cover": "assets/books/design-for-hackers.jpg",
+    "alt": "Cover of Design for Hackers: Reverse-Engineering Beauty"
+  },
+  {
+    "id": "dont-make-me-think",
+    "title": "Don’t Make Me Think",
+    "author": "Steve Krug",
+    "amazonUrl": "https://a.co/d/0eSR3WyS",
+    "cover": "assets/books/dont-make-me-think.jpg",
+    "alt": "Cover of Don’t Make Me Think, Revisited, third edition"
+  },
+  {
+    "id": "scalable-internet-architectures",
+    "title": "Scalable Internet Architectures",
+    "author": "Theo Schlossnagle",
+    "amazonUrl": "https://a.co/d/01Lb1oJt",
+    "cover": "assets/books/scalable-internet-architectures.jpg",
+    "alt": "Cover of Scalable Internet Architectures"
+  }
+]
