@@ -10,6 +10,7 @@ A standalone 3D arcade driving game for Mark's site. Serve the repository over H
 - **P / Escape:** pause/resume. Losing focus or hiding the page pauses the shift.
 - **R / Unstuck:** return to the nearest road for a five-second shift penalty.
 - Touch devices have a left-thumb ← / → steering pad and a right-thumb ↑ / ↓ forward/reverse pad, plus a separate brake button. Hold a driving arrow while steering; slide between arrows within either pad to change direction. Releasing a finger or sliding off its pad releases only that input.
+- On compact screens, **Map** opens the map when needed. **Pause → Unstuck** returns the Jeep to the nearest road and resumes the shift with the usual five-second penalty. Unstuck remains unavailable during its recovery cooldown. Entering a menu closes the map.
 - Sound is optional and off initially. It uses synthesized tones after user interaction.
 
 A shift lasts three minutes. Dispatch assigns one surfer at a time to one of six pickup spots. Reach the yellow marker within 45 seconds, then the coral beach marker within 60 seconds. Both require a slow stop. Successful trips earn a distance-based fare and a tip based on speed, passenger comfort and consecutive rides. Collisions lower comfort by 18 points; recovery lowers it by eight. Missed requests reset the streak. Grass limits speed, roads let you travel faster, and the map/directional indicator show the next destination. Collect the floating coconut halves along roads and beach approaches for **25 bonus points each**. Each coconut can be collected once per shift, then all return when a new shift begins. Pickups have a small ring burst, optional chime, +25 popup and a live counter; remaining coconuts appear as cream dots on the minimap. The total score is fare earnings (one point per dollar, including tips) plus coconut points. Coconuts do not extend the clock or change fares. Personal best total scores are saved locally under `cr-surf-rides-best-score`; the older earnings-only record is left intact.
@@ -20,7 +21,9 @@ The driving camera uses a 25-degree perspective lens with a 45-degree diagonal b
 
 ## Shared presentation
 
-The shared `../shared/arcade.css` defines the arcade shell and common controls. Each game stylesheet retains its palette, scene overlays and responsive positions. HUD labels stay at least 10px; compact minimaps omit cramped decorative text while retaining their accessible names and visual markers.
+The shared `../shared/arcade.css` defines the arcade shell and common controls. `../shared/driving.css` owns both driving games' direction pads and compact HUD layouts. Each game stylesheet retains its palette and desktop scene presentation. HUD labels stay at least 10px; compact minimaps omit cramped decorative text while retaining their accessible names and visual markers.
+
+`../shared/driving-ui.js` manages map visibility and the pause-menu recovery button for both driving games. CSS selects the compact layout; the controllers retain each game's recovery rules and penalties.
 
 `../shared/game-loop.js` owns frame timing, viewport observation, focus/visibility pauses and page-cache restoration. The controller supplies its render callback, resize guard and cleanup; gameplay remains in the simulation module. Missing optional minimap contexts no longer prevent either driving game from launching.
 

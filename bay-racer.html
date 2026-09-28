@@ -45,8 +45,9 @@
     <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" sizes="180x180" />
     <link rel="stylesheet" href="assets/shared/arcade.css" />
     <link rel="stylesheet" href="assets/bay-racer/style.css" />
+    <link rel="stylesheet" href="assets/shared/driving.css" />
   </head>
-  <body>
+  <body class="driving-page">
     <header class="topbar">
       <a href="index.html" target="_blank" rel="noopener noreferrer">← MARK'S ARCADE</a
       ><span class="terminal">./bay-racer <span aria-hidden="true">▌</span></span
@@ -105,6 +106,15 @@
         >
         <div>
           <button
+            type="button"
+            id="map-toggle"
+            class="map-toggle hidden"
+            aria-expanded="false"
+            aria-controls="map-panel"
+          >
+            MAP
+          </button>
+          <button
             id="recover"
             class="hidden"
             type="button"
@@ -120,9 +130,18 @@
         class="touch-controls driving-controls hidden"
         aria-label="Touch boat controls"
       >
-        <div data-control-pad="steering" role="group" aria-label="Steering">
+        <div
+          class="driving-dpad"
+          data-control-pad="driving"
+          data-dpad
+          role="group"
+          aria-label="Directional pad: up to drive, down to reverse, left and right to steer; slide diagonally to drive and turn"
+        >
+          <button type="button" data-control="gas" class="gas" aria-label="Drive forward">↑</button>
           <button type="button" data-control="left" aria-label="Steer left">←</button>
+          <span class="dpad-center" aria-hidden="true"></span>
           <button type="button" data-control="right" aria-label="Steer right">→</button>
+          <button type="button" data-control="reverse" aria-label="Slow down or reverse">↓</button>
         </div>
         <div class="driving-actions">
           <button
@@ -133,21 +152,15 @@
           >
             BOOST
           </button>
-          <div data-control-pad="throttle" role="group" aria-label="Forward and reverse">
-            <button type="button" data-control="gas" class="gas" aria-label="Drive forward">
-              ↑
-            </button>
-            <button type="button" data-control="reverse" aria-label="Slow down or reverse">
-              ↓
-            </button>
-          </div>
         </div>
       </div>
       <section id="overlay" class="overlay" aria-label="Race menu">
         <div class="menu-card">
           <span id="menu-eyebrow" class="eyebrow">23 FEET OF SUMMER</span>
-          <h2 id="menu-title">Full throttle.<br />Salt air.</h2>
-          <p id="menu-description">Your Sea-Doo. A sunny bay. Three laps to beat the clock.</p>
+          <h2 id="menu-title">Full throttle. <br />Salt air.</h2>
+          <p id="menu-description">
+            Three laps. Eight gates, in order. Follow the arrow; clean passes refill your boost.
+          </p>
           <div id="intro-details" class="intro-details">
             <div>
               <span>01</span>
@@ -171,8 +184,16 @@
           <button id="start" class="primary" type="button">
             LET'S RACE <span aria-hidden="true">↗</span></button
           ><button id="restart" class="secondary hidden" type="button">START A NEW RACE</button>
+          <button id="menu-recover" class="secondary hidden" type="button">
+            RESET TO GATE · +5s
+          </button>
           <p id="menu-note" class="menu-note">
-            Hold ↑ / ↓ to drive · ← / → to steer<br />WASD also works · Space to boost
+            <span class="keyboard-instructions"
+              >Hold ↑ / ↓ to drive · ← / → to steer<br />WASD also works · Space to boost</span
+            >
+            <span class="touch-instructions"
+              >Slide diagonally on the D-pad to drive and turn. Boost on the right.</span
+            >
           </p>
         </div>
       </section>

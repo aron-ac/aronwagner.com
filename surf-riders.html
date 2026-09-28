@@ -48,8 +48,9 @@
     <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" sizes="180x180" />
     <link rel="stylesheet" href="assets/shared/arcade.css" />
     <link rel="stylesheet" href="assets/surf-rides/style.css" />
+    <link rel="stylesheet" href="assets/shared/driving.css" />
   </head>
-  <body>
+  <body class="driving-page">
     <header class="topbar">
       <a
         class="back"
@@ -132,6 +133,15 @@
         <div>
           <button
             type="button"
+            id="map-toggle"
+            class="map-toggle hidden"
+            aria-expanded="false"
+            aria-controls="map-panel"
+          >
+            MAP
+          </button>
+          <button
+            type="button"
             id="recover"
             class="hidden"
             title="Return to the nearest road for a 5-second penalty"
@@ -146,30 +156,32 @@
         class="touch-controls driving-controls hidden"
         aria-label="Touch driving controls"
       >
-        <div data-control-pad="steering" role="group" aria-label="Steering">
+        <div
+          class="driving-dpad"
+          data-control-pad="driving"
+          data-dpad
+          role="group"
+          aria-label="Directional pad: up to drive, down to reverse, left and right to steer; slide diagonally to drive and turn"
+        >
+          <button type="button" data-control="gas" class="gas" aria-label="Drive forward">↑</button>
           <button type="button" data-control="left" aria-label="Steer left">←</button>
+          <span class="dpad-center" aria-hidden="true"></span>
           <button type="button" data-control="right" aria-label="Steer right">→</button>
+          <button type="button" data-control="reverse" aria-label="Slow down or reverse">↓</button>
         </div>
         <div class="driving-actions">
           <button type="button" data-control="brake" class="driving-auxiliary" aria-label="Brake">
             BRAKE
           </button>
-          <div data-control-pad="throttle" role="group" aria-label="Forward and reverse">
-            <button type="button" data-control="gas" class="gas" aria-label="Drive forward">
-              ↑
-            </button>
-            <button type="button" data-control="reverse" aria-label="Slow down or reverse">
-              ↓
-            </button>
-          </div>
         </div>
       </div>
       <section id="overlay" class="overlay" aria-label="Game menu">
         <div class="menu-card" id="menu-card">
           <span class="eyebrow" id="menu-eyebrow">A LITTLE ARCADE ESCAPE</span>
-          <h2 id="menu-title">Good waves.<br />Great rides.</h2>
+          <h2 id="menu-title">Good waves. <br />Great rides.</h2>
           <p id="menu-description">
-            Your Jeep. A few surfers. Three minutes to get everyone to the break.
+            Three minutes to get surfers to the beach. Stop in the rings and grab coconuts for bonus
+            points.
           </p>
           <div id="intro-details" class="intro-details">
             <div>
@@ -192,8 +204,16 @@
           <div id="results" class="results hidden"></div>
           <button type="button" id="start" class="primary">LET'S RIDE <span>↗</span></button
           ><button type="button" id="restart" class="secondary hidden">START A NEW SHIFT</button>
+          <button type="button" id="menu-recover" class="secondary hidden">
+            GET UNSTUCK · −5s
+          </button>
           <p class="menu-note" id="menu-note">
-            Hold ↑ / ↓ to drive · ← / → to steer<br />WASD also works · Space to brake<br />
+            <span class="keyboard-instructions"
+              >Hold ↑ / ↓ to drive · ← / → to steer<br />WASD also works · Space to brake</span
+            >
+            <span class="touch-instructions"
+              >Slide diagonally on the D-pad to drive and turn. Brake on the right.</span
+            ><br />
             Best score: <span id="best">0 pts</span>
           </p>
         </div>

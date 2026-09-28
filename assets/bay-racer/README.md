@@ -12,6 +12,7 @@ Complete three laps through eight buoy gates in order. The next gate is gold, an
 - **P / Escape:** pause/resume. Losing focus or hiding the tab pauses the race, including its countdown.
 - **R / Reset:** return to an approach to the next gate for a five-second penalty. It does not advance the course.
 - Touch devices have a left-thumb ← / → steering pad and a right-thumb ↑ / ↓ forward/reverse pad, plus a separate boost button. Hold a driving arrow while steering; slide between arrows within either pad to change direction. Releasing a finger or sliding off its pad releases only that input. Boost can be held alongside forward throttle.
+- On compact screens, **Map** opens the course map when needed. **Pause → Reset** returns the boat to the next gate and resumes the race with the usual five-second penalty. Reset is unavailable during the countdown or recovery cooldown. Entering a menu closes the map.
 
 A center pass awards 20 boost; other successful passes award eight. Boost also recharges when unused. Running into land at speed adds two seconds, with a short collision cooldown to prevent repeated penalties while stuck. The final time includes all penalties. Results show the race time, best lap, penalties and personal best. Gold is under 100 seconds, silver under 125, and bronze celebrates every other finish. The fastest completed race is saved locally under `bay-racer-best-time`. Three-second countdowns, a pause screen, restart, optional synthesized sound, drifting foam trails and mobile controls round out the demo.
 
@@ -19,7 +20,9 @@ The bay is an invented compact course with palm islands, a marina, a lighthouse,
 
 ## Shared runtime
 
-The shared `../shared/arcade.css` defines the arcade shell and common controls. Each game stylesheet retains its palette, scene overlays and responsive positions. HUD labels stay at least 10px; compact minimaps omit cramped decorative text while retaining their accessible names and visual markers.
+The shared `../shared/arcade.css` defines the arcade shell and common controls. `../shared/driving.css` owns both driving games' direction pads and compact HUD layouts. Each game stylesheet retains its palette and desktop scene presentation. HUD labels stay at least 10px; compact minimaps omit cramped decorative text while retaining their accessible names and visual markers.
+
+`../shared/driving-ui.js` manages map visibility and the pause-menu recovery button for both driving games. CSS selects the compact layout; the controllers retain each game's recovery rules and penalties.
 
 `../shared/game-loop.js` owns frame timing, viewport observation, focus/visibility pauses and page-cache restoration. The controller supplies its render callback, resize guard and cleanup; gameplay remains in the simulation module. Missing optional minimap contexts no longer prevent either driving game from launching.
 

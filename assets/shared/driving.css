@@ -1,0 +1,437 @@
+/* Driving controls and compact HUD, loaded after each game's visual theme. */
+.driving-game {
+  --dpad-cell: 52px;
+}
+.driving-controls.touch-controls {
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  align-items: flex-end;
+}
+.driving-controls .driving-dpad {
+  display: grid;
+  grid-template: repeat(3, var(--dpad-cell)) / repeat(3, var(--dpad-cell));
+  gap: 0;
+  border-radius: 24px;
+  background: #10252e30;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.driving-controls .driving-dpad button {
+  width: var(--dpad-cell);
+  min-width: var(--dpad-cell);
+  height: var(--dpad-cell);
+  padding: 0;
+  font: bold 28px/1 monospace;
+  background: #153642e8;
+  color: var(--cream);
+}
+.driving-dpad [data-control='gas'] {
+  grid-area: 1 / 2;
+  border-radius: 12px 12px 0 0;
+  border-bottom: 0;
+}
+.driving-dpad [data-control='left'] {
+  grid-area: 2 / 1;
+  border-radius: 12px 0 0 12px;
+  border-right: 0;
+}
+.driving-dpad [data-control='right'] {
+  grid-area: 2 / 3;
+  border-radius: 0 12px 12px 0;
+  border-left: 0;
+}
+.driving-dpad [data-control='reverse'] {
+  grid-area: 3 / 2;
+  border-radius: 0 0 12px 12px;
+  border-top: 0;
+}
+.driving-dpad .dpad-center {
+  grid-area: 2 / 2;
+  display: grid;
+  place-items: center;
+  background: #153642e8;
+  pointer-events: none;
+}
+.dpad-center::before {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border: 2px solid #fff4;
+  border-radius: 50%;
+}
+.driving-controls .driving-dpad button.pressed {
+  background: var(--mint);
+  color: var(--dark);
+}
+.driving-controls .driving-actions {
+  margin-bottom: var(--dpad-cell);
+}
+.driving-controls .driving-auxiliary {
+  width: 64px;
+  min-width: 64px;
+  height: 64px;
+  padding: 0;
+  border-radius: 50%;
+  font: bold 11px/1 monospace;
+}
+.map-toggle,
+#menu-recover,
+.touch-instructions {
+  display: none;
+}
+.driving-game:has(.driving-controls:not(.hidden)) .speedometer {
+  display: none;
+}
+.driving-game:where(:has(.driving-controls:not(.hidden))) .keyboard-help {
+  display: none;
+}
+.driving-game:where(:has(.driving-controls:not(.hidden))) .bottom-bar {
+  left: auto;
+}
+.driving-game:where(:has(.driving-controls:not(.hidden))) .map-panel {
+  bottom: 160px;
+}
+.driving-game:where(:has(.driving-controls:not(.hidden))) .target {
+  bottom: 80px;
+}
+@media (pointer: coarse) {
+  .driving-page .keyboard-instructions {
+    display: none;
+  }
+  .driving-page .touch-instructions {
+    display: inline;
+  }
+}
+
+/* Reserve the top edge for essential stats and one live objective. Everything
+   else is optional or available while paused, leaving the road/water visible. */
+@media (max-width: 900px), (max-height: 600px) and (orientation: landscape) {
+  .driving-page .topbar {
+    height: 44px;
+    padding: 0 12px;
+    font-size: 10px;
+  }
+  .driving-page .topbar a,
+  .driving-page .topbar button {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  .driving-page .topbar button {
+    border: 0;
+    font-size: 10px;
+  }
+  .driving-page footer,
+  .driving-page .terminal {
+    display: none;
+  }
+  .driving-page #game-shell {
+    height: calc(100svh - 44px - var(--safe-top) - var(--safe-bottom));
+    max-width: none;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+  }
+  .driving-game .game-brand,
+  .driving-game .speedometer,
+  .driving-game .keyboard-help,
+  .driving-game #recover,
+  .driving-game .stats > div:has(#best, #cash, #rides),
+  .driving-game .coconut-total {
+    display: none;
+  }
+  .driving-game .hud {
+    top: 10px;
+    left: 12px;
+    right: 112px;
+    gap: 0;
+  }
+  .driving-game .stats {
+    height: 44px;
+    padding: 4px 0;
+    background: #102b36dc;
+    box-shadow: none;
+    border: 0;
+    border-radius: 8px;
+  }
+  .driving-game .stats > div {
+    min-width: 64px;
+    padding: 0 10px;
+  }
+  .driving-game .stats span {
+    font-size: 10px;
+    letter-spacing: 0;
+  }
+  .driving-game .stats strong {
+    font-size: 18px;
+    line-height: 1.4;
+  }
+  .driving-game .coconut-hud {
+    top: 10px;
+    left: 84px;
+    right: auto;
+    width: auto;
+    height: 44px;
+    padding: 4px 10px;
+    border: 0;
+    border-radius: 8px;
+    background: #102b36dc;
+  }
+  .driving-game .coconut-hud > div:first-child {
+    display: block;
+  }
+  .driving-game .coconut-hud strong {
+    font-size: 18px;
+    line-height: 1.4;
+  }
+  .driving-game .bottom-bar {
+    top: 10px;
+    right: 12px;
+    bottom: auto;
+    left: auto;
+    gap: 0;
+  }
+  .driving-game .bottom-bar > div {
+    gap: 4px;
+  }
+  .driving-game .bottom-bar button {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    background: #102b36dc;
+    border: 0;
+    border-radius: 8px;
+    font-size: 11px;
+    letter-spacing: 0;
+  }
+  .driving-game .map-toggle,
+  .driving-game #menu-recover {
+    display: block;
+  }
+  .driving-game #pause {
+    font-size: 0;
+  }
+  .driving-game #pause::before {
+    content: 'Ⅱ';
+    font-size: 22px;
+  }
+  .driving-game .map-toggle[aria-expanded='true'] {
+    background: var(--mint);
+    color: var(--dark);
+  }
+  .driving-game .dispatch,
+  .driving-game .course-panel {
+    top: 64px;
+    left: 12px;
+    width: calc(100% - 144px);
+    max-width: 310px;
+    height: 62px;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 8px;
+    background: #102b36dc;
+    backdrop-filter: none;
+  }
+  .driving-game .radio-label,
+  .driving-game .dispatch h2,
+  .driving-game .dispatch p,
+  .driving-game .meter-label,
+  .driving-game .course-panel > .eyebrow,
+  .driving-game .course-panel p,
+  .driving-game .course-panel > small,
+  .driving-game .boost-label > span {
+    display: none;
+  }
+  .driving-game .dispatch {
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: space-between;
+  }
+  .driving-game .boarding {
+    font-size: 12px;
+    line-height: 1.35;
+    min-height: 0;
+  }
+  .driving-game .meter {
+    height: 4px;
+    flex-shrink: 0;
+    margin: 4px 0 0;
+  }
+  .driving-game .course-panel h2 {
+    margin: 0 0 5px;
+    font: bold 12px/1.2 monospace;
+  }
+  .driving-game .boost-label {
+    font-size: 10px;
+  }
+  .driving-game .course-panel progress {
+    height: 4px;
+    margin: 5px 0 0;
+  }
+  .driving-game .target {
+    top: 64px;
+    right: 12px;
+    left: auto;
+    bottom: auto;
+    width: 112px;
+    height: 62px;
+    padding: 8px;
+    gap: 8px;
+    transform: none;
+    border: 0;
+    border-radius: 8px;
+    background: #102b36dc;
+  }
+  .driving-game .target > span {
+    font-size: 24px;
+  }
+  .driving-game .target strong {
+    font-size: 14px;
+  }
+  .driving-game .target small {
+    font-size: 10px;
+    letter-spacing: 0;
+  }
+  .driving-game .map-panel {
+    display: none;
+    top: 138px;
+    right: 12px;
+    bottom: auto;
+    width: 144px;
+    padding: 6px;
+    pointer-events: none;
+  }
+  .driving-game.is-driving.map-open .map-panel {
+    display: block;
+  }
+  .driving-game .map-title,
+  .driving-game .map-legend {
+    display: none;
+  }
+  .driving-game .map-panel canvas {
+    margin: 0;
+  }
+  .driving-game #toast {
+    top: 138px;
+    max-width: 320px;
+    width: calc(100% - 32px);
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  .driving-game .overlay {
+    padding: 16px;
+    align-items: center;
+    justify-content: center;
+    background: #10282d44;
+  }
+  .driving-game:has(.overlay:not(.hidden)) .hud {
+    display: none;
+  }
+  .driving-game .menu-card {
+    width: min(340px, 100%);
+    max-height: 100%;
+    overflow: auto;
+    padding: 22px;
+  }
+  .driving-game .menu-card h2 {
+    margin: 10px 0;
+    font-size: 34px;
+  }
+  .driving-game .menu-card > p {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .driving-game .intro-details {
+    display: none;
+  }
+  .driving-game .menu-card .menu-note {
+    display: block;
+    font-size: 11px;
+    line-height: 1.5;
+    margin-top: 12px;
+  }
+  .driving-game .primary,
+  .driving-game .secondary {
+    min-height: 44px;
+    font-size: 11px;
+    padding: 12px;
+  }
+  .driving-game .results {
+    margin: 14px 0;
+  }
+}
+@media (max-width: 380px) {
+  .driving-game {
+    --dpad-cell: 48px;
+  }
+}
+@media (max-height: 600px) and (orientation: landscape) {
+  .driving-game {
+    --dpad-cell: 44px;
+  }
+  .driving-game .dispatch,
+  .driving-game .course-panel,
+  .driving-game .target {
+    top: 60px;
+    height: 52px;
+    padding: 6px 10px;
+  }
+  .driving-game .dispatch,
+  .driving-game .course-panel {
+    width: 260px;
+  }
+  .driving-game .boarding {
+    font-size: 11px;
+  }
+  .driving-game .course-panel h2 {
+    margin-bottom: 2px;
+  }
+  .driving-game .course-panel progress {
+    margin-top: 3px;
+  }
+  .driving-game .map-panel {
+    top: 124px;
+    right: 92px;
+    width: 104px;
+  }
+  .driving-game .overlay {
+    padding: 8px 16px;
+  }
+  .driving-game .menu-card {
+    width: min(420px, 100%);
+    padding: 14px 18px;
+  }
+  .driving-game .menu-card > .eyebrow {
+    display: none;
+  }
+  .driving-game .menu-card h2 {
+    font-size: 25px;
+    margin: 6px 0;
+  }
+  .driving-game .menu-card h2 br {
+    display: none;
+  }
+  .driving-game .menu-card > p {
+    margin: 8px 0;
+    font-size: 12px;
+  }
+  .driving-game .menu-card .menu-note {
+    font-size: 10px;
+    margin-top: 8px;
+  }
+  .driving-game .secondary {
+    margin-top: 6px;
+  }
+  .driving-game .results {
+    margin: 8px 0;
+    gap: 8px;
+  }
+  .driving-game .results strong {
+    font-size: 18px;
+  }
+  .driving-game .results div {
+    padding-top: 5px;
+  }
+}

@@ -8,6 +8,9 @@ export function createGameInput({
   const keys = new Set();
   const pointers = new Map();
   const controls = [...buttons];
+  const directionalPads = [
+    ...new Set(controls.map((button) => button.closest('[data-dpad]'))),
+  ].filter(Boolean);
   const actions = Object.entries(bindings);
   const codes = new Set(actions.flatMap(([, codes]) => codes));
   const listeners = new AbortController();
@@ -15,7 +18,7 @@ export function createGameInput({
 
   function isDown(action) {
     if ((bindings[action] || []).some((code) => keys.has(code))) return true;
-    for (const pointer of pointers.values()) if (pointer.action === action) return true;
+    for (const pointer of pointers.values()) if (pointer.actions.includes(action)) return true;
     return false;
   }
   function snapshot(target = {}) {
@@ -26,7 +29,7 @@ export function createGameInput({
     for (const button of controls) {
       let pressed = false;
       for (const pointer of pointers.values())
-        if (pointer.button === button) {
+        if (pointer.buttons.includes(button)) {
           pressed = true;
           break;
         }
@@ -38,8 +41,8 @@ export function createGameInput({
     const held = [...pointers];
     pointers.clear();
     updateButtons();
-    for (const [id, { captureButton }] of held) {
-      if (captureButton.hasPointerCapture(id)) captureButton.releasePointerCapture(id);
+    for (const [id, { captureElement }] of held) {
+      if (captureElement.hasPointerCapture(id)) captureElement.releasePointerCapture(id);
     }
   }
   window.addEventListener(
@@ -68,29 +71,63 @@ export function createGameInput({
     options,
   );
 
-  for (const button of controls) {
-    button.addEventListener(
+  function updateDirectionalPad(pointer, event) {
+    const bounds = pointer.pad.getBoundingClientRect();
+    const x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1;
+    const y = ((event.clientY - bounds.top) / bounds.height) * 2 - 1;
+    const actions = [];
+    if (bounds.width > 0 && bounds.height > 0 && Math.abs(x) <= 1 && Math.abs(y) <= 1) {
+      // A neutral center prevents accidental turns. Corner sectors combine
+      // forward/reverse and steering so one thumb can drive around a bend.
+      if (x < -0.3) actions.push('left');
+      else if (x > 0.3) actions.push('right');
+      if (y < -0.3) actions.push('gas');
+      else if (y > 0.3) actions.push('reverse');
+    }
+    pointer.buttons = controls.filter(
+      (button) =>
+        button.closest('[data-dpad]') === pointer.pad && actions.includes(button.dataset.control),
+    );
+    pointer.actions = pointer.buttons.map((button) => button.dataset.control);
+  }
+
+  // The pad itself receives presses between arrow buttons, including diagonals.
+  // Pointer capture stays on the surface where that finger first touched down.
+  for (const surface of [...controls, ...directionalPads]) {
+    surface.addEventListener(
       'pointerdown',
       (event) => {
-        if (!isActive() || (event.pointerType === 'mouse' && event.button !== 0)) return;
+        if (
+          !isActive() ||
+          pointers.has(event.pointerId) ||
+          (event.pointerType === 'mouse' && event.button !== 0)
+        )
+          return;
         event.preventDefault();
-        button.setPointerCapture(event.pointerId);
-        pointers.set(event.pointerId, {
-          captureButton: button,
-          button,
-          action: button.dataset.control,
-          pad: button.closest('[data-control-pad]'),
-        });
+        surface.setPointerCapture(event.pointerId);
+        const pointer = {
+          captureElement: surface,
+          buttons: controls.includes(surface) ? [surface] : [],
+          actions: controls.includes(surface) ? [surface.dataset.control] : [],
+          pad: surface.closest('[data-control-pad]'),
+        };
+        if (directionalPads.includes(pointer.pad)) updateDirectionalPad(pointer, event);
+        pointers.set(event.pointerId, pointer);
         updateButtons();
       },
       options,
     );
-    button.addEventListener(
+    surface.addEventListener(
       'pointermove',
       (event) => {
         const pointer = pointers.get(event.pointerId);
-        if (!pointer?.pad) return;
+        if (!pointer?.pad || pointer.captureElement !== surface) return;
         event.preventDefault();
+        if (directionalPads.includes(pointer.pad)) {
+          updateDirectionalPad(pointer, event);
+          updateButtons();
+          return;
+        }
         // Keep capture on the original button so lifting outside still releases.
         // Sliding only changes actions within the pad where this finger began.
         const target = document
@@ -100,19 +137,19 @@ export function createGameInput({
           controls.includes(target) && target.closest('[data-control-pad]') === pointer.pad
             ? target
             : null;
-        if (pointer.button === next) return;
-        pointer.button = next;
-        pointer.action = next?.dataset.control;
+        pointer.buttons = next ? [next] : [];
+        pointer.actions = next ? [next.dataset.control] : [];
         updateButtons();
       },
       options,
     );
     const release = (event) => {
+      if (pointers.get(event.pointerId)?.captureElement !== surface) return;
       pointers.delete(event.pointerId);
       updateButtons();
     };
     for (const eventName of ['pointerup', 'pointercancel', 'lostpointercapture']) {
-      button.addEventListener(eventName, release, options);
+      surface.addEventListener(eventName, release, options);
     }
   }
   return {

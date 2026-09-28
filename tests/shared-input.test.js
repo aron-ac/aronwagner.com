@@ -25,7 +25,9 @@ class InputElement extends EventTarget {
         ? 'controlPad'
         : selector === '[data-control]'
           ? 'control'
-          : null;
+          : selector === '[data-dpad]'
+            ? 'dpad'
+            : null;
     if (property && property in this.dataset) return this;
     return this.parentElement?.closest(selector) ?? null;
   }
@@ -39,6 +41,9 @@ class InputElement extends EventTarget {
     this.captures.delete(id);
     dispatch(this, 'lostpointercapture', { pointerId: id });
   }
+  getBoundingClientRect() {
+    return { left: 20, top: 40, width: 132, height: 132 };
+  }
 }
 
 function dispatch(target, type, properties = {}) {
@@ -48,7 +53,7 @@ function dispatch(target, type, properties = {}) {
   return event;
 }
 
-function createFixture(t) {
+function createFixture(t, { dpad = false } = {}) {
   const window = new EventTarget();
   const document = new EventTarget();
   document.hidden = false;
@@ -61,8 +66,9 @@ function createFixture(t) {
       else delete globalThis[name];
     });
   }
-  const steering = new InputElement({ controlPad: 'steering' });
-  const throttle = new InputElement({ controlPad: 'throttle' });
+  const drivingPad = dpad ? new InputElement({ controlPad: 'driving', dpad: '' }) : null;
+  const steering = drivingPad || new InputElement({ controlPad: 'steering' });
+  const throttle = drivingPad || new InputElement({ controlPad: 'throttle' });
   const buttons = Object.fromEntries(
     [
       ['left', steering],
@@ -98,6 +104,16 @@ function createFixture(t) {
     document,
     window,
     pointer,
+    drivingPad,
+    padPointer(action, type, x, y, id = 1) {
+      const bounds = drivingPad.getBoundingClientRect();
+      return dispatch(action ? buttons[action] : drivingPad, type, {
+        pointerId: id,
+        pointerType: 'touch',
+        clientX: bounds.left + ((x + 1) * bounds.width) / 2,
+        clientY: bounds.top + ((y + 1) * bounds.height) / 2,
+      });
+    },
     setActive: (value) => (active = value),
     move(origin, target, id = 1) {
       document.hit = typeof target === 'string' ? buttons[target] : target;
@@ -125,6 +141,105 @@ test('direction pads support sliding, neutral gaps, and returning without recapt
   assert.equal(input.isDown('gas'), true);
   pointer('gas', 'pointerup');
   assert.equal(input.isDown('gas'), false);
+});
+
+test('a D-pad supports all cardinal and diagonal directions with one finger', (t) => {
+  const { input, buttons, drivingPad, padPointer } = createFixture(t, { dpad: true });
+  for (const [x, y, expected] of [
+    [0, -0.7, ['gas']],
+    [0, 0.7, ['reverse']],
+    [-0.7, 0, ['left']],
+    [0.7, 0, ['right']],
+    [-0.7, -0.7, ['gas', 'left']],
+    [0.7, -0.7, ['gas', 'right']],
+    [-0.7, 0.7, ['left', 'reverse']],
+    [0.7, 0.7, ['reverse', 'right']],
+  ]) {
+    padPointer(null, 'pointerdown', x, y);
+    assert.equal(drivingPad.hasPointerCapture(1), true);
+    assert.deepEqual(
+      Object.keys(input.snapshot())
+        .filter((action) => input.isDown(action))
+        .sort(),
+      expected,
+    );
+    assert.deepEqual(
+      Object.keys(buttons)
+        .filter((action) => buttons[action].classList.contains('pressed'))
+        .sort(),
+      expected,
+    );
+    padPointer(null, 'pointerup', x, y);
+    assert.equal(Object.values(input.snapshot()).some(Boolean), false);
+  }
+});
+
+test('D-pad sliding crosses sectors, rests in the center, and releases outside the pad', (t) => {
+  const { input, buttons, drivingPad, padPointer } = createFixture(t, { dpad: true });
+  padPointer('gas', 'pointerdown', 0, -0.7);
+  // The same down event also bubbles to the pad in a browser. It cannot recapture.
+  padPointer(null, 'pointerdown', 0, -0.7);
+  assert.equal(buttons.gas.hasPointerCapture(1), true);
+  assert.equal(drivingPad.hasPointerCapture(1), false);
+  padPointer('gas', 'pointermove', -0.7, -0.7);
+  assert.equal(input.isDown('gas') && input.isDown('left'), true);
+  padPointer('gas', 'pointermove', 0.7, 0.7);
+  assert.equal(input.isDown('reverse') && input.isDown('right'), true);
+  assert.equal(input.isDown('gas') || input.isDown('left'), false);
+  padPointer('gas', 'pointermove', 0.2, -0.2);
+  assert.equal(Object.values(input.snapshot()).some(Boolean), false, 'the center is neutral');
+  padPointer('gas', 'pointermove', -0.7, -0.7);
+  assert.equal(input.isDown('gas') && input.isDown('left'), true);
+  padPointer('gas', 'pointermove', -1.1, -0.7);
+  assert.equal(Object.values(input.snapshot()).some(Boolean), false, 'outside the pad is neutral');
+  padPointer('gas', 'pointermove', 0, -0.7);
+  assert.equal(input.isDown('gas'), true, 'returning to the pad resumes driving');
+  padPointer('gas', 'pointercancel', 0, -0.7);
+  assert.equal(Object.values(input.snapshot()).some(Boolean), false);
+});
+
+test('a diagonal D-pad touch and an auxiliary button remain independent', (t) => {
+  const { input, padPointer, pointer } = createFixture(t, { dpad: true });
+  padPointer(null, 'pointerdown', -0.7, -0.7);
+  pointer('brake', 'pointerdown', 2);
+  assert.equal(input.isDown('gas') && input.isDown('left') && input.isDown('brake'), true);
+  padPointer(null, 'pointermove', 1.1, 0);
+  assert.equal(input.isDown('gas') || input.isDown('left'), false);
+  assert.equal(input.isDown('brake'), true, 'leaving the D-pad keeps the other finger held');
+  padPointer(null, 'pointermove', 0.7, -0.7);
+  pointer('brake', 'pointerup', 2);
+  assert.equal(input.isDown('gas') && input.isDown('right'), true);
+  assert.equal(input.isDown('brake'), false);
+  padPointer(null, 'lostpointercapture', 0.7, -0.7);
+  assert.equal(Object.values(input.snapshot()).some(Boolean), false);
+});
+
+test('D-pad cleanup releases captures, diagonal actions and pressed arrows', (t) => {
+  const { input, buttons, drivingPad, padPointer, window, document } = createFixture(t, {
+    dpad: true,
+  });
+  for (const cleanup of [
+    () => input.clear(),
+    () => dispatch(window, 'blur'),
+    () => {
+      document.hidden = true;
+      dispatch(document, 'visibilitychange');
+    },
+    () => input.dispose(),
+  ]) {
+    padPointer(null, 'pointerdown', -0.7, -0.7);
+    assert.equal(input.isDown('gas') && input.isDown('left'), true);
+    cleanup();
+    assert.equal(Object.values(input.snapshot()).some(Boolean), false);
+    assert.equal(drivingPad.hasPointerCapture(1), false);
+    assert.equal(
+      Object.values(buttons).some((button) => button.classList.contains('pressed')),
+      false,
+    );
+    document.hidden = false;
+  }
+  padPointer(null, 'pointerdown', -0.7, -0.7);
+  assert.equal(input.isDown('gas'), false, 'disposed D-pads no longer accept input');
 });
 
 test('sliding never transfers a finger to another pad or an auxiliary action', (t) => {

@@ -711,7 +711,7 @@ footer a {
     transition: none !important;
   }
 }
-/* Fit the minimap between the coconut tally and stacked touch arrows. */
+/* Keep the desktop minimap compact on short touch-capable viewports. */
 @media (min-width: 651px) and (min-height: 521px) and (max-height: 700px) {
   .driving-game:where(:has(.driving-controls:not(.hidden))) .map-panel {
     width: 100px;
@@ -1127,9 +1127,6 @@ footer a {
   }
 }
 @media (max-height: 380px) and (orientation: landscape) {
-  .driving-game {
-    --driving-map-clearance: 110px;
-  }
   .overlay {
     padding: 8px 16px;
   }

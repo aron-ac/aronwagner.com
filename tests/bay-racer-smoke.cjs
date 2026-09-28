@@ -11,6 +11,8 @@ const {
 const {
   assertDrivingControls,
   exerciseDrivingControls,
+  assertCompactDrivingUI,
+  exerciseCompactDrivingUI,
 } = require('./helpers/driving-controls.cjs');
 const url = new URL(
   process.env.GAME_URL ||
@@ -446,6 +448,9 @@ test('bay racer smoke', { timeout: 300_000 }, async () => {
         'Releasing both fingers leaves no stuck controls',
       );
       await assertDrivingControls(page, `Bay Racer ${viewport.width}×${viewport.height}`);
+      await assertCompactDrivingUI(page, `Bay Racer ${viewport.width}×${viewport.height}`);
+      if (viewport.width === 390)
+        await exerciseCompactDrivingUI(page, { debugName: 'bayDebug', activeMode: 'racing' });
       await exerciseDrivingControls(page, {
         debugName: 'bayDebug',
         start: 'startRace',
@@ -455,7 +460,7 @@ test('bay racer smoke', { timeout: 300_000 }, async () => {
     }
     assert.deepEqual(errors, [], 'No JavaScript errors or failed game assets');
     console.log(
-      `PASS: ${mechanical.length} race checks, keyboard driving, pause keys, two-thumb driving and sliding, portrait/landscape layout and new-tab navigation.\n${mechanical.join('\n')}`,
+      `PASS: ${mechanical.length} race checks, keyboard driving, pause keys, one-thumb D-pad diagonals and sliding, independent boost, compact map/recovery, portrait/landscape layout and new-tab navigation.\n${mechanical.join('\n')}`,
     );
   } finally {
     await closeBrowser(browser);

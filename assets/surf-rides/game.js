@@ -7,10 +7,12 @@ import { readStoredNumber, writeStoredNumber } from '../shared/storage.js';
 import { createSynthAudio } from '../shared/audio.js';
 import { createGameInput } from '../shared/input.js';
 import { createGameLoop } from '../shared/game-loop.js';
+import { createDrivingUI } from '../shared/driving-ui.js';
 import { requireElements, setText, isInteractiveTarget } from '../shared/dom.js';
 import { createCamera, cameraOffset } from '../shared/camera-rig.js';
 
 const ui = requireElements([
+  'game-shell',
   'viewport',
   'load-state',
   'overlay',
@@ -18,6 +20,8 @@ const ui = requireElements([
   'restart',
   'pause',
   'recover',
+  'menu-recover',
+  'map-toggle',
   'dispatch',
   'target',
   'speedometer',
@@ -54,6 +58,7 @@ const ui = requireElements([
   'coconut-hud',
   'coconut-pop',
 ]);
+const drivingUI = createDrivingUI(ui);
 const clamp = THREE.MathUtils.clamp;
 let renderer;
 try {
@@ -241,8 +246,16 @@ function setDrivingUI(visible) {
   for (const name of ['dispatch', 'target', 'speedometer', 'pause', 'recover', 'coconut-hud'])
     ui[name].classList.toggle('hidden', !visible);
   ui['touch-controls'].classList.toggle('hidden', !visible || !coarse);
-  ui['map-panel'].classList.toggle('menu-map', !visible);
+  drivingUI.setPlaying(visible, state.mode === 'paused');
+  updateRecoveryUI();
   if (!visible) ui['coconut-pop'].classList.remove('show');
+}
+function updateRecoveryUI() {
+  const coolingDown = state.recoverCooldown > 0;
+  const disabled = state.mode !== 'playing' || coolingDown;
+  if (ui.recover.disabled !== disabled) ui.recover.disabled = disabled;
+  const menuDisabled = state.mode !== 'paused' || coolingDown;
+  if (ui['menu-recover'].disabled !== menuDisabled) ui['menu-recover'].disabled = menuDisabled;
 }
 function handleGameEvent(type, detail = {}) {
   const { ride } = detail;
@@ -285,7 +298,7 @@ function handleGameEvent(type, detail = {}) {
       setDrivingUI(false);
       ui.overlay.classList.remove('hidden');
       ui['menu-eyebrow'].textContent = 'TAKE A BREATHER';
-      ui['menu-title'].innerHTML = 'On island<br>time.';
+      ui['menu-title'].innerHTML = 'On island <br>time.';
       ui['menu-description'].textContent = 'Your shift is paused. The waves can wait.';
       ui['intro-details'].classList.add('hidden');
       ui.results.classList.add('hidden');
@@ -376,8 +389,8 @@ function showResults() {
   }
   ui['menu-eyebrow'].textContent = newBest ? 'NEW PERSONAL BEST' : 'THAT’S A WRAP';
   ui['menu-title'].innerHTML = state.rides
-    ? 'Pura vida.<br>Nice driving.'
-    : 'Next wave.<br>Next shift.';
+    ? 'Pura vida. <br>Nice driving.'
+    : 'Next wave. <br>Next shift.';
   ui['menu-description'].textContent = state.rides
     ? `${state.rides} happy surfer${state.rides === 1 ? '' : 's'} made it to the break. There’s always time for one more shift.`
     : 'The beach is waiting. Slow down inside each marker to complete a stop.';
@@ -409,6 +422,12 @@ ui.start.addEventListener('click', () => {
 ui.restart.addEventListener('click', startGame);
 ui.pause.addEventListener('click', pauseGame);
 ui.recover.addEventListener('click', recover);
+ui['menu-recover'].addEventListener('click', () => {
+  if (state.mode !== 'paused' || ui['menu-recover'].disabled) return;
+  resumeGame();
+  recover();
+  updateUI();
+});
 window.addEventListener('keydown', (event) => {
   if (
     event.repeat ||
@@ -533,7 +552,7 @@ function updateUI() {
   setText(ui.speed, Math.round(Math.abs(state.speed) * 3.6));
   setText(ui.surface, state.onRoad ? 'DIRT ROAD' : 'OFF THE BEATEN PATH');
   setText(ui.streak, state.streak ? `${state.streak}× STREAK` : '');
-  ui.recover.disabled = state.recoverCooldown > 0;
+  updateRecoveryUI();
   setText(ui.score, points(score()));
   setText(ui['coconut-count'], state.coconuts);
   const ride = state.ride;
@@ -675,6 +694,7 @@ const loop = createGameLoop({
   clearInput,
   resize,
   dispose() {
+    drivingUI.dispose();
     input.dispose();
     audio.dispose();
     renderer.dispose();

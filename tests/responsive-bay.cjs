@@ -2,7 +2,7 @@ const { test } = require('node:test');
 /* Browser layout regression: compact phones, tablets, and laptop viewports. */
 const assert = require('node:assert/strict');
 const { launchBrowser, loadGame, closeBrowser, artifactPath } = require('./helpers/browser.cjs');
-const { assertDrivingControls } = require('./helpers/driving-controls.cjs');
+const { assertDrivingControls, assertCompactDrivingUI } = require('./helpers/driving-controls.cjs');
 
 const url = new URL(
   process.env.GAME_URL ||
@@ -13,8 +13,10 @@ const viewports = [
   [320, 568],
   [360, 640],
   [375, 667],
+  [390, 844],
   [568, 320],
   [667, 375],
+  [844, 390],
   [667, 600],
   [651, 621],
   [700, 650],
@@ -169,6 +171,7 @@ test('responsive bay', { timeout: 300_000 }, async () => {
         true,
       );
       if (touch || hybrid) await assertDrivingControls(page, label);
+      await assertCompactDrivingUI(page, label);
       if (touch) {
         const button = await page.$('[data-control="gas"]');
         const box = await button.boundingBox();

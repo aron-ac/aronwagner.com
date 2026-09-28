@@ -11,6 +11,8 @@ const {
 const {
   assertDrivingControls,
   exerciseDrivingControls,
+  assertCompactDrivingUI,
+  exerciseCompactDrivingUI,
 } = require('./helpers/driving-controls.cjs');
 const gameURL = new URL(
   process.env.GAME_URL ||
@@ -368,6 +370,9 @@ test('surf rides smoke', { timeout: 300_000 }, async () => {
       );
       await client.detach();
       await assertDrivingControls(page, `Surf Riders ${viewport.width}×${viewport.height}`);
+      await assertCompactDrivingUI(page, `Surf Riders ${viewport.width}×${viewport.height}`);
+      if (viewport.width === 390)
+        await exerciseCompactDrivingUI(page, { debugName: 'surfDebug', activeMode: 'playing' });
       await exerciseDrivingControls(page, { debugName: 'surfDebug', start: 'startGame' });
       await page.screenshot({ path: artifactPath(`surf-riders-${viewport.width}.png`) });
     }
@@ -381,7 +386,7 @@ test('surf rides smoke', { timeout: 300_000 }, async () => {
     assert.equal(redirected.hash, '#start', 'The redirect retains the fragment');
     assert.deepEqual(errors, [], 'No page errors or failed asset requests');
     console.log(
-      `PASS: ${mechanical.length} mechanics, keyboard pickup, pause keys, two-thumb driving and sliding, portrait and landscape layouts.\n${mechanical.join('\n')}`,
+      `PASS: ${mechanical.length} mechanics, keyboard pickup, pause keys, one-thumb D-pad diagonals and sliding, independent brake, compact map/recovery, portrait and landscape layouts.\n${mechanical.join('\n')}`,
     );
   } finally {
     await closeBrowser(browser);

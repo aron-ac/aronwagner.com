@@ -6,10 +6,12 @@ import { createRace, NORMAL_SPEED } from './race.js';
 import { createSynthAudio } from '../shared/audio.js';
 import { createGameInput } from '../shared/input.js';
 import { createGameLoop } from '../shared/game-loop.js';
+import { createDrivingUI } from '../shared/driving-ui.js';
 import { requireElements, setText, isInteractiveTarget } from '../shared/dom.js';
 import { readStoredNumber, writeStoredNumber } from '../shared/storage.js';
 
 const ui = requireElements([
+  'game-shell',
   'viewport',
   'load-state',
   'overlay',
@@ -17,6 +19,8 @@ const ui = requireElements([
   'restart',
   'pause',
   'recover',
+  'menu-recover',
+  'map-toggle',
   'course-panel',
   'target',
   'speedometer',
@@ -44,6 +48,7 @@ const ui = requireElements([
   'menu-note',
   'sound',
 ]);
+const drivingUI = createDrivingUI(ui);
 const formatTime = (seconds) => {
   const tenths = Math.floor(Math.max(0, seconds) * 10);
   return `${Math.floor(tenths / 600)}:${((tenths % 600) / 10).toFixed(1).padStart(4, '0')}`;
@@ -123,7 +128,15 @@ function setDrivingUI(show) {
   for (const id of ['course-panel', 'target', 'speedometer', 'pause', 'recover'])
     ui[id].classList.toggle('hidden', !show);
   ui['touch-controls'].classList.toggle('hidden', !show || !coarse);
-  ui['map-panel'].classList.toggle('menu-map', !show);
+  drivingUI.setPlaying(show, state.mode === 'paused');
+  updateRecoveryUI();
+}
+function updateRecoveryUI() {
+  const coolingDown = state.recoverCooldown > 0;
+  const disabled = state.mode !== 'racing' || coolingDown;
+  if (ui.recover.disabled !== disabled) ui.recover.disabled = disabled;
+  const menuDisabled = state.mode !== 'paused' || state.pausedMode !== 'racing' || coolingDown;
+  if (ui['menu-recover'].disabled !== menuDisabled) ui['menu-recover'].disabled = menuDisabled;
 }
 function raceEvent(type, detail = {}) {
   if (type === 'start') {
@@ -226,6 +239,11 @@ ui.start.addEventListener('click', () => {
 ui.restart.addEventListener('click', startRace);
 ui.pause.addEventListener('click', pauseRace);
 ui.recover.addEventListener('click', recover);
+ui['menu-recover'].addEventListener('click', () => {
+  if (state.mode !== 'paused' || ui['menu-recover'].disabled) return;
+  resumeRace();
+  recover();
+});
 document.addEventListener('keydown', (event) => {
   if (event.repeat) return;
   if (event.code === 'KeyP' || event.code === 'Escape') {
@@ -363,8 +381,7 @@ function updateUI() {
   setText(ui['water-status'], state.boosting ? 'BOOSTING ≈' : 'FIND YOUR LINE');
   setText(ui['boost-value'], `${Math.round(state.boost)}%`);
   if (ui['boost-meter'].value !== state.boost) ui['boost-meter'].value = state.boost;
-  const recovering = state.mode !== 'racing' || state.recoverCooldown > 0;
-  if (ui.recover.disabled !== recovering) ui.recover.disabled = recovering;
+  updateRecoveryUI();
   const gate = world.gates[state.nextGate];
   setText(
     ui['gate-label'],
@@ -470,6 +487,7 @@ const loop = createGameLoop({
   clearInput,
   resize,
   dispose() {
+    drivingUI.dispose();
     controls.dispose();
     audio.dispose();
     renderer.dispose();
