@@ -9,25 +9,44 @@ const games = [
   {
     page: 'surf-riders.html',
     debug: 'surfDebug',
-    start: 'startGame',
     active: ['playing'],
     touch: 'gas',
   },
   {
     page: 'bay-racer.html',
     debug: 'bayDebug',
-    start: 'startRace',
     active: ['countdown', 'racing'],
     touch: 'gas',
   },
   {
     page: 'cici-treat-trail.html',
     debug: 'ciciDebug',
-    start: 'startGame',
     active: ['playing'],
     touch: 'right',
   },
 ];
+
+async function assertKeyboardNavigation(browser, page, game, selector, mode) {
+  const targets = new Set(browser.targets());
+  const destination = await page.$eval(selector, (link) => link.href);
+  await page.focus(selector);
+  const opened = browser.waitForTarget(
+    (target) => !targets.has(target) && target.type() === 'page' && target.url() === destination,
+  );
+  await page.keyboard.press('Enter');
+  const popup = await (await opened).page();
+  try {
+    assert.equal(page.url(), new URL(`${game.page}?debug=1`, baseURL).href);
+    assert.equal(
+      await page.evaluate((name) => window[name].state.mode, game.debug),
+      mode,
+      `${game.page}: Enter on ${selector} opens the link without starting or resuming gameplay`,
+    );
+  } finally {
+    await popup.close();
+    await page.bringToFront();
+  }
+}
 
 async function checkGame(browser, game) {
   const page = await browser.newPage();
@@ -90,6 +109,15 @@ async function checkGame(browser, game) {
 
     // loadGame uses timer polling, so readiness never contributes RAF callbacks.
     await loadGame(page, url.href, game.debug);
+    await assertKeyboardNavigation(browser, page, game, '.topbar a', 'menu');
+    await page.focus('#sound');
+    await page.keyboard.press('Enter');
+    assert.equal(
+      await page.$eval('#sound', (button) => button.getAttribute('aria-pressed')),
+      'true',
+    );
+    assert.equal(await page.evaluate((name) => window[name].state.mode, game.debug), 'menu');
+    await page.keyboard.press('Enter');
     assert.deepEqual(
       await page.$$eval('[data-control]', (buttons) =>
         buttons
@@ -113,7 +141,7 @@ async function checkGame(browser, game) {
       );
       assert.equal(await page.$eval('#minimap', (element) => element.getAttribute('role')), 'img');
     }
-    await page.evaluate(({ debug, start }) => {
+    await page.evaluate(({ debug }) => {
       const game = window[debug];
       if (game.renderer) {
         const render = game.renderer.render.bind(game.renderer);
@@ -129,8 +157,9 @@ async function checkGame(browser, game) {
           return clear(...args);
         };
       }
-      game[start]();
     }, game);
+    await page.focus('#start');
+    await page.keyboard.press('Enter');
     await page.waitForFunction(() => window.__gameFrames.renders >= 2, { polling: 50 });
     assert.ok(
       game.active.includes(await page.evaluate((name) => window[name].state.mode, game.debug)),
@@ -233,6 +262,7 @@ async function checkGame(browser, game) {
       },
       `${game.page}: rendering resumes once per frame while the simulation stays paused`,
     );
+    await assertKeyboardNavigation(browser, page, game, 'footer a', 'paused');
     await page.evaluate(() => document.getElementById('start').click());
     assert.equal(
       await page.evaluate((name) => window[name].state.mode, game.debug),
@@ -354,7 +384,7 @@ async function checkGame(browser, game) {
       );
     }
     console.log(
-      `PASS: ${game.page} lifecycle, render loop, input cleanup, loader recovery, accessible controls and optional render targets.`,
+      `PASS: ${game.page} lifecycle, render loop, input cleanup, keyboard navigation, loader recovery, accessible controls and optional render targets.`,
     );
   } finally {
     await page.close();

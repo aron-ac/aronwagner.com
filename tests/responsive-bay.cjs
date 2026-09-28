@@ -131,6 +131,28 @@ test('responsive bay', { timeout: 300_000 }, async () => {
       await page.evaluate(() => {
         for (let i = 0; i < 186; i++) bayDebug.update(1 / 60);
       });
+      const targetDirectionError = await page.evaluate(() => {
+        const game = bayDebug;
+        game.updateUI();
+        const gate = game.world.gates[game.state.nextGate];
+        const target = game.boat.position.clone().set(gate.x, 0, gate.z).project(game.camera);
+        const origin = game.boat.position
+          .clone()
+          .set(game.state.x, 0, game.state.z)
+          .project(game.camera);
+        const viewport = document.getElementById('viewport');
+        // Convert projected points into pixels before deriving the expected direction.
+        const dx = ((target.x - origin.x) * viewport.clientWidth) / 2;
+        const dy = ((target.y - origin.y) * viewport.clientHeight) / 2;
+        const expected = Math.atan2(dx, dy);
+        const transform = document.getElementById('target-arrow').style.transform;
+        const actual = Number(transform.match(/^rotate\((.*)rad\)$/)[1]);
+        return Math.abs(Math.atan2(Math.sin(actual - expected), Math.cos(actual - expected)));
+      });
+      assert.ok(
+        targetDirectionError < 0.0001,
+        `${label}: navigation arrow points toward the gate in viewport pixels`,
+      );
       await assertLayout(
         page,
         `${label} racing`,

@@ -74,6 +74,41 @@ async function assertVisible(page, selector, label, interactive = false) {
   if (interactive) assert.equal(result.reachable, true, `${label}: ${selector} is reachable`);
 }
 
+async function assertThemeContrast(page, label) {
+  const checks = await page.evaluate(() => {
+    function luminance(color) {
+      const linear = color
+        .match(/[\d.]+/g)
+        .slice(0, 3)
+        .map(Number)
+        .map((value) => {
+          const channel = value / 255;
+          return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+        });
+      return linear[0] * 0.2126 + linear[1] * 0.7152 + linear[2] * 0.0722;
+    }
+    return [
+      ['.theme-toggle', 'body', 3],
+      ['#sisyphus-dialog .quote-source', '#sisyphus-dialog', 4.5],
+      ['.book-amazon', '.book-amazon', 4.5],
+    ].map(([selector, background, minimum]) => {
+      const foreground = luminance(getComputedStyle(document.querySelector(selector)).color);
+      const backdrop = luminance(
+        getComputedStyle(document.querySelector(background)).backgroundColor,
+      );
+      const ratio =
+        (Math.max(foreground, backdrop) + 0.05) / (Math.min(foreground, backdrop) + 0.05);
+      return { selector, minimum, ratio };
+    });
+  });
+  for (const { selector, minimum, ratio } of checks) {
+    assert.ok(
+      ratio >= minimum,
+      `${label}: ${selector} contrast ${ratio.toFixed(2)}:1 meets ${minimum}:1`,
+    );
+  }
+}
+
 async function assertHotspotPins(page, label, hasTouch) {
   assert.equal(
     await page.evaluate(() => matchMedia('(hover: none)').matches),
@@ -208,6 +243,7 @@ test('responsive home', { timeout: 300_000 }, async () => {
           await page.click('.theme-toggle');
         }
         await page.click('.sisyphus-toggle');
+        await assertThemeContrast(page, `${label} (${night ? 'night' : 'day'})`);
         await assertVisible(page, '#sisyphus-dialog', label);
         await assertVisible(page, '#sisyphus-dialog .quote-close', label, true);
         await assertVisible(page, '#sisyphus-dialog .quote-passage', label, true);

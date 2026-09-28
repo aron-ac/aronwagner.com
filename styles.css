@@ -100,7 +100,7 @@ button:disabled {
   padding: 7px;
   border: 0;
   background: transparent;
-  color: #d2cec4;
+  color: var(--ink);
   cursor: pointer;
   z-index: 30;
   transition:

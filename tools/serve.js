@@ -97,18 +97,20 @@ export function createSiteServer({ root: directory = projectRoot } = {}) {
           throw new Error(`Could not render ${originalPath}: ${error.message}`, { cause: error });
         }
       }
-      const configuredHeaders = Object.assign(
-        {},
-        ...headers
-          .filter((rule) => matchesPath(rule.path, originalPath))
-          .map((rule) => rule.headers),
-      );
+      // Cloudflare combines repeated custom headers across matching rules. Keep
+      // defaults separate so one configured header replaces, rather than appends
+      // to, the default value. Headers handles case-insensitive names and joins.
+      const configuredHeaders = new Headers();
+      for (const rule of headers) {
+        if (!matchesPath(rule.path, originalPath)) continue;
+        for (const [name, value] of rule.headers) configuredHeaders.append(name, value);
+      }
       response.writeHead(200, {
-        'Content-Type': mimeTypes[extname(filename)] || 'application/octet-stream',
-        'Content-Length': html?.length ?? info.size,
-        'Cache-Control': 'no-cache',
-        'X-Content-Type-Options': 'nosniff',
-        ...configuredHeaders,
+        'content-type': mimeTypes[extname(filename)] || 'application/octet-stream',
+        'content-length': html?.length ?? info.size,
+        'cache-control': 'no-cache',
+        'x-content-type-options': 'nosniff',
+        ...Object.fromEntries(configuredHeaders),
       });
       if (request.method === 'HEAD') response.end();
       else if (html) response.end(html);
@@ -166,10 +168,10 @@ function parseHeaders(text) {
       } catch (error) {
         throw new Error(`Invalid _headers line: ${line}`, { cause: error });
       }
-      current.headers[match[1]] = match[2];
+      current.headers.push([match[1], match[2]]);
     } else {
       if (!/^\/[^*]*(?:\*)?$/.test(line)) throw new Error(`Unsupported _headers route: ${line}`);
-      current = { path: line, headers: {} };
+      current = { path: line, headers: [] };
       rules.push(current);
     }
   }

@@ -6,7 +6,7 @@ import { createRace, NORMAL_SPEED } from './race.js';
 import { createSynthAudio } from '../shared/audio.js';
 import { createGameInput } from '../shared/input.js';
 import { createGameLoop } from '../shared/game-loop.js';
-import { requireElements, setText } from '../shared/dom.js';
+import { requireElements, setText, isInteractiveTarget } from '../shared/dom.js';
 import { readStoredNumber, writeStoredNumber } from '../shared/storage.js';
 
 const ui = requireElements([
@@ -235,7 +235,7 @@ document.addEventListener('keydown', (event) => {
   if (event.code === 'KeyR') recover();
   if (
     event.code === 'Enter' &&
-    event.target.tagName !== 'BUTTON' &&
+    !isInteractiveTarget(event.target) &&
     ['menu', 'finished', 'paused'].includes(state.mode)
   ) {
     event.preventDefault();
@@ -383,7 +383,7 @@ function updateUI() {
   boatProjection.set(state.x, 0, state.z).project(camera);
   const angle = Math.atan2(
     targetProjection.x - boatProjection.x,
-    targetProjection.y - boatProjection.y,
+    (targetProjection.y - boatProjection.y) / viewportAspect,
   );
   const rotation = `rotate(${angle}rad)`;
   if (ui['target-arrow'].style.transform !== rotation)

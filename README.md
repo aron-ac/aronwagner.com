@@ -66,6 +66,11 @@ Browser checks use Puppeteer. If Chromium was not downloaded during installation
 `npm run setup:browser`, or set `CHROME_BIN` to an existing Chrome executable.
 GitHub Actions runs the locked install, pinned Chrome setup, static/unit checks, and both source
 and production browser suites on pushes and pull requests.
+The shared browser launcher explicitly starts with desktop pointer and hover capabilities so
+headless Linux and macOS simulate the same input device. Puppeteer's touch emulation still
+overrides that baseline for phones and tablets; disabling it restores the desktop settings.
+`tests/browser-emulation-smoke.cjs` checks these transitions and hybrid touchscreen laptops.
+This device setup is independent of the graphics backend.
 The Linux workflow sets `BROWSER_SOFTWARE_RENDERING=1` to exercise real WebGL through Chromium's
 SwiftShader backend without a graphics device. Local runs use the default graphics backend unless
 explicitly opted in. Game tests wait for initialization and rendered frames rather than network

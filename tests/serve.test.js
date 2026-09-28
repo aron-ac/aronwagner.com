@@ -14,7 +14,7 @@ test('local production server applies build headers and redirects without exposi
   await writeFile(join(directory, 'immutable', 'hash', 'app.js'), 'window.loaded=true;');
   await writeFile(
     join(directory, '_headers'),
-    "/*\n  Content-Security-Policy: default-src 'self'\n  Cache-Control: no-cache\n/immutable/*\n  Cache-Control: public, max-age=31536000, immutable\n",
+    "/*\n  Content-Security-Policy: default-src 'self'\n/immutable/*\n  Cache-Control: public, max-age=31536000, immutable\n",
   );
   await writeFile(
     join(directory, '_redirects'),
@@ -35,6 +35,8 @@ test('local production server applies build headers and redirects without exposi
   assert.equal(home.headers.get('cache-control'), 'no-cache');
   const asset = await fetch(`${base}/immutable/hash/app.js`, { method: 'HEAD' });
   assert.equal(asset.headers.get('cache-control'), 'public, max-age=31536000, immutable');
+  assert.equal(asset.headers.get('content-security-policy'), "default-src 'self'");
+  assert.equal(asset.headers.get('x-content-type-options'), 'nosniff');
   assert.equal(asset.headers.get('content-type'), 'text/javascript; charset=utf-8');
   assert.equal(await asset.text(), '');
   for (const [route, target] of [
@@ -51,6 +53,46 @@ test('local production server applies build headers and redirects without exposi
   assert.equal((await fetch(`${base}/%ZZ`)).status, 400);
   assert.equal((await fetch(`${base}/missing.html`)).status, 404);
   assert.equal((await fetch(base, { method: 'POST' })).status, 405);
+});
+
+test('matching header rules combine duplicate names case-insensitively without merging defaults', async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), 'mark-site-header-rules-'));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  await mkdir(join(directory, 'immutable'), { recursive: true });
+  await writeFile(join(directory, 'index.html'), '<!doctype html><h1>Home</h1>');
+  await writeFile(join(directory, 'immutable', 'app.js'), 'window.loaded=true;');
+  await writeFile(
+    join(directory, '_headers'),
+    [
+      '/*',
+      '  Cache-Control: public',
+      '  X-Robots-Tag: nosnippet',
+      '  X-Robots-Tag: noarchive',
+      '/immutable/*',
+      '  cache-control: max-age=31536000',
+      '  x-robots-tag: noindex',
+      '/immutable/app.js',
+      '  CACHE-CONTROL: immutable',
+      '/unrelated/*',
+      '  Cache-Control: no-store',
+      '',
+    ].join('\n'),
+  );
+  const server = createSiteServer({ root: directory });
+  t.after(async () => {
+    server.closeAllConnections();
+    await new Promise((done) => server.close(done));
+  });
+  server.listen(0, '127.0.0.1');
+  await once(server, 'listening');
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const home = await fetch(base);
+  assert.equal(home.headers.get('cache-control'), 'public', 'One rule replaces the default');
+  assert.equal(home.headers.get('x-robots-tag'), 'nosnippet, noarchive');
+  const asset = await fetch(`${base}/immutable/app.js`);
+  assert.equal(asset.headers.get('cache-control'), 'public, max-age=31536000, immutable');
+  assert.equal(asset.headers.get('x-robots-tag'), 'nosnippet, noarchive, noindex');
+  assert.equal(await asset.text(), 'window.loaded=true;');
 });
 
 test('invalid server rules fail synchronously before a server can listen', async (t) => {

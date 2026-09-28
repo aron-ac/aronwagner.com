@@ -38,6 +38,6 @@ jeep.userData.brakeLights.forEach((light) => {
 
 ## Provenance and validation
 
-All vehicle geometry was created specifically for this project; no third-party mesh was downloaded. This document does not assign an additional license to the project's original model. Three.js and its export/import utilities are MIT-licensed; the dependency's license is in `vendor/LICENSE`. The Jeep name identifies the vehicle depicted; the model is an unofficial stylized depiction.
+All vehicle geometry was created specifically for this project; no third-party mesh was downloaded. This document does not assign an additional license to the project's original model. Three.js and its export/import utilities are MIT-licensed; see the [dependency's license](../vendor/three/LICENSE). The Jeep name identifies the vehicle depicted; the model is an unofficial stylized depiction.
 
 Exported using Three.js `GLTFExporter` 0.180.0 and successfully loaded back through `GLTFLoader` 0.180.0, checking finite mesh data, white-shell and LED-bar materials, and all four named wheel pivots. Export/import utilities were used as temporary development tools and are not runtime dependencies. The revised source model was rendered in Chrome from front and rear perspectives and with passenger boards to inspect the roof contrast, light bar, rack clearance, materials and shadow.

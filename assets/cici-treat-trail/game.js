@@ -4,7 +4,7 @@ import * as art from './art.js';
 import { createSynthAudio } from '../shared/audio.js';
 import { createGameInput } from '../shared/input.js';
 import { createGameLoop } from '../shared/game-loop.js';
-import { requireElements, setText, setAttribute } from '../shared/dom.js';
+import { requireElements, setText, setAttribute, isInteractiveTarget } from '../shared/dom.js';
 import { readStoredNumber, writeStoredNumber } from '../shared/storage.js';
 
 const ui = requireElements([
@@ -198,7 +198,7 @@ document.addEventListener('keydown', (event) => {
   }
   if (
     event.code === 'Enter' &&
-    event.target.tagName !== 'BUTTON' &&
+    !isInteractiveTarget(event.target) &&
     ['menu', 'paused', 'won', 'lost'].includes(state.mode)
   ) {
     event.preventDefault();

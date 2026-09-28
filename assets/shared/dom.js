@@ -18,3 +18,16 @@ export function setAttribute(element, name, value) {
   const text = String(value);
   if (element.getAttribute(name) !== text) element.setAttribute(name, text);
 }
+
+// Global menu shortcuts must not consume a focused control's native activation.
+export function isInteractiveTarget(target) {
+  return (
+    target instanceof Element &&
+    (target.isContentEditable ||
+      Boolean(
+        target.closest(
+          'a[href], button, input, textarea, select, summary, [role="button"], [role="link"]',
+        ),
+      ))
+  );
+}

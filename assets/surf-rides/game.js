@@ -7,7 +7,7 @@ import { readStoredNumber, writeStoredNumber } from '../shared/storage.js';
 import { createSynthAudio } from '../shared/audio.js';
 import { createGameInput } from '../shared/input.js';
 import { createGameLoop } from '../shared/game-loop.js';
-import { requireElements, setText } from '../shared/dom.js';
+import { requireElements, setText, isInteractiveTarget } from '../shared/dom.js';
 import { createCamera, cameraOffset } from '../shared/camera-rig.js';
 
 const ui = requireElements([
@@ -421,7 +421,7 @@ window.addEventListener('keydown', (event) => {
     else if (state.mode === 'paused') resumeGame();
   }
   if (event.code === 'KeyR' && state.mode === 'playing') recover();
-  if (event.code === 'Enter' && event.target.tagName !== 'BUTTON' && state.mode !== 'playing') {
+  if (event.code === 'Enter' && !isInteractiveTarget(event.target) && state.mode !== 'playing') {
     event.preventDefault();
     if (state.mode === 'paused') resumeGame();
     else startGame();

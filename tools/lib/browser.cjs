@@ -6,11 +6,16 @@ async function launchBrowser() {
   const puppeteer = imported.default || imported;
   const browser = await puppeteer.launch({
     headless: true,
-    // Explicit opt-in for trusted local pages on GPU-less CI runners. Keep the
-    // browser sandbox and real WebGL rendering; local runs use the native GPU.
-    ...(process.env.BROWSER_SOFTWARE_RENDERING === '1'
-      ? { args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] }
-      : {}),
+    args: [
+      // Headless Linux may have no pointing device. Define the desktop baseline
+      // explicitly; Puppeteer's touch emulation overrides it for phone/tablet tests.
+      '--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4',
+      // Explicit opt-in for trusted local pages on GPU-less CI runners. Keep the
+      // browser sandbox and real WebGL rendering; local runs use the native GPU.
+      ...(process.env.BROWSER_SOFTWARE_RENDERING === '1'
+        ? ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader']
+        : []),
+    ],
     ...(process.env.CHROME_BIN ? { executablePath: process.env.CHROME_BIN } : {}),
   });
   // On macOS, an orphaned Chrome crash reporter can inherit stderr and keep
