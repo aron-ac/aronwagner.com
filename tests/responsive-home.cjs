@@ -11,6 +11,7 @@ const viewports = [
   [481, 800, true],
   [568, 320, true],
   [650, 900, true],
+  [651, 900, true],
   [667, 375, true],
   [844, 390, true],
   [768, 1024, true],
@@ -47,6 +48,11 @@ const sceneObjects = [
   ['.katana-toggle', 300, 368],
   ['.candle-toggle', 321, 461],
   ['.portrait', 551, 485],
+  ['.dog', 795, 795],
+  ['.monitor', 860, 390],
+  ['.left-screen', 727, 486],
+  ['.laptop', 861, 490],
+  ['.right-screen', 1009, 510],
   ['.sisyphus-toggle', 1303, 334],
   ['.sisyphus-toggle', 1367, 307],
   ['.sisyphus-toggle', 1265, 359],
@@ -115,6 +121,7 @@ async function assertHotspotPins(page, label, hasTouch) {
     hasTouch,
     `${label}: hover capability matches the emulated device`,
   );
+  const circles = [];
   for (const selector of sceneControls) {
     await page.$eval(selector, (control) => control.scrollIntoView({ block: 'center' }));
     const pin = await page.$eval(selector, (control) => {
@@ -129,13 +136,16 @@ async function assertHotspotPins(page, label, hasTouch) {
       ];
       const x = bounds.left + bounds.width / 2;
       const y = bounds.top + bounds.height / 2;
-      const radius = Math.min(bounds.width, bounds.height) / 2 - 3;
+      const radius = Math.min(bounds.width, bounds.height) / 2 - 1;
       return {
         count: pins.length,
         decorative: pin.getAttribute('aria-hidden') === 'true' && pin.tabIndex === -1,
         visible: pin.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true }),
         width: bounds.width,
         height: bounds.height,
+        // Document coordinates stay comparable while each control is scrolled into view.
+        x: x + scrollX,
+        y: y + scrollY,
         hasDot: styles.some(
           (style) =>
             style.display !== 'none' &&
@@ -149,10 +159,12 @@ async function assertHotspotPins(page, label, hasTouch) {
         ),
         tapFailures: [
           [x, y],
-          [x - radius, y],
-          [x + radius, y],
-          [x, y - radius],
-          [x, y + radius],
+          ...[radius / 2, radius].flatMap((distance) =>
+            Array.from({ length: 16 }, (_, index) => {
+              const angle = (index * Math.PI) / 8;
+              return [x + Math.cos(angle) * distance, y + Math.sin(angle) * distance];
+            }),
+          ),
         ]
           .map(([x, y]) => ({ x, y, hit: document.elementFromPoint(x, y) }))
           .filter(({ hit }) => !control.contains(hit))
@@ -161,23 +173,44 @@ async function assertHotspotPins(page, label, hasTouch) {
             y,
             hit: hit?.closest('a, button')?.className || hit?.className || null,
           })),
+        cornerHits: [-1, 1].flatMap((dx) =>
+          [-1, 1]
+            .map((dy) => [x + dx * bounds.width * 0.45, y + dy * bounds.height * 0.45])
+            .filter(([x, y]) => pin.contains(document.elementFromPoint(x, y))),
+        ),
         animations: styles.map((style) => style.animationName),
       };
     });
+    if (['.portrait', '.dog'].includes(selector)) {
+      assert.equal(pin.count, 0, `${label}: ${selector} keeps its artwork free of pins`);
+      continue;
+    }
     assert.equal(pin.count, 1, `${label}: ${selector} has one pin`);
     assert.equal(pin.decorative, true, `${label}: ${selector} keeps one accessible control`);
     assert.equal(pin.visible, hasTouch, `${label}: ${selector} pin follows hover capability`);
     if (hasTouch) {
       assert.ok(
-        pin.width >= 24 && pin.height >= 24,
-        `${label}: ${selector} pin has a 24px tap area`,
+        pin.width >= 44 && pin.height >= 44,
+        `${label}: ${selector} pin has a 44px tap area`,
       );
+      assert.ok(Math.abs(pin.width - pin.height) < 0.1, `${label}: ${selector} pin is circular`);
+      assert.deepEqual(pin.cornerHits, [], `${label}: ${selector} excludes the square's corners`);
       assert.equal(pin.hasDot, true, `${label}: ${selector} pin displays a small dot`);
       assert.deepEqual(pin.tapFailures, [], `${label}: ${selector} owns its pin's tap area`);
       assert.deepEqual(
         pin.animations,
         ['none', 'none', 'none'],
         `${label}: ${selector} pin remains still with reduced motion`,
+      );
+      circles.push({ selector, x: pin.x, y: pin.y, radius: pin.width / 2 });
+    }
+  }
+  for (const [index, first] of circles.entries()) {
+    for (const second of circles.slice(index + 1)) {
+      const separation = Math.hypot(first.x - second.x, first.y - second.y);
+      assert.ok(
+        separation + 0.1 >= first.radius + second.radius,
+        `${label}: ${first.selector} and ${second.selector} tap circles do not overlap (${separation.toFixed(2)}px apart)`,
       );
     }
   }
@@ -205,6 +238,7 @@ test('responsive home', { timeout: 300_000 }, async () => {
       await assertHotspotPins(page, label, hasTouch);
       await page.$eval('.scene', (scene) => scene.scrollIntoView({ block: 'start' }));
       for (const [selector, x, y] of sceneObjects) {
+        await page.$eval(selector, (control) => control.scrollIntoView({ block: 'center' }));
         const reachable = await page.$eval(
           '.scene',
           (scene, { selector, x, y }) => {

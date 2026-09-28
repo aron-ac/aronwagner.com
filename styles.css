@@ -1565,17 +1565,95 @@ footer span {
   }
 }
 @media (hover: none) {
-  /* Keep pins inside the existing controls: their transparent circular targets
-     grow with the illustration, without adding focus stops or duplicate actions. */
+  /* Spread crowded targets as the scene shrinks. Each pin stays part of its
+     original control, with a short leader connecting it to the artwork. */
+  .scene {
+    --pin-spread: max(0px, calc(40px - 4.6cqw));
+  }
+  /* Keep whole pin circles above neighboring artwork hit regions. The lower
+     screens also overlap the bookcase and one another's original rectangles. */
+  .scene-hotspot:has(.hotspot-pin) {
+    z-index: 6;
+  }
+  .scene-hotspot.right-screen,
+  .scene-hotspot.sisyphus-toggle {
+    z-index: 7;
+  }
+  .scene-hotspot.laptop {
+    z-index: 8;
+  }
+  .scene-hotspot:not(:disabled):has(.hotspot-pin)::after,
+  .painting-toggle::after {
+    content: '';
+    position: absolute;
+    left: var(--pin-x, 50%);
+    top: var(--pin-y, 50%);
+    width: calc(hypot(var(--pin-dx), var(--pin-dy)) * var(--pin-spread));
+    height: 1px;
+    background: var(--accent);
+    box-shadow: 0 0 0 1px #ffffff80;
+    transform-origin: left center;
+    transform: rotate(atan2(var(--pin-dy), var(--pin-dx)));
+    pointer-events: none;
+  }
+  .camera-toggle {
+    --pin-dx: -0.329;
+    --pin-dy: -0.751;
+  }
+  .meditations-toggle {
+    --pin-dx: 0.594;
+    --pin-dy: -0.538;
+  }
+  .katana-toggle {
+    --pin-y: calc(18 / 1536 * 100cqw);
+    --pin-dx: -0.963;
+    --pin-dy: 0.256;
+  }
+  .candle-toggle {
+    --pin-dx: -0.138;
+    --pin-dy: 1.124;
+  }
+  .monitor {
+    /* Keep the original screen anchor when its phone target expands upward. */
+    --pin-y: calc(100% - var(--h) / 1536 * 50cqw);
+    --pin-dx: 0.586;
+    --pin-dy: -0.988;
+  }
+  .left-screen {
+    --pin-dx: -0.027;
+    --pin-dy: -0.739;
+  }
+  .laptop {
+    --pin-dx: 0.308;
+    --pin-dy: 0.808;
+  }
+  .right-screen {
+    --pin-dx: 0.828;
+    --pin-dy: -0.115;
+  }
+  .painting-toggle {
+    --pin-dx: -0.42;
+    --pin-dy: -0.035;
+  }
+  .sisyphus-toggle {
+    --pin-x: 35%;
+    --pin-y: 85%;
+    --pin-dx: 1.057;
+    --pin-dy: 0.448;
+  }
+  .books-toggle {
+    --pin-dx: 0.219;
+    --pin-dy: 1.136;
+  }
   .scene-hotspot:not(:disabled) .hotspot-pin,
   .painting-toggle .hotspot-pin {
     display: block;
     position: absolute;
     z-index: 1;
-    left: var(--pin-x, 50%);
-    top: var(--pin-y, 50%);
-    width: clamp(24px, 4.4cqw, 44px);
-    height: clamp(24px, 4.4cqw, 44px);
+    left: calc(var(--pin-x, 50%) + var(--pin-dx) * var(--pin-spread));
+    top: calc(var(--pin-y, 50%) + var(--pin-dy) * var(--pin-spread));
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     transform: translate(-50%, -50%);
     pointer-events: auto;
@@ -1592,26 +1670,20 @@ footer span {
     transform: translate(-50%, -50%);
   }
   .hotspot-pin::before {
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
     border: 2px solid #fff;
     background: var(--accent);
-    box-shadow: 0 1px 4px #142b4d80;
+    box-shadow: 0 1px 5px #142b4da0;
+    animation: hotspot-breathe 2s ease-in-out infinite;
   }
   .hotspot-pin::after {
-    width: 14px;
-    height: 14px;
-    border: 1px solid var(--accent);
-    opacity: 0.5;
-    animation: hotspot-pulse 2.6s ease-out infinite;
-  }
-  .monitor .hotspot-pin {
-    /* The phone monitor target expands upward; keep its pin on the screen. */
-    --pin-y: calc(100% - var(--h) / 1536 * 50cqw);
-  }
-  .sisyphus-toggle .hotspot-pin {
-    --pin-x: 35%;
-    --pin-y: 85%;
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 0 1px #ffffffd9;
+    opacity: 0.7;
+    animation: hotspot-pulse 2s ease-out infinite;
   }
   .scene-hotspot:not(:focus-visible) .label,
   .painting-toggle:not(:focus-visible) .label {
@@ -1619,12 +1691,9 @@ footer span {
   }
 }
 @media (hover: none) and (max-width: 650px) {
-  /* Leave room between the camera, katana and candle on the narrow left shelves. */
-  .camera-toggle .hotspot-pin {
-    --pin-y: 15%;
-  }
-  .candle-toggle .hotspot-pin {
-    --pin-y: 85%;
+  .katana-toggle {
+    /* Anchor the leader to the blade, not the expanded button's center. */
+    --pin-y: calc(100% - 62 / 1536 * 100cqw);
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1673,15 +1742,24 @@ footer span {
     visibility: hidden;
   }
 }
+@keyframes hotspot-breathe {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(0.88);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.12);
+  }
+}
 @keyframes hotspot-pulse {
   0% {
-    opacity: 0.55;
-    transform: translate(-50%, -50%) scale(0.85);
+    opacity: 0.85;
+    transform: translate(-50%, -50%) scale(0.8);
   }
   75%,
   100% {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(1.65);
+    transform: translate(-50%, -50%) scale(1.8);
   }
 }
 

@@ -357,14 +357,15 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
     await page.click('.candle-toggle');
     await page.screenshot({ path: artifactPath('homepage-night-lit.png'), fullPage: true });
 
-    const tapPin = async (selector) => {
-      const point = await page.$eval(`${selector} .hotspot-pin`, (pin) => {
-        pin.scrollIntoView({ block: 'center', behavior: 'instant' });
-        const bounds = pin.getBoundingClientRect();
+    const tapRegion = async (selector) => {
+      const point = await page.$eval(selector, (region) => {
+        region.scrollIntoView({ block: 'center', behavior: 'instant' });
+        const bounds = region.getBoundingClientRect();
         return { x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2 };
       });
       await page.touchscreen.tap(point.x, point.y);
     };
+    const tapPin = (selector) => tapRegion(`${selector} .hotspot-pin`);
     for (const width of [390, 768]) {
       await page.setViewport({
         width,
@@ -391,7 +392,12 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
             }),
           })),
         );
-        assert.equal(pins.length, 13, 'Each scene hotspot has a touch pin');
+        assert.equal(pins.length, 11, 'Scene objects have touch pins except Mark and CiCi');
+        assert.equal(
+          await page.$$eval('.portrait .hotspot-pin, .dog .hotspot-pin', (pins) => pins.length),
+          0,
+          'Mark and CiCi remain free of pin dots',
+        );
         for (const pin of pins) {
           assert.equal(pin.pulsing, true, `${pin.control} pin pulses with normal motion`);
         }
@@ -419,9 +425,16 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
       await page.click('.business-card-close');
       assert.equal(await popupOpen(), false);
       if (width === 390) {
-        await tapPin('.portrait');
-        assert.equal(await popupOpen(), true, 'Tapping the portrait pin opens the business card');
+        await tapRegion('.portrait');
+        assert.equal(await popupOpen(), true, 'Tapping Mark opens the business card without a pin');
         await page.click('.business-card-close');
+        const dogStatus = await page.$eval('#dog-status', (status) => status.textContent);
+        await tapRegion('.dog');
+        assert.notEqual(
+          await page.$eval('#dog-status', (status) => status.textContent),
+          dogStatus,
+          'Tapping CiCi still pets her without a pin',
+        );
         await tapPin('.candle-toggle');
       } else await page.click('.candle-toggle');
       assert.equal(await pressed(), 'false', 'Mobile candle toggle');

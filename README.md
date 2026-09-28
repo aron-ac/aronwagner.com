@@ -108,10 +108,13 @@ his cartoon avatar, CiCi, and a Warsaw picture centered on the Palace of Culture
 All four monitors use the Tampa panorama; the lower three display adjoining crops. The original
 Bitmotive monitor treatment is historical. The official logo remains on the business card.
 
-On devices without hover, small pulsing pins mark every interactive scene object. Each pin is
-part of its existing button or link, with a touch target that scales from 24px on compact phones
-to 44px on larger scenes. Pins stay still when reduced motion is enabled; desktop hover labels
-and keyboard focus behavior remain available.
+On devices without hover, small pulsing pins mark interactive scene objects except Mark and CiCi,
+whose illustrated regions remain tappable without pins. Each pin is part of its existing button
+or link, with a 44px circular touch target. On compact scenes, crowded pins spread apart with
+short connecting lines to their objects so neighboring targets do not overlap.
+The dot gently grows and shrinks while a contrasting ring expands and fades every two seconds.
+Pins stay still when reduced motion is enabled; desktop hover labels and keyboard focus behavior
+remain available.
 
 - The ultrawide opens the project section. The left screen links to Twitter, the laptop to
   LinkedIn, and the right screen to GitHub. On phones and desktop, activating an external screen
