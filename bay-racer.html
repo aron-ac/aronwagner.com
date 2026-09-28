@@ -135,20 +135,40 @@
           data-control-pad="driving"
           data-dpad
           role="group"
-          aria-label="Directional pad: up to drive, down to reverse, left and right to steer; slide diagonally to drive and turn"
+          aria-label="Directional pad: drive toward the arrow on screen; slide between directions"
         >
-          <button type="button" data-control="gas" class="gas" aria-label="Drive forward">↑</button>
-          <button type="button" data-control="left" aria-label="Steer left">←</button>
+          <button type="button" data-control="up" aria-label="Drive toward the top of the screen">
+            ↑
+          </button>
+          <button
+            type="button"
+            data-control="left"
+            aria-label="Drive toward the left of the screen"
+          >
+            ←
+          </button>
           <span class="dpad-center" aria-hidden="true"></span>
-          <button type="button" data-control="right" aria-label="Steer right">→</button>
-          <button type="button" data-control="reverse" aria-label="Slow down or reverse">↓</button>
+          <button
+            type="button"
+            data-control="right"
+            aria-label="Drive toward the right of the screen"
+          >
+            →
+          </button>
+          <button
+            type="button"
+            data-control="down"
+            aria-label="Drive toward the bottom of the screen"
+          >
+            ↓
+          </button>
         </div>
         <div class="driving-actions">
           <button
             type="button"
             data-control="boost"
             class="boost driving-auxiliary"
-            aria-label="Boost while accelerating"
+            aria-label="Boost while driving forward"
           >
             BOOST
           </button>
@@ -189,10 +209,11 @@
           </button>
           <p id="menu-note" class="menu-note">
             <span class="keyboard-instructions"
-              >Hold ↑ / ↓ to drive · ← / → to steer<br />WASD also works · Space to boost</span
+              >Hold arrows to drive in that screen direction<br />WASD also works · Space to
+              boost</span
             >
             <span class="touch-instructions"
-              >Slide diagonally on the D-pad to drive and turn. Boost on the right.</span
+              >Hold the D-pad toward where you want to go. Boost on the right.</span
             >
           </p>
         </div>

@@ -393,10 +393,6 @@ kbd {
   border-radius: 10px;
 }
 
-.touch-controls .gas {
-  background: #b3f4dce8;
-  color: #143e40;
-}
 .touch-controls .boost {
   color: var(--gold);
 }

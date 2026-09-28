@@ -420,10 +420,6 @@ footer a {
   border-radius: 10px;
 }
 
-.touch-controls .gas {
-  background: #a7e99ce8;
-  color: #153e31;
-}
 .touch-controls button.pressed {
   background: #fff1a9;
   color: #163936;

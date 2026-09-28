@@ -9,7 +9,13 @@ import { createGameInput } from '../shared/input.js';
 import { createGameLoop } from '../shared/game-loop.js';
 import { createDrivingUI } from '../shared/driving-ui.js';
 import { requireElements, setText, isInteractiveTarget } from '../shared/dom.js';
-import { createCamera, cameraOffset } from '../shared/camera-rig.js';
+import {
+  createCamera,
+  cameraOffset,
+  CAMERA_AZIMUTH,
+  CAMERA_ELEVATION,
+} from '../shared/camera-rig.js';
+import { createDirectionalDrive } from '../shared/directional-drive.js';
 
 const ui = requireElements([
   'game-shell',
@@ -109,8 +115,8 @@ const coconuts = createCoconuts(session.coconuts);
 scene.add(coconuts.group);
 const input = createGameInput({
   bindings: {
-    gas: ['KeyW', 'ArrowUp'],
-    reverse: ['KeyS', 'ArrowDown'],
+    up: ['KeyW', 'ArrowUp'],
+    down: ['KeyS', 'ArrowDown'],
     left: ['KeyA', 'ArrowLeft'],
     right: ['KeyD', 'ArrowRight'],
     brake: ['Space'],
@@ -119,7 +125,15 @@ const input = createGameInput({
 });
 const { keys } = input;
 const control = input.isDown;
-const clearInput = input.clear;
+const directionalDrive = createDirectionalDrive({
+  azimuth: CAMERA_AZIMUTH,
+  elevation: CAMERA_ELEVATION,
+});
+const clearInput = () => {
+  input.clear();
+  directionalDrive.reset();
+};
+const directionInput = {};
 const drivingInput = {};
 const greetings = [
   'The swell is picking up. Let’s go!',
@@ -448,7 +462,7 @@ window.addEventListener('keydown', (event) => {
 });
 
 function update(dt) {
-  session.update(dt, input.snapshot(drivingInput));
+  session.update(dt, directionalDrive.update(input.snapshot(directionInput), state, drivingInput));
   if (state.mode !== 'playing') return;
   coconuts.update(dt, state);
   dustTimer -= dt;

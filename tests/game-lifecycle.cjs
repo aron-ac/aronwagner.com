@@ -10,13 +10,13 @@ const games = [
     page: 'surf-riders.html',
     debug: 'surfDebug',
     active: ['playing'],
-    touch: 'gas',
+    touch: 'up',
   },
   {
     page: 'bay-racer.html',
     debug: 'bayDebug',
     active: ['countdown', 'racing'],
-    touch: 'gas',
+    touch: 'up',
   },
   {
     page: 'cici-treat-trail.html',

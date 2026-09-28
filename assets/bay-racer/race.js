@@ -184,7 +184,14 @@ export function createRace(world, onEvent = () => {}) {
           : 0;
     const acceleration = input.brake ? 3 : input.reverse ? 1.65 : input.gas ? 0.9 : 0.28;
     state.speed = damp(state.speed, targetSpeed, acceleration, dt);
-    state.steer = damp(state.steer, (input.left ? 1 : 0) - (input.right ? 1 : 0), 6, dt);
+    state.steer = damp(
+      state.steer,
+      Number.isFinite(input.steering)
+        ? clamp(input.steering, -1, 1)
+        : (input.left ? 1 : 0) - (input.right ? 1 : 0),
+      6,
+      dt,
+    );
     state.heading +=
       state.steer *
       (1.0 + Math.min(Math.abs(state.speed) / NORMAL_SPEED, 1) * 0.5) *

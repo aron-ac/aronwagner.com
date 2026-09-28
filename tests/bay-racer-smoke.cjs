@@ -11,6 +11,7 @@ const {
 const {
   assertDrivingControls,
   exerciseDrivingControls,
+  exerciseDrivingKeyboard,
   assertCompactDrivingUI,
   exerciseCompactDrivingUI,
 } = require('./helpers/driving-controls.cjs');
@@ -101,7 +102,7 @@ test('bay racer smoke', { timeout: 300_000 }, async () => {
         'Initial HUD gate number matches the first numbered buoy signs',
       );
       const start = { x: s.x, z: s.z };
-      d.keys.add('KeyW');
+      d.keys.add('KeyS');
       step(1);
       d.clearInput();
       check(
@@ -174,12 +175,12 @@ test('bay racer smoke', { timeout: 300_000 }, async () => {
         'Collision cooldown prevents repeat penalties on consecutive frames',
       );
       ready();
-      d.keys.add('KeyW');
+      d.keys.add('KeyS');
       step(1.2);
       d.clearInput();
       const normalSpeed = s.speed;
       ready();
-      d.keys.add('KeyW');
+      d.keys.add('KeyS');
       d.keys.add('Space');
       step(1.2);
       d.clearInput();
@@ -246,34 +247,11 @@ test('bay racer smoke', { timeout: 300_000 }, async () => {
       step(3.1);
       return results;
     });
-    // Exercise real browser input independently of the checkpoint setup above.
-    const initial = await page.evaluate(() => ({ x: bayDebug.state.x, z: bayDebug.state.z }));
-    await page.keyboard.down('KeyW');
-    await page.evaluate(() => {
-      for (let i = 0; i < 60; i++) bayDebug.update(1 / 60);
+    await exerciseDrivingKeyboard(page, {
+      debugName: 'bayDebug',
+      start: 'startRace',
+      countdownFrames: 186,
     });
-    await page.keyboard.up('KeyW');
-    assert.ok(
-      await page.evaluate(
-        (initial) =>
-          Math.hypot(bayDebug.state.x - initial.x, bayDebug.state.z - initial.z) > 1 &&
-          bayDebug.state.speed > 0,
-        initial,
-      ),
-      'Keyboard throttle drives the boat',
-    );
-    const heading = await page.evaluate(() => bayDebug.state.heading);
-    await page.keyboard.down('KeyD');
-    await page.keyboard.down('KeyW');
-    await page.evaluate(() => {
-      for (let i = 0; i < 30; i++) bayDebug.update(1 / 60);
-    });
-    await page.keyboard.up('KeyD');
-    await page.keyboard.up('KeyW');
-    assert.ok(
-      await page.evaluate((heading) => Math.abs(bayDebug.state.heading - heading) > 0.02, heading),
-      'Keyboard steering changes heading while underway',
-    );
     await page.keyboard.press('KeyP');
     assert.equal(await page.evaluate(() => bayDebug.state.mode), 'paused');
     await page.keyboard.press('Escape');
@@ -381,8 +359,11 @@ test('bay racer smoke', { timeout: 300_000 }, async () => {
           ),
         'All touch controls fit the viewport',
       );
+      await page.evaluate(() => {
+        bayDebug.state.heading = (-3 * Math.PI) / 4;
+      });
       const client = await page.createCDPSession();
-      const rect = await (await page.$('[data-control="gas"]')).boundingBox();
+      const rect = await (await page.$('[data-control="up"]')).boundingBox();
       const touchPoints = [{ x: rect.x + rect.width / 2, y: rect.y + rect.height / 2, id: 1 }];
       await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints });
       assert.ok(
@@ -390,7 +371,7 @@ test('bay racer smoke', { timeout: 300_000 }, async () => {
           for (let i = 0; i < 45; i++) bayDebug.update(1 / 60);
           return bayDebug.state.speed > 0;
         }),
-        'Touch throttle accelerates',
+        'Touch up accelerates toward the top of the screen',
       );
       await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
       assert.ok(
@@ -399,7 +380,7 @@ test('bay racer smoke', { timeout: 300_000 }, async () => {
           for (let i = 0; i < 30; i++) bayDebug.update(1 / 60);
           return (
             bayDebug.state.speed < before &&
-            !document.querySelector('[data-control="gas"]').classList.contains('pressed')
+            !document.querySelector('[data-control="up"]').classList.contains('pressed')
           );
         }),
         'Releasing touch throttle clears input and lets the boat coast',
@@ -408,9 +389,9 @@ test('bay racer smoke', { timeout: 300_000 }, async () => {
       await client.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] });
       assert.ok(
         await page.evaluate(
-          () => !document.querySelector('[data-control="gas"]').classList.contains('pressed'),
+          () => !document.querySelector('[data-control="up"]').classList.contains('pressed'),
         ),
-        'Cancelled touch releases throttle',
+        'Cancelled touch releases direction',
       );
       await client.detach();
       const boostRect = await (await page.$('[data-control="boost"]')).boundingBox();
@@ -435,7 +416,7 @@ test('bay racer smoke', { timeout: 300_000 }, async () => {
           bayDebug.update(1 / 60);
           return (
             !bayDebug.state.boosting &&
-            document.querySelector('[data-control="gas"]').classList.contains('pressed') &&
+            document.querySelector('[data-control="up"]').classList.contains('pressed') &&
             !document.querySelector('[data-control="boost"]').classList.contains('pressed')
           );
         }),
@@ -460,7 +441,7 @@ test('bay racer smoke', { timeout: 300_000 }, async () => {
     }
     assert.deepEqual(errors, [], 'No JavaScript errors or failed game assets');
     console.log(
-      `PASS: ${mechanical.length} race checks, keyboard driving, pause keys, one-thumb D-pad diagonals and sliding, independent boost, compact map/recovery, portrait/landscape layout and new-tab navigation.\n${mechanical.join('\n')}`,
+      `PASS: ${mechanical.length} race checks, screen-relative keyboard movement, pause keys, one-thumb D-pad diagonals and sliding, independent boost, compact map/recovery, portrait/landscape layout and new-tab navigation.\n${mechanical.join('\n')}`,
     );
   } finally {
     await closeBrowser(browser);

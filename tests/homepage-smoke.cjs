@@ -62,6 +62,10 @@ async function assertMobileGestures(page) {
       'Long presses do not select mobile homepage content',
     );
     await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
+    // Wait for the reset to reach the compositor before dispatching another
+    // gesture. Its completion acknowledgement can precede the main-thread scroll
+    // update on software-rendered CI, so observe the resulting position as well.
+    await settlePage(page);
     await client.send('Input.synthesizeScrollGesture', {
       x: point.x,
       y: point.y + 100,
@@ -70,11 +74,13 @@ async function assertMobileGestures(page) {
       preventFling: true,
       gestureSourceType: 'touch',
     });
+    await page.waitForFunction(() => scrollY > 100);
     assert.ok(
       await page.evaluate(() => scrollY > 100),
       'A vertical touch drag still scrolls the homepage',
     );
     await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
+    await settlePage(page);
   } finally {
     await client.detach();
   }

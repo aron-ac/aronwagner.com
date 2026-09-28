@@ -73,8 +73,8 @@ function createFixture(t, { dpad = false } = {}) {
     [
       ['left', steering],
       ['right', steering],
-      ['gas', throttle],
-      ['reverse', throttle],
+      ['up', throttle],
+      ['down', throttle],
       ['brake', null],
     ].map(([action, pad]) => [action, new InputElement({ control: action }, pad)]),
   );
@@ -83,8 +83,8 @@ function createFixture(t, { dpad = false } = {}) {
     bindings: {
       left: ['ArrowLeft'],
       right: ['ArrowRight'],
-      gas: ['ArrowUp'],
-      reverse: ['ArrowDown'],
+      up: ['ArrowUp'],
+      down: ['ArrowDown'],
       brake: ['Space'],
     },
     buttons: Object.values(buttons),
@@ -124,36 +124,36 @@ function createFixture(t, { dpad = false } = {}) {
 
 test('direction pads support sliding, neutral gaps, and returning without recapturing', (t) => {
   const { input, buttons, pointer, move } = createFixture(t);
-  pointer('gas', 'pointerdown');
-  assert.equal(input.isDown('gas'), true);
-  move('gas', new InputElement({}, buttons.reverse));
-  assert.equal(input.isDown('gas'), false);
-  assert.equal(input.isDown('reverse'), true);
-  assert.equal(buttons.gas.classList.contains('pressed'), false);
-  assert.equal(buttons.reverse.classList.contains('pressed'), true);
-  assert.equal(buttons.gas.hasPointerCapture(1), true);
-  assert.equal(buttons.reverse.hasPointerCapture(1), false);
-  move('gas', buttons.reverse.parentElement);
-  assert.equal(input.isDown('reverse'), false, 'space between buttons is neutral');
-  move('gas', null);
-  assert.equal(input.isDown('gas'), false, 'leaving the viewport is neutral');
-  move('gas', 'gas');
-  assert.equal(input.isDown('gas'), true);
-  pointer('gas', 'pointerup');
-  assert.equal(input.isDown('gas'), false);
+  pointer('up', 'pointerdown');
+  assert.equal(input.isDown('up'), true);
+  move('up', new InputElement({}, buttons.down));
+  assert.equal(input.isDown('up'), false);
+  assert.equal(input.isDown('down'), true);
+  assert.equal(buttons.up.classList.contains('pressed'), false);
+  assert.equal(buttons.down.classList.contains('pressed'), true);
+  assert.equal(buttons.up.hasPointerCapture(1), true);
+  assert.equal(buttons.down.hasPointerCapture(1), false);
+  move('up', buttons.down.parentElement);
+  assert.equal(input.isDown('down'), false, 'space between buttons is neutral');
+  move('up', null);
+  assert.equal(input.isDown('up'), false, 'leaving the viewport is neutral');
+  move('up', 'up');
+  assert.equal(input.isDown('up'), true);
+  pointer('up', 'pointerup');
+  assert.equal(input.isDown('up'), false);
 });
 
 test('a D-pad supports all cardinal and diagonal directions with one finger', (t) => {
   const { input, buttons, drivingPad, padPointer } = createFixture(t, { dpad: true });
   for (const [x, y, expected] of [
-    [0, -0.7, ['gas']],
-    [0, 0.7, ['reverse']],
+    [0, -0.7, ['up']],
+    [0, 0.7, ['down']],
     [-0.7, 0, ['left']],
     [0.7, 0, ['right']],
-    [-0.7, -0.7, ['gas', 'left']],
-    [0.7, -0.7, ['gas', 'right']],
-    [-0.7, 0.7, ['left', 'reverse']],
-    [0.7, 0.7, ['reverse', 'right']],
+    [-0.7, -0.7, ['up', 'left']],
+    [0.7, -0.7, ['up', 'right']],
+    [-0.7, 0.7, ['left', 'down']],
+    [0.7, 0.7, ['down', 'right']],
   ]) {
     padPointer(null, 'pointerdown', x, y);
     assert.equal(drivingPad.hasPointerCapture(1), true);
@@ -161,13 +161,13 @@ test('a D-pad supports all cardinal and diagonal directions with one finger', (t
       Object.keys(input.snapshot())
         .filter((action) => input.isDown(action))
         .sort(),
-      expected,
+      expected.toSorted(),
     );
     assert.deepEqual(
       Object.keys(buttons)
         .filter((action) => buttons[action].classList.contains('pressed'))
         .sort(),
-      expected,
+      expected.toSorted(),
     );
     padPointer(null, 'pointerup', x, y);
     assert.equal(Object.values(input.snapshot()).some(Boolean), false);
@@ -176,25 +176,25 @@ test('a D-pad supports all cardinal and diagonal directions with one finger', (t
 
 test('D-pad sliding crosses sectors, rests in the center, and releases outside the pad', (t) => {
   const { input, buttons, drivingPad, padPointer } = createFixture(t, { dpad: true });
-  padPointer('gas', 'pointerdown', 0, -0.7);
+  padPointer('up', 'pointerdown', 0, -0.7);
   // The same down event also bubbles to the pad in a browser. It cannot recapture.
   padPointer(null, 'pointerdown', 0, -0.7);
-  assert.equal(buttons.gas.hasPointerCapture(1), true);
+  assert.equal(buttons.up.hasPointerCapture(1), true);
   assert.equal(drivingPad.hasPointerCapture(1), false);
-  padPointer('gas', 'pointermove', -0.7, -0.7);
-  assert.equal(input.isDown('gas') && input.isDown('left'), true);
-  padPointer('gas', 'pointermove', 0.7, 0.7);
-  assert.equal(input.isDown('reverse') && input.isDown('right'), true);
-  assert.equal(input.isDown('gas') || input.isDown('left'), false);
-  padPointer('gas', 'pointermove', 0.2, -0.2);
+  padPointer('up', 'pointermove', -0.7, -0.7);
+  assert.equal(input.isDown('up') && input.isDown('left'), true);
+  padPointer('up', 'pointermove', 0.7, 0.7);
+  assert.equal(input.isDown('down') && input.isDown('right'), true);
+  assert.equal(input.isDown('up') || input.isDown('left'), false);
+  padPointer('up', 'pointermove', 0.2, -0.2);
   assert.equal(Object.values(input.snapshot()).some(Boolean), false, 'the center is neutral');
-  padPointer('gas', 'pointermove', -0.7, -0.7);
-  assert.equal(input.isDown('gas') && input.isDown('left'), true);
-  padPointer('gas', 'pointermove', -1.1, -0.7);
+  padPointer('up', 'pointermove', -0.7, -0.7);
+  assert.equal(input.isDown('up') && input.isDown('left'), true);
+  padPointer('up', 'pointermove', -1.1, -0.7);
   assert.equal(Object.values(input.snapshot()).some(Boolean), false, 'outside the pad is neutral');
-  padPointer('gas', 'pointermove', 0, -0.7);
-  assert.equal(input.isDown('gas'), true, 'returning to the pad resumes driving');
-  padPointer('gas', 'pointercancel', 0, -0.7);
+  padPointer('up', 'pointermove', 0, -0.7);
+  assert.equal(input.isDown('up'), true, 'returning to the pad resumes driving');
+  padPointer('up', 'pointercancel', 0, -0.7);
   assert.equal(Object.values(input.snapshot()).some(Boolean), false);
 });
 
@@ -202,13 +202,13 @@ test('a diagonal D-pad touch and an auxiliary button remain independent', (t) =>
   const { input, padPointer, pointer } = createFixture(t, { dpad: true });
   padPointer(null, 'pointerdown', -0.7, -0.7);
   pointer('brake', 'pointerdown', 2);
-  assert.equal(input.isDown('gas') && input.isDown('left') && input.isDown('brake'), true);
+  assert.equal(input.isDown('up') && input.isDown('left') && input.isDown('brake'), true);
   padPointer(null, 'pointermove', 1.1, 0);
-  assert.equal(input.isDown('gas') || input.isDown('left'), false);
+  assert.equal(input.isDown('up') || input.isDown('left'), false);
   assert.equal(input.isDown('brake'), true, 'leaving the D-pad keeps the other finger held');
   padPointer(null, 'pointermove', 0.7, -0.7);
   pointer('brake', 'pointerup', 2);
-  assert.equal(input.isDown('gas') && input.isDown('right'), true);
+  assert.equal(input.isDown('up') && input.isDown('right'), true);
   assert.equal(input.isDown('brake'), false);
   padPointer(null, 'lostpointercapture', 0.7, -0.7);
   assert.equal(Object.values(input.snapshot()).some(Boolean), false);
@@ -228,7 +228,7 @@ test('D-pad cleanup releases captures, diagonal actions and pressed arrows', (t)
     () => input.dispose(),
   ]) {
     padPointer(null, 'pointerdown', -0.7, -0.7);
-    assert.equal(input.isDown('gas') && input.isDown('left'), true);
+    assert.equal(input.isDown('up') && input.isDown('left'), true);
     cleanup();
     assert.equal(Object.values(input.snapshot()).some(Boolean), false);
     assert.equal(drivingPad.hasPointerCapture(1), false);
@@ -239,46 +239,46 @@ test('D-pad cleanup releases captures, diagonal actions and pressed arrows', (t)
     document.hidden = false;
   }
   padPointer(null, 'pointerdown', -0.7, -0.7);
-  assert.equal(input.isDown('gas'), false, 'disposed D-pads no longer accept input');
+  assert.equal(input.isDown('up'), false, 'disposed D-pads no longer accept input');
 });
 
 test('sliding never transfers a finger to another pad or an auxiliary action', (t) => {
   const { input, buttons, pointer, move } = createFixture(t);
   pointer('left', 'pointerdown');
-  for (const target of ['gas', 'brake']) {
+  for (const target of ['up', 'brake']) {
     move('left', target);
     assert.equal(input.isDown('left'), false);
     assert.equal(input.isDown(target), false);
   }
-  const unregistered = new InputElement({ control: 'gas' }, buttons.left.parentElement);
+  const unregistered = new InputElement({ control: 'up' }, buttons.left.parentElement);
   move('left', unregistered);
-  assert.equal(input.isDown('gas'), false, 'only registered controls are actionable');
+  assert.equal(input.isDown('up'), false, 'only registered controls are actionable');
   move('left', 'right');
   assert.equal(input.isDown('right'), true);
 });
 
 test('independent fingers can accelerate and change steering without releasing each other', (t) => {
   const { input, buttons, pointer, move } = createFixture(t);
-  pointer('gas', 'pointerdown', 1);
+  pointer('up', 'pointerdown', 1);
   pointer('left', 'pointerdown', 2);
   move('left', 'right', 2);
-  assert.equal(input.isDown('gas'), true);
+  assert.equal(input.isDown('up'), true);
   assert.equal(input.isDown('left'), false);
   assert.equal(input.isDown('right'), true);
   pointer('left', 'pointerup', 2);
-  assert.equal(input.isDown('gas'), true);
+  assert.equal(input.isDown('up'), true);
   assert.equal(input.isDown('right'), false);
   assert.equal(buttons.right.classList.contains('pressed'), false);
-  pointer('gas', 'pointerup', 1);
-  assert.equal(input.isDown('gas'), false);
+  pointer('up', 'pointerup', 1);
+  assert.equal(input.isDown('up'), false);
 });
 
 test('buttons outside a direction pad retain their original hold behavior', (t) => {
   const { input, pointer, move } = createFixture(t);
   pointer('brake', 'pointerdown');
-  move('brake', 'gas');
+  move('brake', 'up');
   assert.equal(input.isDown('brake'), true);
-  assert.equal(input.isDown('gas'), false);
+  assert.equal(input.isDown('up'), false);
   move('brake', null);
   assert.equal(input.isDown('brake'), true);
   pointer('brake', 'pointerup');
@@ -288,24 +288,24 @@ test('buttons outside a direction pad retain their original hold behavior', (t) 
 test('cancelled or lost pointer capture releases the action selected after sliding', (t) => {
   const { input, buttons, pointer, move } = createFixture(t);
   for (const type of ['pointercancel', 'lostpointercapture']) {
-    pointer('gas', 'pointerdown');
-    move('gas', 'reverse');
-    pointer('gas', type);
-    assert.equal(input.isDown('reverse'), false, type);
-    assert.equal(buttons.reverse.classList.contains('pressed'), false, type);
+    pointer('up', 'pointerdown');
+    move('up', 'down');
+    pointer('up', type);
+    assert.equal(input.isDown('down'), false, type);
+    assert.equal(buttons.down.classList.contains('pressed'), false, type);
   }
 });
 
 test('keyboard input remains independent of touch sliding and releases normally', (t) => {
   const { input, window, pointer, move } = createFixture(t);
   dispatch(window, 'keydown', { code: 'ArrowUp' });
-  pointer('gas', 'pointerdown');
-  move('gas', null);
-  assert.equal(input.isDown('gas'), true, 'a held keyboard key survives touch release');
-  pointer('gas', 'pointerup');
-  assert.equal(input.isDown('gas'), true);
+  pointer('up', 'pointerdown');
+  move('up', null);
+  assert.equal(input.isDown('up'), true, 'a held keyboard key survives touch release');
+  pointer('up', 'pointerup');
+  assert.equal(input.isDown('up'), true);
   dispatch(window, 'keyup', { code: 'ArrowUp' });
-  assert.equal(input.isDown('gas'), false);
+  assert.equal(input.isDown('up'), false);
 });
 
 test('clear, blur, visibility and disposal release original captures and slid actions', (t) => {
@@ -328,16 +328,16 @@ test('clear, blur, visibility and disposal release original captures and slid ac
     document.hidden = false;
   }
   setActive(false);
-  pointer('gas', 'pointerdown');
+  pointer('up', 'pointerdown');
   dispatch(window, 'keydown', { code: 'ArrowUp' });
-  assert.equal(input.isDown('gas'), false, 'inactive games reject new inputs');
+  assert.equal(input.isDown('up'), false, 'inactive games reject new inputs');
   setActive(true);
-  pointer('gas', 'pointerdown');
-  move('gas', 'reverse');
+  pointer('up', 'pointerdown');
+  move('up', 'down');
   input.dispose();
-  assert.equal(buttons.gas.hasPointerCapture(1), false);
-  assert.equal(input.isDown('reverse'), false);
-  pointer('gas', 'pointerdown');
+  assert.equal(buttons.up.hasPointerCapture(1), false);
+  assert.equal(input.isDown('down'), false);
+  pointer('up', 'pointerdown');
   dispatch(window, 'keydown', { code: 'ArrowUp' });
-  assert.equal(input.isDown('gas'), false, 'disposed controls no longer listen');
+  assert.equal(input.isDown('up'), false, 'disposed controls no longer listen');
 });

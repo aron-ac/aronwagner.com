@@ -77,12 +77,12 @@ export function createGameInput({
     const y = ((event.clientY - bounds.top) / bounds.height) * 2 - 1;
     const actions = [];
     if (bounds.width > 0 && bounds.height > 0 && Math.abs(x) <= 1 && Math.abs(y) <= 1) {
-      // A neutral center prevents accidental turns. Corner sectors combine
-      // forward/reverse and steering so one thumb can drive around a bend.
+      // The center is neutral. Corner sectors combine two screen directions
+      // so one thumb can select a diagonal.
       if (x < -0.3) actions.push('left');
       else if (x > 0.3) actions.push('right');
-      if (y < -0.3) actions.push('gas');
-      else if (y > 0.3) actions.push('reverse');
+      if (y < -0.3) actions.push('up');
+      else if (y > 0.3) actions.push('down');
     }
     pointer.buttons = controls.filter(
       (button) =>

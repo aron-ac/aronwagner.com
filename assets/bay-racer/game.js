@@ -1,5 +1,11 @@
 import * as THREE from '../vendor/three/three.module.js';
-import { createCamera, cameraOffset } from '../shared/camera-rig.js';
+import {
+  createCamera,
+  cameraOffset,
+  CAMERA_AZIMUTH,
+  CAMERA_ELEVATION,
+} from '../shared/camera-rig.js';
+import { createDirectionalDrive } from '../shared/directional-drive.js';
 import { createBoatModel } from './boat-model.js';
 import { createBayWorld } from './world.js';
 import { createRace, NORMAL_SPEED } from './race.js';
@@ -97,8 +103,8 @@ const race = createRace(world, raceEvent);
 const state = race.state;
 const controls = createGameInput({
   bindings: {
-    gas: ['KeyW', 'ArrowUp'],
-    reverse: ['KeyS', 'ArrowDown'],
+    up: ['KeyW', 'ArrowUp'],
+    down: ['KeyS', 'ArrowDown'],
     left: ['KeyA', 'ArrowLeft'],
     right: ['KeyD', 'ArrowRight'],
     boost: ['Space'],
@@ -107,7 +113,15 @@ const controls = createGameInput({
   isActive: () => state.mode === 'racing' || state.mode === 'countdown',
 });
 const keys = controls.keys;
-const clearInput = () => controls.clear();
+const directionalDrive = createDirectionalDrive({
+  azimuth: CAMERA_AZIMUTH,
+  elevation: CAMERA_ELEVATION,
+});
+const clearInput = () => {
+  controls.clear();
+  directionalDrive.reset();
+};
+const directionInput = {};
 const frameInput = {};
 const BEST_TIME_KEY = 'bay-racer-best-time';
 const storedBest = readStoredNumber(BEST_TIME_KEY, Infinity);
@@ -313,7 +327,7 @@ function updateWake(dt) {
   }
 }
 function update(dt) {
-  race.update(dt, controls.snapshot(frameInput));
+  race.update(dt, directionalDrive.update(controls.snapshot(directionInput), state, frameInput));
   const next = state.mode === 'finished' ? -1 : state.nextGate;
   if (next !== activeGate) {
     activeGate = next;

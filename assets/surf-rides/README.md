@@ -4,12 +4,12 @@ A standalone 3D arcade driving game for Mark's site. Serve the repository over H
 
 ## Play
 
-- **W / Up:** accelerate. **S / Down:** brake into reverse.
-- **A / D** or **Left / Right:** steer. Steering works while moving, including in reverse.
+- **Arrow keys / WASD:** choose a direction on the screen. The vehicle automatically steers and drives toward it; Left and Right work from a standstill too.
+- A direction ahead of the vehicle drives forward; a direction behind it brakes into reverse. Diagonals follow the screen perspective, and opposite arrows cancel each other.
 - **Space:** brake. Stop inside a destination ring for 1.1 seconds to complete the stop.
 - **P / Escape:** pause/resume. Losing focus or hiding the page pauses the shift.
 - **R / Unstuck:** return to the nearest road for a five-second shift penalty.
-- Touch devices have a left-thumb ← / → steering pad and a right-thumb ↑ / ↓ forward/reverse pad, plus a separate brake button. Hold a driving arrow while steering; slide between arrows within either pad to change direction. Releasing a finger or sliding off its pad releases only that input.
+- Touch devices have one left-thumb D-pad with the same screen-relative directions and diagonals, plus a separate Brake button on the right. Slide between arrows to change direction. The center is neutral; lifting or leaving the pad releases that finger. Brake can be held with a second finger.
 - On compact screens, **Map** opens the map when needed. **Pause → Unstuck** returns the Jeep to the nearest road and resumes the shift with the usual five-second penalty. Unstuck remains unavailable during its recovery cooldown. Entering a menu closes the map.
 - Sound is optional and off initially. It uses synthesized tones after user interaction.
 
@@ -22,6 +22,8 @@ The driving camera uses a 25-degree perspective lens with a 45-degree diagonal b
 ## Shared presentation
 
 The shared `../shared/arcade.css` defines the arcade shell and common controls. `../shared/driving.css` owns both driving games' direction pads and compact HUD layouts. Each game stylesheet retains its palette and desktop scene presentation. HUD labels stay at least 10px; compact minimaps omit cramped decorative text while retaining their accessible names and visual markers.
+
+`../shared/directional-drive.js` converts screen directions into forward/reverse and proportional steering using the shared camera angle. Both keyboard and touch use it, while each simulation retains vehicle acceleration, traction and collisions.
 
 `../shared/driving-ui.js` manages map visibility and the pause-menu recovery button for both driving games. CSS selects the compact layout; the controllers retain each game's recovery rules and penalties.
 
@@ -48,7 +50,7 @@ The game needs WebGL 2 in a current desktop/mobile browser. It displays a readab
 
 `tests/surf-session.test.js` exercises the pure simulation: actual acceleration/braking into a pickup, fare/tip lifecycle, one-shot coconuts and clock invariants, collision cooldown, pause/end guards, both request timeouts, recovery exhaustion and deterministic replay. Run it with `node --test tests/surf-session.test.js`.
 
-`tests/surf-rides-smoke.cjs` exercises the real browser game through its explicit `?debug=1` inspection hook: coconut placement, scoring, full-speed collection, one-shot pickup, pause/end protection, best-score persistence and reset; full request/pickup/drop-off lifecycle, comfort/tips/streaks, both timeout cases, pause, recovery, shift end/restart, keyboard driving to the first pickup, touch acceleration/release/cancellation, responsive layouts and failed asset/JavaScript checks.
+`tests/surf-rides-smoke.cjs` exercises the real browser game through its explicit `?debug=1` inspection hook: coconut placement, scoring, full-speed collection, one-shot pickup, pause/end protection, best-score persistence and reset; full request/pickup/drop-off lifecycle, comfort/tips/streaks, both timeout cases, pause, recovery, shift end/restart, screen-relative arrow/WASD driving, touch acceleration/release/cancellation, responsive layouts and failed asset/JavaScript checks.
 
 With a server running and Puppeteer installed in your development environment:
 

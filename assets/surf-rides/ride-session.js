@@ -239,7 +239,14 @@ export function createRideSession(world, onEvent = () => {}, { random = Math.ran
       state.speed = Math.sign(state.speed) * Math.max(0, Math.abs(state.speed) - friction * dt);
     }
     state.speed = clamp(state.speed, -7, topSpeed);
-    state.steer = damp(state.steer, (input.left ? 1 : 0) - (input.right ? 1 : 0), 10, dt);
+    state.steer = damp(
+      state.steer,
+      Number.isFinite(input.steering)
+        ? clamp(input.steering, -1, 1)
+        : (input.left ? 1 : 0) - (input.right ? 1 : 0),
+      10,
+      dt,
+    );
     state.heading +=
       state.steer * 1.95 * clamp(Math.abs(state.speed) / 5, 0, 1) * Math.sign(state.speed) * dt;
     state.x += Math.sin(state.heading) * state.speed * dt;

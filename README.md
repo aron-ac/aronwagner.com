@@ -159,7 +159,9 @@ current page. Download links retain their download behavior.
 
 Each game supports keyboard/touch controls, pause, optional audio, and locally saved best results.
 The driving games use a single left-side D-pad with one-thumb diagonals and a separate right-side
-Brake or Boost button. Their compact layouts keep essential stats and the destination visible,
+Brake or Boost button. Arrows and WASD select a direction on the screen; the vehicle steers
+automatically and backs up when that direction is behind it. Shared direction mapping lives in
+`assets/shared/directional-drive.js`. Their compact layouts keep essential stats and the destination visible,
 open the map on demand, and put recovery in the pause menu. Shared driving layout and menu state
 live in `assets/shared/driving.css` and `assets/shared/driving-ui.js`; CiCi keeps her platformer UI.
 The old `/cr-surf-rides.html` path redirects to `/surf-riders.html`; Asteroids is not shipped.

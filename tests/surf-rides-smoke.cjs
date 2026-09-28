@@ -11,6 +11,7 @@ const {
 const {
   assertDrivingControls,
   exerciseDrivingControls,
+  exerciseDrivingKeyboard,
   assertCompactDrivingUI,
   exerciseCompactDrivingUI,
 } = require('./helpers/driving-controls.cjs');
@@ -227,22 +228,7 @@ test('surf rides smoke', { timeout: 300_000 }, async () => {
       );
       return results;
     });
-    // Browser keyboard events must drive the real input path, without teleporting.
-    await page.keyboard.down('KeyW');
-    await page.evaluate(() => {
-      for (let i = 0; i < 177; i++) surfDebug.update(1 / 60);
-    });
-    await page.keyboard.up('KeyW');
-    await page.keyboard.down('Space');
-    await page.evaluate(() => {
-      for (let i = 0; i < 140; i++) surfDebug.update(1 / 60);
-    });
-    await page.keyboard.up('Space');
-    assert.equal(
-      await page.evaluate(() => surfDebug.state.ride.phase),
-      'dropoff',
-      'Keyboard drive and braking reach first pickup',
-    );
+    await exerciseDrivingKeyboard(page, { debugName: 'surfDebug', start: 'startGame' });
     await page.keyboard.press('KeyP');
     assert.equal(await page.evaluate(() => surfDebug.state.mode), 'paused');
     await page.keyboard.press('Escape');
@@ -336,9 +322,12 @@ test('surf rides smoke', { timeout: 300_000 }, async () => {
         ),
         'All touch controls visible',
       );
+      await page.evaluate(() => {
+        surfDebug.state.heading = (-3 * Math.PI) / 4;
+      });
       const client = await page.createCDPSession();
-      const gas = await page.$('[data-control="gas"]');
-      const rect = await gas.boundingBox();
+      const up = await page.$('[data-control="up"]');
+      const rect = await up.boundingBox();
       const touchPoints = [{ x: rect.x + rect.width / 2, y: rect.y + rect.height / 2, id: 1 }];
       await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints });
       assert.ok(
@@ -346,7 +335,7 @@ test('surf rides smoke', { timeout: 300_000 }, async () => {
           for (let i = 0; i < 30; i++) surfDebug.update(1 / 60);
           return surfDebug.state.speed > 0;
         }),
-        'Touch gas accelerates',
+        'Touch up accelerates toward the top of the screen',
       );
       await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
       assert.ok(
@@ -355,7 +344,7 @@ test('surf rides smoke', { timeout: 300_000 }, async () => {
           for (let i = 0; i < 15; i++) surfDebug.update(1 / 60);
           return (
             surfDebug.state.speed < before &&
-            !document.querySelector('[data-control="gas"]').classList.contains('pressed')
+            !document.querySelector('[data-control="up"]').classList.contains('pressed')
           );
         }),
         'Touch release clears input',
@@ -364,7 +353,7 @@ test('surf rides smoke', { timeout: 300_000 }, async () => {
       await client.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] });
       assert.ok(
         await page.evaluate(
-          () => !document.querySelector('[data-control="gas"]').classList.contains('pressed'),
+          () => !document.querySelector('[data-control="up"]').classList.contains('pressed'),
         ),
         'Touch cancellation clears input',
       );
@@ -386,7 +375,7 @@ test('surf rides smoke', { timeout: 300_000 }, async () => {
     assert.equal(redirected.hash, '#start', 'The redirect retains the fragment');
     assert.deepEqual(errors, [], 'No page errors or failed asset requests');
     console.log(
-      `PASS: ${mechanical.length} mechanics, keyboard pickup, pause keys, one-thumb D-pad diagonals and sliding, independent brake, compact map/recovery, portrait and landscape layouts.\n${mechanical.join('\n')}`,
+      `PASS: ${mechanical.length} mechanics, screen-relative keyboard movement, pause keys, one-thumb D-pad diagonals and sliding, independent brake, compact map/recovery, portrait and landscape layouts.\n${mechanical.join('\n')}`,
     );
   } finally {
     await closeBrowser(browser);

@@ -6,12 +6,12 @@ A small 3D boat time trial for Mark's arcade. Serve the repository over HTTP and
 
 Complete three laps through eight buoy gates in order. The next gate is gold, and the minimap and direction arrow show where to go. White/checkered buoys mark the lap line. Each gate must be crossed forwards between its buoys; passing a later gate or reversing over a gate does not advance the race.
 
-- **W / Up:** throttle. **S / Down:** slow down into reverse.
-- **A / D / Left / Right:** steer. The boat coasts and slides slightly into turns.
+- **Arrow keys / WASD:** choose a direction on the screen. The vehicle automatically steers and drives toward it; Left and Right work from a standstill too.
+- A direction ahead of the vehicle drives forward; a direction behind it brakes into reverse. Diagonals follow the screen perspective, and opposite arrows cancel each other.
 - **Space:** boost while accelerating. Normal top speed is 19 units/s, boosted speed 26; these are arcade tuning values, not specifications of the real boat.
 - **P / Escape:** pause/resume. Losing focus or hiding the tab pauses the race, including its countdown.
 - **R / Reset:** return to an approach to the next gate for a five-second penalty. It does not advance the course.
-- Touch devices have a left-thumb ← / → steering pad and a right-thumb ↑ / ↓ forward/reverse pad, plus a separate boost button. Hold a driving arrow while steering; slide between arrows within either pad to change direction. Releasing a finger or sliding off its pad releases only that input. Boost can be held alongside forward throttle.
+- Touch devices have one left-thumb D-pad with the same screen-relative directions and diagonals, plus a separate Boost button on the right. Slide between arrows to change direction. The center is neutral; lifting or leaving the pad releases that finger. Boost can be held with a second finger.
 - On compact screens, **Map** opens the course map when needed. **Pause → Reset** returns the boat to the next gate and resumes the race with the usual five-second penalty. Reset is unavailable during the countdown or recovery cooldown. Entering a menu closes the map.
 
 A center pass awards 20 boost; other successful passes award eight. Boost also recharges when unused. Running into land at speed adds two seconds, with a short collision cooldown to prevent repeated penalties while stuck. The final time includes all penalties. Results show the race time, best lap, penalties and personal best. Gold is under 100 seconds, silver under 125, and bronze celebrates every other finish. The fastest completed race is saved locally under `bay-racer-best-time`. Three-second countdowns, a pause screen, restart, optional synthesized sound, drifting foam trails and mobile controls round out the demo.
@@ -21,6 +21,8 @@ The bay is an invented compact course with palm islands, a marina, a lighthouse,
 ## Shared runtime
 
 The shared `../shared/arcade.css` defines the arcade shell and common controls. `../shared/driving.css` owns both driving games' direction pads and compact HUD layouts. Each game stylesheet retains its palette and desktop scene presentation. HUD labels stay at least 10px; compact minimaps omit cramped decorative text while retaining their accessible names and visual markers.
+
+`../shared/directional-drive.js` converts screen directions into forward/reverse and proportional steering using the shared camera angle. Both keyboard and touch use it, while each simulation retains vehicle acceleration, traction and collisions.
 
 `../shared/driving-ui.js` manages map visibility and the pause-menu recovery button for both driving games. CSS selects the compact layout; the controllers retain each game's recovery rules and penalties.
 

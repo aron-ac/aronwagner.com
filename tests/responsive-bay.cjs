@@ -173,7 +173,7 @@ test('responsive bay', { timeout: 300_000 }, async () => {
       if (touch || hybrid) await assertDrivingControls(page, label);
       await assertCompactDrivingUI(page, label);
       if (touch) {
-        const button = await page.$('[data-control="gas"]');
+        const button = await page.$('[data-control="up"]');
         const box = await button.boundingBox();
         const client = await page.createCDPSession();
         await client.send('Input.dispatchTouchEvent', {
@@ -181,9 +181,9 @@ test('responsive bay', { timeout: 300_000 }, async () => {
           touchPoints: [{ x: box.x + box.width / 2, y: box.y + box.height / 2, id: 1 }],
         });
         assert.equal(
-          await page.$eval('[data-control="gas"]', (el) => el.classList.contains('pressed')),
+          await page.$eval('[data-control="up"]', (el) => el.classList.contains('pressed')),
           true,
-          `${label}: throttle accepts touch`,
+          `${label}: up accepts touch`,
         );
         await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
         await client.detach();
