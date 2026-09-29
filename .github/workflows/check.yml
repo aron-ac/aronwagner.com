@@ -15,6 +15,12 @@ jobs:
   check:
     runs-on: ubuntu-22.04
     timeout-minutes: 25
+    # Software-rendered browser suites each take about 15 minutes on hosted runners.
+    # Run source and production independently so both complete within the job limit.
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [source, production]
     env:
       # Install one exact browser pinned by our locked Puppeteer version below.
       PUPPETEER_SKIP_DOWNLOAD: 'true'
@@ -31,14 +37,16 @@ jobs:
         run: sudo env "PATH=$PATH" "PUPPETEER_CACHE_DIR=$HOME/.cache/puppeteer" npm run setup:browser -- --install-deps
       - run: npm run check
       - name: Test source website and interactions
+        if: matrix.target == 'source'
         run: npm run test:browser
       - name: Test production build and response policies
+        if: matrix.target == 'production'
         run: npm run test:browser:production
       - name: Upload browser screenshots
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: browser-screenshots
+          name: browser-screenshots-${{ matrix.target }}
           path: test-results/
           if-no-files-found: ignore
           retention-days: 7
