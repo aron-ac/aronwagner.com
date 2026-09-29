@@ -1,8 +1,9 @@
 name: Check website
 
 on:
-  push:
   pull_request:
+  push:
+    branches: [main]
 
 permissions:
   contents: read
@@ -12,16 +13,39 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check:
+  # Formatting, lint, unit tests, the build, and the production Caddyfile's
+  # response policies. Fast, and needs no browser.
+  static:
     runs-on: ubuntu-22.04
-    timeout-minutes: 25
-    # Software-rendered browser suites each take about 15 minutes on hosted runners.
-    # Run each target independently so all complete within the job limit.
+    timeout-minutes: 10
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: 'true'
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm run build:site
+      - name: Install Caddy
+        run: .github/install-caddy.sh
+      - name: Check response policies through the VM's Caddyfile
+        run: |
+          deploy/serve-local.sh
+          deploy/smoke.sh http://127.0.0.1:8080 http://localhost:8081
+
+  # Browser suites against the production build served by the VM's Caddyfile,
+  # split across parallel shards. Software-rendered WebGL makes the game suites
+  # slow on hosted runners; `npm run test:browser` covers the unbuilt source locally.
+  browser:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
-        # caddy: the production build served by the VM's own Caddyfile.
-        target: [source, production, caddy]
+        shard: [1, 2, 3, 4, 5]
     env:
       # Install one exact browser pinned by our locked Puppeteer version below.
       PUPPETEER_SKIP_DOWNLOAD: 'true'
@@ -36,51 +60,24 @@ jobs:
       - run: npm ci
       - name: Install pinned Chrome and Linux dependencies
         run: sudo env "PATH=$PATH" "PUPPETEER_CACHE_DIR=$HOME/.cache/puppeteer" npm run setup:browser -- --install-deps
-      - run: npm run check
-      - name: Test source website and interactions
-        if: matrix.target == 'source'
-        run: npm run test:browser
-      - name: Test production build and response policies
-        if: matrix.target == 'production'
-        run: npm run test:browser:production
+      - run: npm run build:site
       - name: Install Caddy
-        if: matrix.target == 'caddy'
+        run: .github/install-caddy.sh
+      - name: Browser suites (shard ${{ matrix.shard }} of 5)
         run: |
-          curl -1sLf https://dl.cloudsmith.io/public/caddy/stable/gpg.key |
-            sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
-          curl -1sLf https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt |
-            sudo tee /etc/apt/sources.list.d/caddy-stable.list
-          sudo apt-get update
-          sudo apt-get install -y caddy
-          # The package starts a system Caddy that holds the admin port; the test runs its own.
-          sudo systemctl stop caddy
-      - name: Test production build through the VM's Caddyfile
-        if: matrix.target == 'caddy'
-        run: |
-          npm run build:site
-          # Mirror the VM layout: a current release plus the shared immutable directory.
-          site=$RUNNER_TEMP/site conf=$RUNNER_TEMP/caddy
-          mkdir -p "$site" "$conf"
-          ln -s "$PWD/dist" "$site/current"
-          ln -s "$PWD/dist/immutable" "$site/immutable"
-          : > "$conf/origin-tls.caddy"
-          echo 'trusted_proxies static private_ranges' > "$conf/cloudflare-proxies.caddy"
-          CADDY_CONFIG_DIR=$conf SITE_ROOT=$site SITE_LOG=$RUNNER_TEMP/caddy.log \
-            SITE_ADDRESS=http://127.0.0.1:8080 WWW_ADDRESS=http://localhost:8081 \
-            caddy start --config deploy/Caddyfile --adapter caddyfile
-          deploy/smoke.sh http://127.0.0.1:8080 http://localhost:8081
-          node tools/test-browser.js --url http://127.0.0.1:8080/
+          deploy/serve-local.sh
+          node tools/test-browser.js --url http://127.0.0.1:8080/ --shard ${{ matrix.shard }}/5
       - name: Upload browser screenshots
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: browser-screenshots-${{ matrix.target }}
+          name: browser-screenshots-shard-${{ matrix.shard }}
           path: test-results/
           if-no-files-found: ignore
           retention-days: 7
 
   deploy:
-    needs: check
+    needs: [static, browser]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-22.04
     timeout-minutes: 10

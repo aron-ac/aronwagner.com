@@ -64,8 +64,12 @@ npm run render:branding           # regenerate favicons and social sharing cards
 
 Browser checks use Puppeteer. If Chromium was not downloaded during installation, run
 `npm run setup:browser`, or set `CHROME_BIN` to an existing Chrome executable.
-GitHub Actions runs the locked install, pinned Chrome setup, static/unit checks, and the source, production and Caddy browser suites on pushes and pull requests. Pushes to
-`main` then deploy (see [Hosting and deployment](#hosting-and-deployment)).
+GitHub Actions runs on pull requests and pushes to `main`. A `static` job runs formatting, lint,
+unit tests, the build, and `deploy/smoke.sh` against `deploy/Caddyfile`. Five parallel `browser`
+shards run every browser suite against the production build served by that same Caddyfile, with
+the pinned Chrome. Pushes to `main` deploy once both pass (see
+[Hosting and deployment](#hosting-and-deployment)). CI does not rerun the suites against the
+unbuilt source; run `npm run test:browser` locally for that.
 The shared browser launcher explicitly starts with desktop pointer and hover capabilities so
 headless Linux and macOS simulate the same input device. Puppeteer's touch emulation still
 overrides that baseline for phones and tablets; disabling it restores the desktop settings.
@@ -83,7 +87,9 @@ CHROME_BIN='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' npm ru
 ```
 
 The browser runner discovers smoke, responsive, theme-load, and lifecycle suites. It accepts suite
-filenames to run a focused subset and `--root dist` to serve an existing production build. Every
+filenames to run a focused subset, `--root dist` to serve an existing production build, `--url` to
+target a server that is already running, and `--shard k/n` to run one of n groups balanced by
+typical duration (`--list` prints the selection without running it). Every
 run gets its own artifact directory under ignored `test-results/`; `TEST_ARTIFACT_DIR` can change
 that parent directory. Individual suites accept `SITE_URL` or `GAME_URL` for an existing server.
 `PUPPETEER_MODULE` remains an optional dependency override.
@@ -269,7 +275,7 @@ scene and dynamic game UI. Referrer, MIME-sniffing, and browser-permission heade
 The build writes these headers and redirects from one rule list in two forms: `dist/site.caddy`,
 which the VM's Caddyfile imports for each release, and `dist/_headers`/`dist/_redirects`, which the
 local server in `tools/serve.js` uses for `npm run test:browser:production`. A unit test checks the
-two agree. CI also serves the build through `deploy/Caddyfile` itself and runs `deploy/smoke.sh`
-and every browser suite against it (`node tools/test-browser.js --url <site>` targets any running
-server). Test the packaged site when changing loading behavior, headers, asset references, or
+two agree. CI also serves the build through `deploy/Caddyfile` itself (`deploy/serve-local.sh`
+does the same locally when Caddy is installed) and runs `deploy/smoke.sh` and every browser suite
+against it. Test the packaged site when changing loading behavior, headers, asset references, or
 redirects.
