@@ -4,6 +4,10 @@ export const SHIFT_SECONDS = 180;
 export const COCONUT_POINTS = 25;
 export const STOP_RADIUS = 4.3;
 export const STOP_SECONDS = 1.1;
+const SPEED_SCALE = 0.75;
+export const ROAD_SPEED = 19 * SPEED_SCALE;
+export const OFF_ROAD_SPEED = 10 * SPEED_SCALE;
+export const REVERSE_SPEED = 7 * SPEED_SCALE;
 
 const COCONUT_RADIUS = 2;
 const JEEP_RADIUS = 1.3;
@@ -234,18 +238,18 @@ export function createRideSession(world, onEvent = () => {}, { random = Math.ran
     }
     const road = nearestRoad(world.roads, state.x, state.z);
     state.onRoad = Boolean(road && road.distance < road.width / 2 + 1);
-    const topSpeed = state.onRoad ? 19 : 10;
+    const topSpeed = state.onRoad ? ROAD_SPEED : OFF_ROAD_SPEED;
     const alignment = applyDirectionalHeading(state, input, dt);
     const propulsion = alignment === null ? 1 : clamp(1 + alignment, 0, 1);
     if (alignment !== null) state.speed = damp(state.speed, 0, 12 * Math.max(0, -alignment), dt);
     if (input.brake) state.speed = damp(state.speed, 0, 7, dt);
-    else if (input.gas) state.speed += (state.speed < 0 ? 27 : 14) * propulsion * dt;
-    else if (input.reverse) state.speed -= state.speed > 0 ? 27 * dt : 10 * dt;
+    else if (input.gas) state.speed += (state.speed < 0 ? 27 : 14) * SPEED_SCALE * propulsion * dt;
+    else if (input.reverse) state.speed -= (state.speed > 0 ? 27 : 10) * SPEED_SCALE * dt;
     else {
-      const friction = state.onRoad ? 3.6 : 5.5;
+      const friction = (state.onRoad ? 3.6 : 5.5) * SPEED_SCALE;
       state.speed = Math.sign(state.speed) * Math.max(0, Math.abs(state.speed) - friction * dt);
     }
-    state.speed = clamp(state.speed, -7, topSpeed);
+    state.speed = clamp(state.speed, -REVERSE_SPEED, topSpeed);
     if (alignment === null) {
       state.steer = damp(
         state.steer,

@@ -5,8 +5,8 @@ import {
   createDirectionalDrive,
 } from '../assets/shared/directional-drive.js';
 import { CAMERA_AZIMUTH, CAMERA_ELEVATION } from '../assets/shared/camera-rig.js';
-import { createRideSession } from '../assets/surf-rides/ride-session.js';
-import { createRace } from '../assets/bay-racer/race.js';
+import { createRideSession, ROAD_SPEED } from '../assets/surf-rides/ride-session.js';
+import { createRace, NORMAL_SPEED } from '../assets/bay-racer/race.js';
 
 const camera = { azimuth: CAMERA_AZIMUTH, elevation: CAMERA_ELEVATION };
 const makeDrive = () => createDirectionalDrive(camera);
@@ -159,9 +159,9 @@ function openWorld() {
   };
 }
 
-for (const [name, createSimulation] of [
-  ['Jeep', createRideSession],
-  ['boat', createRace],
+for (const [name, createSimulation, cruisingSpeed] of [
+  ['Jeep', createRideSession, ROAD_SPEED],
+  ['boat', createRace, NORMAL_SPEED],
 ]) {
   const start = (heading, speed = 0) => {
     const simulation = createSimulation(openWorld());
@@ -192,7 +192,7 @@ for (const [name, createSimulation] of [
           -Math.PI / 2,
           headingFor(direction) + Math.PI,
         ]) {
-          for (const speed of [0, 19]) {
+          for (const speed of [0, cruisingSpeed]) {
             const simulation = start(heading, speed);
             const drive = makeDrive();
             const output = {};
@@ -220,7 +220,7 @@ for (const [name, createSimulation] of [
     for (const frameRate of [20, 60, 120]) {
       for (const direction of directions) {
         const heading = headingFor(direction) + Math.PI;
-        const simulation = start(heading, 19);
+        const simulation = start(heading, cruisingSpeed);
         const drive = makeDrive();
         let wrongWayDistance = 0;
         for (let frame = 0; frame < frameRate / 2; frame++) {
@@ -272,14 +272,17 @@ for (const [name, createSimulation] of [
       [directions[2], directions[1]],
     ]) {
       const initialHeading = headingFor(from);
-      const simulation = start(initialHeading, 19);
+      const simulation = start(initialHeading, cruisingSpeed);
       const drive = makeDrive();
       const dt = 1 / 60;
       simulation.update(dt, drive.update(to.input, simulation.state));
       const firstTurn = Math.abs(angleDifference(simulation.state.heading, initialHeading));
       assert.ok(firstTurn > 0 && firstTurn < Math.PI / 90, 'The first frame eases into the turn');
       assert.ok(Math.abs(simulation.state.steer) < 0.4, 'Wheels and boat banking ease in too');
-      assert.ok(simulation.state.speed > 19 * 0.95, 'Changing direction must not slam the brakes');
+      assert.ok(
+        simulation.state.speed > cruisingSpeed * 0.95,
+        'Changing direction must not slam the brakes',
+      );
       let minimumSpeed = simulation.state.speed;
       let peakTurn = firstTurn;
       for (let frame = 1; frame < 60; frame++) {
@@ -292,14 +295,14 @@ for (const [name, createSimulation] of [
         minimumSpeed = Math.min(minimumSpeed, simulation.state.speed);
       }
       assert.ok(peakTurn > firstTurn * 1.5, 'Turning builds gradually from its first frame');
-      assert.ok(minimumSpeed > 19 * 0.65, 'Ordinary corners preserve forward momentum');
+      assert.ok(minimumSpeed > cruisingSpeed * 0.65, 'Ordinary corners preserve forward momentum');
       assertDirection(velocity(simulation.state), to);
       assert.ok(Math.abs(simulation.state.steer) < 0.02, 'Steering settles at the new direction');
     }
   });
 
   test(`${name} eases through a brief neutral gap and an opposite steering request`, () => {
-    const simulation = start(headingFor(directions[0]), 19);
+    const simulation = start(headingFor(directions[0]), cruisingSpeed);
     const drive = makeDrive();
     const dt = 1 / 60;
     for (let frame = 0; frame < 6; frame++)
@@ -327,7 +330,7 @@ for (const [name, createSimulation] of [
 
   test(`${name} moving turns follow the same path across frame rates`, () => {
     const outcomes = [20, 60, 120].map((fps) => {
-      const simulation = start(headingFor(directions[0]), 19);
+      const simulation = start(headingFor(directions[0]), cruisingSpeed);
       const drive = makeDrive();
       for (const [direction, seconds] of [
         [directions[3], 0.3],
@@ -351,7 +354,7 @@ for (const [name, createSimulation] of [
   });
 
   test(`${name} settles smoothly when a new arrow falls inside an ongoing U-turn`, () => {
-    const simulation = start(headingFor(directions[0]), 19);
+    const simulation = start(headingFor(directions[0]), cruisingSpeed);
     const drive = makeDrive();
     const dt = 1 / 60;
     for (let frame = 0; frame < 18; frame++)
@@ -371,7 +374,7 @@ for (const [name, createSimulation] of [
   });
 
   test(`${name} pauses turning momentum and clears it on recovery or restart`, () => {
-    const simulation = start(headingFor(directions[0]), 19);
+    const simulation = start(headingFor(directions[0]), cruisingSpeed);
     const drive = makeDrive();
     for (let frame = 0; frame < 6; frame++)
       simulation.update(1 / 60, drive.update(directions[3].input, simulation.state));

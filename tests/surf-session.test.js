@@ -4,6 +4,7 @@ import {
   createRideSession,
   nearestRoad,
   SHIFT_SECONDS,
+  STOP_RADIUS,
 } from '../assets/surf-rides/ride-session.js';
 
 function fixture() {
@@ -45,7 +46,10 @@ function stopAt(session, point) {
 test('real acceleration and braking reach the first surfer and reset the ride clock', () => {
   const { session, state, events } = setup();
   assert.equal(state.remaining, SHIFT_SECONDS);
-  step(session, 177 / 60, { gas: true });
+  const approach = state.ride.pickup.z + STOP_RADIUS;
+  for (let frame = 0; frame < 600 && state.z > approach; frame++)
+    session.update(1 / 60, { gas: true });
+  assert.ok(state.z <= approach, 'Real driving reaches the pickup before braking');
   step(session, 140 / 60, { brake: true });
   assert.equal(state.ride.phase, 'dropoff');
   assert.equal(state.ride.patienceMax, 60);

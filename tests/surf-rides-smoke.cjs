@@ -128,10 +128,11 @@ test('surf rides smoke', { timeout: 300_000 }, async () => {
         'A collected coconut cannot score again during the shift',
       );
       const secondCoconut = coconuts.find((item) => item.active);
+      const fullSpeed = 14.25;
       s.x = secondCoconut.x;
-      s.z = secondCoconut.z - 19 / 60;
+      s.z = secondCoconut.z - fullSpeed / 60;
       s.heading = 0;
-      s.speed = 19;
+      s.speed = fullSpeed;
       d.update(1 / 60);
       check(
         s.coconuts === 2 && d.score() === 50 && !secondCoconut.active,

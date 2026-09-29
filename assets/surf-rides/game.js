@@ -2,7 +2,13 @@ import * as THREE from '../vendor/three/three.module.js';
 import { createJeepModel } from './jeep-model.js';
 import { createWorld } from './world.js';
 import { createCoconuts } from './coconuts.js';
-import { createRideSession, COCONUT_POINTS, STOP_RADIUS, STOP_SECONDS } from './ride-session.js';
+import {
+  createRideSession,
+  COCONUT_POINTS,
+  ROAD_SPEED,
+  STOP_RADIUS,
+  STOP_SECONDS,
+} from './ride-session.js';
 import { readStoredNumber, writeStoredNumber } from '../shared/storage.js';
 import { createSynthAudio } from '../shared/audio.js';
 import { createGameInput } from '../shared/input.js';
@@ -665,7 +671,8 @@ function animate(dt, now) {
     desiredLook.set(state.x - (aspect > 1 ? 5 : 0), 0.8, state.z + (aspect > 1 ? 3 : 0));
   } else {
     const portraitOffset = Math.max(0, 1.25 / aspect - 1) * 14;
-    distance = 68 + Math.min(portraitOffset, 27) + Math.min(Math.abs(state.speed), 19) * 0.35;
+    distance =
+      68 + Math.min(portraitOffset, 27) + Math.min(Math.abs(state.speed), ROAD_SPEED) * 0.35;
     const ahead = state.mode === 'playing' ? state.speed * 0.17 : 0;
     desiredLook.set(
       state.x + Math.sin(state.heading) * ahead,
