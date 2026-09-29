@@ -52,6 +52,8 @@ jobs:
             sudo tee /etc/apt/sources.list.d/caddy-stable.list
           sudo apt-get update
           sudo apt-get install -y caddy
+          # The package starts a system Caddy that holds the admin port; the test runs its own.
+          sudo systemctl stop caddy
       - name: Test production build through the VM's Caddyfile
         if: matrix.target == 'caddy'
         run: |
