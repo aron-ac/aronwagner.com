@@ -5,7 +5,7 @@ const { screenLinks } = require('./helpers/identity.cjs');
 
 const site = process.env.SITE_URL || 'http://localhost:8000/';
 const dialogSelector = '#external-link-dialog';
-const destinations = ['.left-screen', '.laptop', '.right-screen'].map((selector, index) => ({
+const destinations = ['.left-screen', '.right-screen'].map((selector, index) => ({
   selector,
   name: screenLinks[index][1],
   url: screenLinks[index][0],
