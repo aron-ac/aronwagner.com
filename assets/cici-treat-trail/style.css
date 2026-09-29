@@ -38,6 +38,18 @@ a {
   background: #bce5e6;
 }
 
+/* A thumb can land between arrows or beside a button. Protect the whole active
+   play area, then restore native gestures when the menu is showing. */
+#game-shell:has(.touch-controls:not(.hidden)) {
+  touch-action: none;
+}
+#game-shell:has(.touch-controls:not(.hidden)),
+#game-shell:has(.touch-controls:not(.hidden)) * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
 #viewport,
 #canvas {
   position: absolute;

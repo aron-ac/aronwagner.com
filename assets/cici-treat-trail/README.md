@@ -8,6 +8,7 @@ An original side-scrolling platformer starring CiCi, Mark's fluffy white pomsky.
 - **Space / W / Up**: jump. Hold for a full jump or release early for a shorter hop.
 - **P / Escape**: pause/resume. Hiding the tab or losing focus also pauses the game.
 - Touch controls support running and jumping together; pointer release/cancellation clears its control.
+- While touch controls are visible, the entire play area suppresses text selection, long-press callouts and browser zoom gestures, including missed taps between or beside controls. Menus retain native scrolling and zoom.
 
 The 6,200px course has 75 treats, eight squirrels, seven pits, 22 optional higher platforms and two checkpoint flags. Treat arcs show the way across the gaps. Raised platforms can be jumped through from below. Jumps support a small grace period after leaving a ledge and a short input buffer before landing.
 

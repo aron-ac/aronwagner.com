@@ -8,6 +8,106 @@ const url = new URL(
 );
 url.searchParams.set('debug', '1');
 
+async function exerciseMobileGestures(page) {
+  const center = async (selector) =>
+    page.$eval(selector, (element) => {
+      const r = element.getBoundingClientRect();
+      return {
+        x: r.x + r.width / 2,
+        y: r.y + r.height / 2,
+        top: r.top,
+        left: r.left,
+        right: r.right,
+      };
+    });
+  const left = await center('[data-control="left"]');
+  const right = await center('[data-control="right"]');
+  const gap = { x: (left.right + right.left) / 2, y: right.y };
+  const miss = { x: gap.x, y: right.top - 18 };
+  const metrics = () =>
+    page.evaluate(() => ({
+      scale: visualViewport.scale,
+      selection: getSelection().toString(),
+      x: scrollX,
+      y: scrollY,
+    }));
+  const before = await metrics();
+  const frame = () => page.evaluate(() => new Promise(requestAnimationFrame));
+  for (const point of [left, right, gap, miss]) {
+    await page.touchscreen.tap(point.x, point.y);
+    await frame();
+    await page.touchscreen.tap(point.x, point.y);
+  }
+  const held = await page.touchscreen.touchStart(right.x, right.y);
+  // Long-press selection requires elapsed wall time, rather than simulated game ticks.
+  await page.evaluate(() => new Promise((done) => setTimeout(done, 650)));
+  await held.end();
+  const client = await page.createCDPSession();
+  const pinch = async ({ x, y }) => {
+    const points = (distance) => [
+      { x: x - distance, y, id: 1 },
+      { x: x + distance, y, id: 2 },
+    ];
+    await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: points(20) });
+    for (let distance = 30; distance <= 70; distance += 10) {
+      await client.send('Input.dispatchTouchEvent', {
+        type: 'touchMove',
+        touchPoints: points(distance),
+      });
+      await frame();
+    }
+    await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await frame();
+  };
+  try {
+    await pinch(miss);
+    const after = await metrics();
+    assert.equal(after.selection, '', 'Rapid taps and a held arrow do not select game text');
+    assert.ok(
+      Math.abs(after.scale - before.scale) < 0.01,
+      'Near-miss taps and pinch gestures do not zoom active play',
+    );
+    assert.equal(after.x, before.x, 'Touch controls do not pan the page horizontally');
+    assert.equal(after.y, before.y, 'Touch controls do not pan the page vertically');
+    assert.equal(await page.$$eval('[data-control].pressed', (buttons) => buttons.length), 0);
+
+    await page.tap('#pause');
+    assert.equal(await page.evaluate(() => ciciDebug.state.mode), 'paused');
+    const menu = await page.$eval('#overlay', (element) => {
+      const r = element.getBoundingClientRect();
+      return {
+        x: r.left + r.width / 2,
+        y: r.top + r.height / 2,
+        bottom: r.bottom,
+        overflow: element.scrollHeight > element.clientHeight + 1,
+      };
+    });
+    if (menu.overflow) {
+      const finger = await page.touchscreen.touchStart(menu.x, menu.bottom - 25);
+      for (let step = 1; step <= 6; step++) {
+        await finger.move(menu.x, menu.bottom - 25 - step * 20);
+        await frame();
+      }
+      await finger.end();
+      await page.waitForFunction(() => document.querySelector('#overlay').scrollTop > 0);
+    }
+    // Positive control: the same native gesture must zoom the paused menu,
+    // proving the active-play check is not passing because touch emulation is inert.
+    await pinch(menu);
+    assert.ok(
+      (await metrics()).scale > before.scale + 0.1,
+      'Paused menus retain native pinch zoom',
+    );
+  } finally {
+    await client.send('Emulation.setPageScaleFactor', { pageScaleFactor: before.scale });
+    await client.detach();
+  }
+  await page.$eval('#overlay', (element) => {
+    element.scrollTop = 0;
+  });
+  await page.click('#start');
+}
+
 test('cici treat trail smoke', { timeout: 300_000 }, async () => {
   const browser = await launchBrowser();
   try {
@@ -356,7 +456,6 @@ test('cici treat trail smoke', { timeout: 300_000 }, async () => {
         }),
         'Mobile start button is visible without scrolling',
       );
-      await page.screenshot({ path: artifactPath(`cici-treat-trail-menu-${viewport.width}.png`) });
       await page.click('#start');
       const layout = await page.evaluate(() => ({
         overflow: document.documentElement.scrollWidth > innerWidth,
@@ -386,6 +485,7 @@ test('cici treat trail smoke', { timeout: 300_000 }, async () => {
           ),
         'All three touch controls fit the viewport',
       );
+      await exerciseMobileGestures(page);
       const right = await (await page.$('[data-control="right"]')).boundingBox();
       const jump = await (await page.$('[data-control="jump"]')).boundingBox();
       const startX = await page.evaluate(() => ciciDebug.state.player.x);
@@ -422,11 +522,14 @@ test('cici treat trail smoke', { timeout: 300_000 }, async () => {
         0,
         'Releasing both fingers leaves no stuck controls',
       );
+      // Capture only after touch checks; screenshots can alter Chromium's emulated input state.
       await page.screenshot({ path: artifactPath(`cici-treat-trail-${viewport.width}.png`) });
+      await page.click('#pause');
+      await page.screenshot({ path: artifactPath(`cici-treat-trail-menu-${viewport.width}.png`) });
     }
     assert.deepEqual(errors, [], 'No JavaScript errors or failed game assets');
     console.log(
-      `PASS: ${mechanical.length} platform checks, full keyboard playthrough (${snapshot.treats} treats, ${snapshot.hearts} hearts), pause keys, multitouch and mobile layouts.\n${mechanical.join('\n')}`,
+      `PASS: ${mechanical.length} platform checks, full keyboard playthrough (${snapshot.treats} treats, ${snapshot.hearts} hearts), pause keys, multitouch, touch gesture protection and mobile layouts.\n${mechanical.join('\n')}`,
     );
   } finally {
     await closeBrowser(browser);
