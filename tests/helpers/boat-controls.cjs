@@ -371,6 +371,9 @@ async function exerciseBoatTouch(page) {
     });
     await page.waitForFunction(() => bayDebug.touchDrive.snapshot().active);
     await client.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] });
+    // Native events arrive asynchronously; slow CI runners can deliver the cancel
+    // after the next frame, so wait for it as the touch start above does.
+    await page.waitForFunction(() => !bayDebug.touchDrive.snapshot().active);
     const cancelled = await stepBoat(page, 1);
     assert.ok(
       !cancelled.touch.active && cancelled.input.gas === 0,

@@ -26,11 +26,16 @@ test('release build resolves immutable assets, secures scripts, and excludes pro
     for (const size of ['', '-small'])
       assert.ok(manifest[`assets/office/office-${theme}${size}.webp`]);
   }
+  // The camera roll lives in script.js; Rebecca's wedding photo is in the page itself.
   const script = await readFile(join(output, manifest['script.js']), 'utf8');
+  const home = await readFile(join(output, 'index.html'), 'utf8');
   const photos = Object.keys(manifest).filter((file) => file.startsWith('assets/polaroids/'));
-  assert.ok(photos.length > 0, 'Camera photos are part of the release');
+  assert.ok(photos.length > 0, 'Photos are part of the release');
   for (const photo of photos) {
-    assert.ok(script.includes(`'${manifest[photo]}'`), `${photo} loads from its immutable URL`);
+    assert.ok(
+      script.includes(`'${manifest[photo]}'`) || home.includes(`"${manifest[photo]}"`),
+      `${photo} loads from its immutable URL`,
+    );
   }
   const headers = await readFile(join(output, '_headers'), 'utf8');
   for (const header of [
