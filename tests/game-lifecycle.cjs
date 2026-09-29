@@ -10,7 +10,7 @@ const games = [
     page: 'surf-riders.html',
     debug: 'surfDebug',
     active: ['playing'],
-    touch: 'up',
+    touch: 'brake',
   },
   {
     page: 'bay-racer.html',

@@ -8,7 +8,8 @@ const {
   artifactPath,
   settleCamera,
 } = require('./helpers/browser.cjs');
-const { assertDrivingControls, assertCompactDrivingUI } = require('./helpers/driving-controls.cjs');
+const { assertCompactDrivingUI } = require('./helpers/driving-controls.cjs');
+const { assertJeepControls, exerciseJeepResponsiveTouch } = require('./helpers/jeep-controls.cjs');
 const gameURL = new URL(
   process.env.GAME_URL ||
     new URL('surf-riders.html', process.env.SITE_URL || 'http://localhost:8000/'),
@@ -147,7 +148,11 @@ test('responsive surf', { timeout: 300_000 }, async () => {
       await inspectLayout(page, `${label} menu`, false);
       await page.click('#start');
       await inspectLayout(page, `${label} driving`, true);
-      if (hasTouch || hybrid) await assertDrivingControls(page, label);
+      if (hasTouch || hybrid) {
+        await settleCamera(page, 'surfDebug');
+        await assertJeepControls(page, label);
+        if (hasTouch) await exerciseJeepResponsiveTouch(page, label);
+      }
       await assertCompactDrivingUI(page, label);
       await page.click('#pause');
       assert.equal(await page.evaluate(() => surfDebug.state.mode), 'paused');
@@ -172,7 +177,9 @@ test('responsive surf', { timeout: 300_000 }, async () => {
     await inspectLayout(page, 'landscape safe area menu', false);
     await page.click('#start');
     await inspectLayout(page, 'landscape safe area driving', true);
-    await assertDrivingControls(page, 'landscape safe area driving');
+    await settleCamera(page, 'surfDebug');
+    await assertJeepControls(page, 'landscape safe area driving');
+    await exerciseJeepResponsiveTouch(page, 'landscape safe area driving');
     await assertCompactDrivingUI(page, 'landscape safe area driving');
     await page.evaluate(() => surfDebug.endGame());
     await inspectLayout(page, 'landscape safe area results', false);

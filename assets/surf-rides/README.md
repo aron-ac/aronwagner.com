@@ -4,12 +4,13 @@ A standalone 3D arcade driving game for Mark's site. Serve the repository over H
 
 ## Play
 
-- **Arrow keys / WASD:** hold one direction to turn the vehicle’s nose toward that part of the screen and drive forward. Steering eases between directions and keeps momentum through ordinary corners. The vehicle can turn from rest; pressing behind it slows the vehicle into a U-turn.
-- Only one direction is active at a time. If two arrows are held, the most recently pressed direction wins; releasing it returns to the other held direction. Releasing all arrows lets the vehicle coast.
-- **Space:** brake. Stop inside a destination ring for 1.1 seconds to complete the stop.
+- **Up / W:** accelerate forward. **Down / S:** reverse. Changing direction brakes to a stop before engaging the opposite gear.
+- **Left / A** and **Right / D:** steer the front wheels. Hold an accelerator and steering key together to drive an arc; steering alone does not rotate a stationary Jeep. Releasing the controls lets it coast.
+- **Space / B / Left Ctrl:** brake. Stop inside a destination ring for 1.1 seconds to complete the stop.
 - **P / Escape:** pause/resume. Losing focus or hiding the page pauses the shift.
 - **R / Unstuck:** return to the nearest road for a five-second shift penalty.
-- Touch devices have four separated left-thumb arrow buttons with the same screen-relative directions, plus a separate Brake button on the right. Slide between arrows to change direction. The gaps, corners, and center are neutral; lifting or leaving the pad releases that finger and eases the steering back. Brake can be held with a second finger.
+- **Touch:** hold one finger around the Jeep to steer in any direction. A ring shows the neutral center and full-throttle distance. Farther away adds throttle; closer eases down for precise stops. Pointing more than 135° behind the Jeep selects reverse. Lift to coast, or use the separate Brake button with a second finger. Bearing and throttle update as the finger moves; holding still maintains the chosen command as the camera follows.
+- A second finger on the scene suspends touch driving until all scene fingers lift. Menus and the Brake button remain independent. Active touch play suppresses browser zoom, text selection and long-press callouts; menus retain native scrolling and zoom.
 - On compact screens, the map is visible by default; **Map** hides or shows it. **Pause → Unstuck** returns the Jeep to the nearest road and resumes the shift with the usual five-second penalty. Unstuck remains unavailable during its recovery cooldown. Entering a menu hides the map; starting or resuming play shows it again.
 - Sound is optional and off initially. It uses synthesized tones after user interaction.
 
@@ -21,9 +22,9 @@ The driving camera uses a 25-degree perspective lens with a 45-degree diagonal b
 
 ## Shared presentation
 
-The shared `../shared/arcade.css` defines the arcade shell and common controls. `../shared/driving.css` owns both driving games' direction pads and compact HUD layouts. Each game stylesheet retains its palette and desktop scene presentation. HUD labels stay at least 10px; compact minimaps omit cramped decorative text while retaining their accessible names and visual markers.
+The shared `../shared/arcade.css` defines the arcade shell and common controls. `../shared/driving.css` owns compact driving HUD layouts and Bay Racer's direction pad. Each game stylesheet retains its palette and desktop scene presentation. HUD labels stay at least 10px; compact minimaps omit cramped decorative text while retaining their accessible names and visual markers.
 
-`../shared/input.js` selects the latest held direction. `../shared/directional-drive.js` maps that screen direction to a heading. Its shared heading assistance turns the nose before accelerating, including from rest, without automatic reversing. Both keyboard and touch use it; each simulation retains vehicle acceleration, traction and collisions.
+`../shared/input.js` tracks simultaneous keyboard pedals, wheel steering and the touch Brake button. `touch-drive.js` projects scene touches onto the ground, captures each pointer and draws the steering guide. `vehicle-drive.js` converts keyboard or analog touch commands into pedals and wheel steering; `ride-session.js` turns the Jeep using its speed, wheelbase and eased front-wheel angle. This Jeep-specific implementation is inspired by the touch and keyboard behavior in [Bruno Simon's portfolio source](https://github.com/brunosimon/folio-2025/tree/41046b57eeed8d156d9c3fd7fa259900baef7816/sources/Game), without importing its code or physics engine. Bay Racer retains its screen-direction controls.
 
 `../shared/driving-ui.js` manages map visibility and the pause-menu recovery button for both driving games. CSS selects the compact layout; the controllers retain each game's recovery rules and penalties.
 
@@ -32,6 +33,8 @@ The shared `../shared/arcade.css` defines the arcade shell and common controls. 
 ## Files
 
 - `game.js`: scene/camera, input bindings, presentation of simulation events, menus, HUD and minimap.
+- `vehicle-drive.js`: pure keyboard/touch pedal mapping and vehicle steering constants.
+- `touch-drive.js`: touch/pen pointer capture, camera-aware ground projection, analog steering guide and lifecycle cleanup.
 - `ride-session.js`: renderer-independent shift state, driving/collisions, request lifecycle, recovery, fares/tips and coconut collection. `createRideSession(world, onEvent, { random })` accepts plain map data and injectable randomness, so gameplay can be tested without a browser. Frame updates take a duration and an input snapshot.
 - `../shared/`: keyboard/multi-pointer input, opt-in synthesized audio, safe numeric score storage, required DOM lookups and game loading/error reporting shared with the other games.
 - `../shared/camera-rig.js`: shared perspective camera lens/angle for gameplay and the native homepage preview.
@@ -50,7 +53,9 @@ The game needs WebGL 2 in a current desktop/mobile browser. It displays a readab
 
 `tests/surf-session.test.js` exercises the pure simulation: actual acceleration/braking into a pickup, fare/tip lifecycle, one-shot coconuts and clock invariants, collision cooldown, pause/end guards, both request timeouts, recovery exhaustion and deterministic replay. Run it with `node --test tests/surf-session.test.js`.
 
-`tests/surf-rides-smoke.cjs` exercises the real browser game through its explicit `?debug=1` inspection hook: coconut placement, scoring, full-speed collection, one-shot pickup, pause/end protection, best-score persistence and reset; full request/pickup/drop-off lifecycle, comfort/tips/streaks, both timeout cases, pause, recovery, shift end/restart, screen-relative arrow/WASD driving, touch acceleration/release/cancellation, responsive layouts and failed asset/JavaScript checks.
+`tests/vehicle-drive.test.js` covers proportional pedals, steering arcs, braking before reverse and simulation timing. `tests/surf-touch-drive.test.js` covers camera projection, deadzone, pointer ownership and cleanup.
+
+`tests/surf-rides-smoke.cjs` exercises the real browser game through its explicit `?debug=1` inspection hook: coconut placement, scoring, full-speed collection, one-shot pickup, pause/end protection, best-score persistence and reset; full request/pickup/drop-off lifecycle, comfort/tips/streaks, both timeout cases, pause, recovery, shift end/restart, simultaneous keyboard acceleration/steering, analog scene touch controls, responsive layouts and failed asset/JavaScript checks.
 
 With a server running and Puppeteer installed in your development environment:
 

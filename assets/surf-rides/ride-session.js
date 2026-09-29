@@ -1,4 +1,4 @@
-import { applyDirectionalHeading } from '../shared/directional-drive.js';
+import { MAX_WHEEL_ANGLE, WHEELBASE } from './vehicle-drive.js';
 
 export const SHIFT_SECONDS = 180;
 export const COCONUT_POINTS = 25;
@@ -14,6 +14,8 @@ const JEEP_RADIUS = 1.3;
 const NAMES = ['Sofi', 'Mateo', 'Luna', 'Kai', 'Valentina', 'Nico', 'Ari', 'Camila'];
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const damp = (from, to, rate, dt) => from + (to - from) * (1 - Math.exp(-rate * dt));
+const pedalPower = (value) =>
+  value === true ? 1 : Number.isFinite(value) ? clamp(value, 0, 1) : 0;
 
 // Geometry-free collectible data lets collision/scoring run without a renderer.
 export function createCoconutSpots(world) {
@@ -68,7 +70,6 @@ export function createRideSession(world, onEvent = () => {}, { random = Math.ran
     heading: 0,
     speed: 0,
     steer: 0,
-    directionalTurnRate: 0,
     remaining: SHIFT_SECONDS,
     cash: 0,
     coconuts: 0,
@@ -150,7 +151,7 @@ export function createRideSession(world, onEvent = () => {}, { random = Math.ran
     state.z = road.z;
     state.heading = road.heading;
     state.speed = 0;
-    state.steer = state.directionalTurnRate = 0;
+    state.steer = 0;
     state.remaining = Math.max(0, state.remaining - 5);
     state.recoverCooldown = 3;
     state.boardTime = 0;
@@ -239,31 +240,38 @@ export function createRideSession(world, onEvent = () => {}, { random = Math.ran
     const road = nearestRoad(world.roads, state.x, state.z);
     state.onRoad = Boolean(road && road.distance < road.width / 2 + 1);
     const topSpeed = state.onRoad ? ROAD_SPEED : OFF_ROAD_SPEED;
-    const alignment = applyDirectionalHeading(state, input, dt);
-    const propulsion = alignment === null ? 1 : clamp(1 + alignment, 0, 1);
-    if (alignment !== null) state.speed = damp(state.speed, 0, 12 * Math.max(0, -alignment), dt);
+    const throttle = pedalPower(input.gas) - pedalPower(input.reverse);
     if (input.brake) state.speed = damp(state.speed, 0, 7, dt);
-    else if (input.gas) state.speed += (state.speed < 0 ? 27 : 14) * SPEED_SCALE * propulsion * dt;
-    else if (input.reverse) state.speed -= (state.speed > 0 ? 27 : 10) * SPEED_SCALE * dt;
-    else {
+    else if (throttle && state.speed * throttle < 0) {
+      // Changing gear first brakes to a stop. The opposite pedal can accelerate
+      // on the next step, so a reversal never jumps through zero in one frame.
+      state.speed =
+        Math.sign(state.speed) * Math.max(0, Math.abs(state.speed) - 27 * SPEED_SCALE * dt);
+    } else if (throttle) {
+      // Pedal pressure sets a sustainable cruising speed. A bounded response
+      // lets moving a touch closer slow the Jeep without snapping its velocity.
+      const targetSpeed = throttle * (throttle > 0 ? topSpeed : REVERSE_SPEED);
+      const acceleration = (throttle > 0 ? 14 : 10) * SPEED_SCALE;
+      state.speed += clamp(targetSpeed - state.speed, -acceleration * dt, acceleration * dt);
+    } else {
       const friction = (state.onRoad ? 3.6 : 5.5) * SPEED_SCALE;
-      state.speed = Math.sign(state.speed) * Math.max(0, Math.abs(state.speed) - friction * dt);
+      const rollingSpeed = damp(Math.abs(state.speed), 0, 0.8, dt);
+      state.speed = Math.sign(state.speed) * Math.max(0, rollingSpeed - friction * dt);
     }
     state.speed = clamp(state.speed, -REVERSE_SPEED, topSpeed);
-    if (alignment === null) {
-      state.steer = damp(
-        state.steer,
-        Number.isFinite(input.steering)
-          ? clamp(input.steering, -1, 1)
-          : (input.left ? 1 : 0) - (input.right ? 1 : 0),
-        10,
-        dt,
-      );
-      state.heading +=
-        state.steer * 1.95 * clamp(Math.abs(state.speed) / 5, 0, 1) * Math.sign(state.speed) * dt;
-    }
-    state.x += Math.sin(state.heading) * state.speed * dt;
-    state.z += Math.cos(state.heading) * state.speed * dt;
+    state.steer = damp(
+      state.steer,
+      Number.isFinite(input.steering)
+        ? clamp(input.steering, -1, 1)
+        : (input.left ? 1 : 0) - (input.right ? 1 : 0),
+      10,
+      dt,
+    );
+    const turn = (state.speed / WHEELBASE) * Math.tan(state.steer * MAX_WHEEL_ANGLE) * dt;
+    const movementHeading = state.heading + turn / 2;
+    state.heading += turn;
+    state.x += Math.sin(movementHeading) * state.speed * dt;
+    state.z += Math.cos(movementHeading) * state.speed * dt;
     collide();
     for (const [index, item] of coconuts.entries()) {
       if (item.active && Math.hypot(state.x - item.x, state.z - item.z) <= COCONUT_RADIUS) {

@@ -15,13 +15,9 @@ import { createGameInput } from '../shared/input.js';
 import { createGameLoop } from '../shared/game-loop.js';
 import { createDrivingUI } from '../shared/driving-ui.js';
 import { requireElements, setText, isInteractiveTarget } from '../shared/dom.js';
-import {
-  createCamera,
-  cameraOffset,
-  CAMERA_AZIMUTH,
-  CAMERA_ELEVATION,
-} from '../shared/camera-rig.js';
-import { createDirectionalDrive } from '../shared/directional-drive.js';
+import { createCamera, cameraOffset } from '../shared/camera-rig.js';
+import { mapVehicleInput, MAX_WHEEL_ANGLE } from './vehicle-drive.js';
+import { createTouchDrive } from './touch-drive.js';
 
 const ui = requireElements([
   'game-shell',
@@ -120,27 +116,29 @@ const { state, score } = session;
 const coconuts = createCoconuts(session.coconuts);
 scene.add(coconuts.group);
 const input = createGameInput({
-  exclusiveDirections: true,
   bindings: {
     up: ['KeyW', 'ArrowUp'],
     down: ['KeyS', 'ArrowDown'],
     left: ['KeyA', 'ArrowLeft'],
     right: ['KeyD', 'ArrowRight'],
-    brake: ['Space'],
+    brake: ['Space', 'KeyB', 'ControlLeft'],
   },
   isActive: () => state.mode === 'playing',
 });
 const { keys } = input;
-const control = input.isDown;
-const directionalDrive = createDirectionalDrive({
-  azimuth: CAMERA_AZIMUTH,
-  elevation: CAMERA_ELEVATION,
+const touchDrive = createTouchDrive({
+  element: ui.viewport,
+  camera,
+  state,
+  isActive: () => state.mode === 'playing',
 });
+scene.add(touchDrive.group);
 const clearInput = () => {
   input.clear();
-  directionalDrive.reset();
+  touchDrive.clear();
 };
 const directionInput = {};
+const touchInput = {};
 const drivingInput = {};
 const greetings = [
   'The swell is picking up. Let’s go!',
@@ -442,6 +440,13 @@ ui.start.addEventListener('click', () => {
 });
 ui.restart.addEventListener('click', startGame);
 ui.pause.addEventListener('click', pauseGame);
+// A second finger may not synthesize a click while the driving finger is held.
+// Pausing is idempotent, so a later click cannot accidentally resume the shift.
+ui.pause.addEventListener('pointerdown', (event) => {
+  if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return;
+  event.preventDefault();
+  pauseGame();
+});
 ui.recover.addEventListener('click', recover);
 ui['menu-recover'].addEventListener('click', () => {
   if (state.mode !== 'paused' || ui['menu-recover'].disabled) return;
@@ -469,7 +474,13 @@ window.addEventListener('keydown', (event) => {
 });
 
 function update(dt) {
-  session.update(dt, directionalDrive.update(input.snapshot(directionInput), state, drivingInput));
+  mapVehicleInput(
+    input.snapshot(directionInput),
+    touchDrive.snapshot(touchInput),
+    state,
+    drivingInput,
+  );
+  session.update(dt, drivingInput);
   if (state.mode !== 'playing') return;
   coconuts.update(dt, state);
   dustTimer -= dt;
@@ -651,10 +662,10 @@ function animate(dt, now) {
   for (const wheel of jeep.userData.wheels)
     if (state.mode === 'playing')
       wheel.rotation.x += (state.speed * dt) / (jeep.userData.wheelRadius || 0.66);
-  for (const pivot of jeep.userData.frontSteering) pivot.rotation.y = state.steer * 0.4;
+  for (const pivot of jeep.userData.frontSteering) pivot.rotation.y = state.steer * MAX_WHEEL_ANGLE;
   for (const light of jeep.userData.brakeLights) {
     if (light.material.emissive)
-      light.material.emissive.setHex(control('brake') ? 0xff2010 : 0x440900);
+      light.material.emissive.setHex(drivingInput.brake ? 0xff2010 : 0x440900);
   }
   pickupBeacon.userData.diamond.rotation.y = t;
   beachBeacon.userData.diamond.rotation.y = t;
@@ -691,6 +702,7 @@ function animate(dt, now) {
     lookAt.lerp(desiredLook, lerp);
   }
   camera.lookAt(lookAt);
+  touchDrive.update();
   sun.position.set(state.x - 32, 62, state.z + 36);
   sun.target.position.set(state.x, 0, state.z);
   sun.target.updateMatrixWorld();
@@ -718,6 +730,7 @@ const loop = createGameLoop({
   dispose() {
     drivingUI.dispose();
     input.dispose();
+    touchDrive.dispose();
     audio.dispose();
     renderer.dispose();
   },
@@ -743,6 +756,9 @@ if (new URLSearchParams(location.search).has('debug'))
     recover,
     endGame,
     keys,
+    clearInput,
+    touchDrive,
+    drivingInput,
     drawMap,
     coconuts,
     score,

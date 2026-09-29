@@ -5,7 +5,6 @@ import {
   createDirectionalDrive,
 } from '../assets/shared/directional-drive.js';
 import { CAMERA_AZIMUTH, CAMERA_ELEVATION } from '../assets/shared/camera-rig.js';
-import { createRideSession, ROAD_SPEED } from '../assets/surf-rides/ride-session.js';
 import { createRace, NORMAL_SPEED } from '../assets/bay-racer/race.js';
 
 const camera = { azimuth: CAMERA_AZIMUTH, elevation: CAMERA_ELEVATION };
@@ -159,15 +158,14 @@ function openWorld() {
   };
 }
 
-for (const [name, createSimulation, cruisingSpeed] of [
-  ['Jeep', createRideSession, ROAD_SPEED],
-  ['boat', createRace, NORMAL_SPEED],
-]) {
+{
+  const name = 'boat';
+  const cruisingSpeed = NORMAL_SPEED;
   const start = (heading, speed = 0) => {
-    const simulation = createSimulation(openWorld());
+    const simulation = createRace(openWorld());
     simulation.start();
     Object.assign(simulation.state, {
-      mode: name === 'Jeep' ? 'playing' : 'racing',
+      mode: 'racing',
       x: 0,
       z: 0,
       heading,
@@ -177,10 +175,7 @@ for (const [name, createSimulation, cruisingSpeed] of [
     });
     return simulation;
   };
-  const velocity = (state) =>
-    name === 'boat'
-      ? project(state.vx, state.vz)
-      : project(Math.sin(state.heading) * state.speed, Math.cos(state.heading) * state.speed);
+  const velocity = (state) => project(state.vx, state.vz);
 
   test(`${name} turns nose-first toward every cardinal direction within one second from rest or cruise`, () => {
     for (const frameRate of [20, 60, 120]) {
@@ -408,10 +403,8 @@ for (const [name, createSimulation, cruisingSpeed] of [
         drive.update({ up: true, brake: true, boost: true }, simulation.state),
       );
     assert.ok(simulation.state.speed < 0.04);
-    if (name === 'boat') {
-      assert.equal(simulation.state.boosting, false);
-      assert.equal(simulation.state.boost, 100);
-    }
+    assert.equal(simulation.state.boosting, false);
+    assert.equal(simulation.state.boost, 100);
   });
 }
 

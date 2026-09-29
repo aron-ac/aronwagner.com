@@ -9,25 +9,20 @@ const {
   settleCamera,
 } = require('./helpers/browser.cjs');
 const {
-  assertDrivingControls,
-  exerciseDrivingControls,
-  exerciseDrivingKeyboard,
   assertCompactDrivingUI,
   exerciseCompactDrivingUI,
 } = require('./helpers/driving-controls.cjs');
+const {
+  assertJeepControls,
+  exerciseJeepKeyboard,
+  exerciseJeepTouch,
+} = require('./helpers/jeep-controls.cjs');
 const gameURL = new URL(
   process.env.GAME_URL ||
     new URL('surf-riders.html', process.env.SITE_URL || 'http://localhost:8000/'),
 );
 gameURL.searchParams.set('debug', '1');
 const url = gameURL.href;
-// The intersection by the coast leaves room for assisted U-turns.
-// Real map obstacles remain active; the helper verifies this patch's clearance.
-const drivingOptions = {
-  debugName: 'surfDebug',
-  start: 'startGame',
-  position: { x: -38, z: 40 },
-};
 test('surf rides smoke', { timeout: 300_000 }, async () => {
   const browser = await launchBrowser();
   try {
@@ -236,7 +231,7 @@ test('surf rides smoke', { timeout: 300_000 }, async () => {
       );
       return results;
     });
-    await exerciseDrivingKeyboard(page, drivingOptions);
+    await exerciseJeepKeyboard(page);
     await page.keyboard.press('KeyP');
     assert.equal(await page.evaluate(() => surfDebug.state.mode), 'paused');
     await page.keyboard.press('Escape');
@@ -330,47 +325,11 @@ test('surf rides smoke', { timeout: 300_000 }, async () => {
         ),
         'All touch controls visible',
       );
-      await page.evaluate(() => {
-        surfDebug.state.heading = (-3 * Math.PI) / 4;
-      });
-      const client = await page.createCDPSession();
-      const up = await page.$('[data-control="up"]');
-      const rect = await up.boundingBox();
-      const touchPoints = [{ x: rect.x + rect.width / 2, y: rect.y + rect.height / 2, id: 1 }];
-      await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints });
-      assert.ok(
-        await page.evaluate(() => {
-          for (let i = 0; i < 30; i++) surfDebug.update(1 / 60);
-          return surfDebug.state.speed > 0;
-        }),
-        'Touch up accelerates toward the top of the screen',
-      );
-      await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-      assert.ok(
-        await page.evaluate(() => {
-          const before = surfDebug.state.speed;
-          for (let i = 0; i < 15; i++) surfDebug.update(1 / 60);
-          return (
-            surfDebug.state.speed < before &&
-            !document.querySelector('[data-control="up"]').classList.contains('pressed')
-          );
-        }),
-        'Touch release clears input',
-      );
-      await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints });
-      await client.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] });
-      assert.ok(
-        await page.evaluate(
-          () => !document.querySelector('[data-control="up"]').classList.contains('pressed'),
-        ),
-        'Touch cancellation clears input',
-      );
-      await client.detach();
-      await assertDrivingControls(page, `Surf Riders ${viewport.width}×${viewport.height}`);
+      await assertJeepControls(page, `Surf Riders ${viewport.width}×${viewport.height}`);
       await assertCompactDrivingUI(page, `Surf Riders ${viewport.width}×${viewport.height}`);
       if (viewport.width === 390)
         await exerciseCompactDrivingUI(page, { debugName: 'surfDebug', activeMode: 'playing' });
-      await exerciseDrivingControls(page, drivingOptions);
+      await exerciseJeepTouch(page);
       await page.screenshot({ path: artifactPath(`surf-riders-${viewport.width}.png`) });
     }
     await loadGame(page, new URL('cr-surf-rides.html?debug=1#start', url).href, 'surfDebug');
@@ -383,7 +342,7 @@ test('surf rides smoke', { timeout: 300_000 }, async () => {
     assert.equal(redirected.hash, '#start', 'The redirect retains the fragment');
     assert.deepEqual(errors, [], 'No page errors or failed asset requests');
     console.log(
-      `PASS: ${mechanical.length} mechanics, nose-first screen-relative travel, exclusive cardinal keyboard/touch controls, neutral gaps, D-pad sliding, pause keys, independent brake, default-visible map/recovery, portrait and landscape layouts.\n${mechanical.join('\n')}`,
+      `PASS: ${mechanical.length} mechanics, vehicle-relative pedals and steering, projected scene touch driving, neutral ring, drag throttle, reverse, pause/cancel cleanup, independent brake, default-visible map/recovery, portrait and landscape layouts.\n${mechanical.join('\n')}`,
     );
   } finally {
     await closeBrowser(browser);

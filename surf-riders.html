@@ -64,8 +64,12 @@
         SOUND OFF
       </button>
     </header>
-    <main id="game-shell" class="driving-game">
-      <div role="group" id="viewport" aria-label="3D surf taxi driving game"></div>
+    <main id="game-shell" class="driving-game jeep-game">
+      <div
+        role="group"
+        id="viewport"
+        aria-label="3D surf taxi driving game. Touch around the Jeep to steer; farther away accelerates, closer slows down, behind reverses."
+      ></div>
       <div class="vignette" aria-hidden="true"></div>
       <section class="hud" aria-label="Shift statistics">
         <div class="game-brand">
@@ -127,8 +131,8 @@
       </div>
       <div class="bottom-bar">
         <span class="keyboard-help"
-          ><kbd>WASD</kbd> / <kbd>↑↓←→</kbd> DRIVE <b>·</b> <kbd>SPACE</kbd> BRAKE <b>·</b>
-          <kbd>P</kbd> PAUSE</span
+          ><kbd>↑↓</kbd> GAS / REVERSE <b>·</b> <kbd>←→</kbd> STEER <b>·</b> <kbd>SPACE</kbd> BRAKE
+          <b>·</b> <kbd>P</kbd> PAUSE</span
         >
         <div>
           <button
@@ -153,41 +157,12 @@
       <div
         role="group"
         id="touch-controls"
-        class="touch-controls driving-controls hidden"
+        class="touch-controls driving-controls jeep-touch-controls hidden"
         aria-label="Touch driving controls"
       >
-        <div
-          class="driving-dpad"
-          data-control-pad="driving"
-          data-dpad
-          role="group"
-          aria-label="Direction buttons: hold one arrow to turn and drive toward that part of the screen"
-        >
-          <button type="button" data-control="up" aria-label="Drive toward the top of the screen">
-            ↑
-          </button>
-          <button
-            type="button"
-            data-control="left"
-            aria-label="Drive toward the left of the screen"
-          >
-            ←
-          </button>
-          <button
-            type="button"
-            data-control="right"
-            aria-label="Drive toward the right of the screen"
-          >
-            →
-          </button>
-          <button
-            type="button"
-            data-control="down"
-            aria-label="Drive toward the bottom of the screen"
-          >
-            ↓
-          </button>
-        </div>
+        <p class="jeep-touch-hint">
+          Hold around the Jeep to drive.<br />Closer to slow · lift to coast
+        </p>
         <div class="driving-actions">
           <button type="button" data-control="brake" class="driving-auxiliary" aria-label="Brake">
             BRAKE
@@ -228,10 +203,12 @@
           </button>
           <p class="menu-note" id="menu-note">
             <span class="keyboard-instructions"
-              >Hold one arrow to turn and drive<br />WASD also works · Space to brake</span
+              >↑ / W gas · ↓ / S reverse · ← → / A D steer<br />Hold gas and steer together · Space
+              to brake</span
             >
             <span class="touch-instructions"
-              >Hold one arrow to turn and drive that way. Brake on the right.</span
+              >Hold around the Jeep to steer. Farther away accelerates; closer slows down. Behind
+              reverses. Lift to coast, or hold Brake to stop.</span
             ><br />
             Best score: <span id="best">0 pts</span>
           </p>
