@@ -5,7 +5,7 @@ const { launchBrowser, closeBrowser, artifactPath, settlePage } = require('./hel
 const identity = require('./helpers/identity.cjs');
 const site = process.env.SITE_URL || 'http://localhost:8000/';
 // Matches the camera roll's photo list in script.js.
-const PHOTO_COUNT = 8;
+const PHOTO_COUNT = 7;
 
 async function assertMobileGestures(page) {
   const client = await page.createCDPSession();
@@ -492,6 +492,36 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
     await page.mouse.click(10, 10);
     assert.equal(await polaroidOpen(), false, 'Clicking the backdrop closes the photo viewer');
 
+    const weddingOpen = () => page.$eval('#wedding-dialog', (dialog) => dialog.open);
+    assert.equal(
+      await page.evaluate(() =>
+        performance
+          .getEntriesByType('resource')
+          .some((entry) => entry.name.includes('wedding-day')),
+      ),
+      false,
+      'The wedding photo waits until Rebecca is clicked',
+    );
+    await page.click('.rebecca');
+    assert.equal(await weddingOpen(), true, 'Clicking Rebecca opens the wedding photo');
+    assert.deepEqual(
+      await page.$eval('#wedding-dialog .polaroid-photo', async (photo) => {
+        await photo.decode();
+        return { loaded: photo.naturalWidth > 0, alt: photo.alt };
+      }),
+      {
+        loaded: true,
+        alt: 'Aron and Rebecca on their wedding day in front of a historic stone church.',
+      },
+      'The wedding photo loads with a description',
+    );
+    await page.keyboard.press('Escape');
+    assert.equal(await weddingOpen(), false, 'Escape closes the wedding photo');
+    assert.equal(
+      await page.evaluate(() => document.activeElement.matches('.rebecca')),
+      true,
+      'Closing the wedding photo returns focus to Rebecca',
+    );
     const dogStatus = () => page.$eval('#dog-status', (status) => status.textContent);
     await page.click('.toys-toggle');
     assert.match(await dogStatus(), /Maggie|fetch/, 'Playing fetch announces what Maggie did');
@@ -548,9 +578,12 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
         );
         assert.equal(pins.length, 7, 'Seven scene objects have touch pins');
         assert.equal(
-          await page.$$eval('.portrait .hotspot-pin, .dog .hotspot-pin', (pins) => pins.length),
+          await page.$$eval(
+            '.portrait .hotspot-pin, .dog .hotspot-pin, .rebecca .hotspot-pin',
+            (pins) => pins.length,
+          ),
           0,
-          'Aron and Maggie remain free of pin dots',
+          'Aron, Maggie and Rebecca remain free of pin dots',
         );
         for (const pin of pins) {
           assert.equal(pin.pulsing, true, `${pin.control} pin pulses with normal motion`);
@@ -650,7 +683,7 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
     }
     assert.deepEqual(errors, [], 'No JavaScript errors or failed homepage assets');
     console.log(
-      'PASS: Eastern schedule (winter/summer), manual override expiry, new-tab navigation, hidden games, social screen and submenu links, American Cloud business card and email link, eight-photo Polaroid shuffle and keyboard controls, Maggie’s fetch and pets, pulsing touch pins and touchscreen activation, scene-scoped gesture protection, selectable and zoomable page/dialog text, all three game cards, and responsive layouts.',
+      'PASS: Eastern schedule (winter/summer), manual override expiry, new-tab navigation, hidden games, social screen and submenu links, American Cloud business card and email link, seven-photo Polaroid shuffle, Rebecca’s wedding photo and keyboard controls, Maggie’s fetch and pets, pulsing touch pins and touchscreen activation, scene-scoped gesture protection, selectable and zoomable page/dialog text, all three game cards, and responsive layouts.',
     );
   } finally {
     await closeBrowser(browser);

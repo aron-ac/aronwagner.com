@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const { launchBrowser, closeBrowser } = require('./helpers/browser.cjs');
 const site = process.env.SITE_URL || 'http://localhost:8000/';
 // Matches the camera roll's photo list in script.js.
-const PHOTO_COUNT = 8;
+const PHOTO_COUNT = 7;
 const viewports = [
   [320, 568, true],
   [360, 640, true],
@@ -38,6 +38,7 @@ const sceneControls = [
   '.portrait',
   '.toys-toggle',
   '.dog',
+  '.rebecca',
 ];
 
 // Points on each illustrated object (1536x1024 artwork) that must reach its control.
@@ -51,6 +52,7 @@ const sceneObjects = [
   ['.portrait', 450, 420],
   ['.toys-toggle', 438, 820],
   ['.dog', 650, 780],
+  ['.rebecca', 1185, 520],
 ];
 
 async function assertVisible(page, selector, label, interactive = false) {
@@ -171,7 +173,7 @@ async function assertHotspotPins(page, label, hasTouch) {
         animations: styles.map((style) => style.animationName),
       };
     });
-    if (['.portrait', '.dog'].includes(selector)) {
+    if (['.portrait', '.dog', '.rebecca'].includes(selector)) {
       assert.equal(pin.count, 0, `${label}: ${selector} keeps its artwork free of pins`);
       continue;
     }

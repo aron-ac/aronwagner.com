@@ -7,10 +7,6 @@
       alt: 'Aron holding Jack on his lap on a backyard deck.',
     },
     {
-      src: 'assets/polaroids/wedding-day.jpg',
-      alt: 'Aron and Rebecca on their wedding day in front of a historic stone church.',
-    },
-    {
       src: 'assets/polaroids/bmw-6-series.jpg',
       alt: 'A classic black BMW 6 Series coupe parked in the sun.',
     },
@@ -185,12 +181,13 @@
     };
   }
 
-  // Reading cards with fixed content: the Bible verse, service note and golf invitation.
+  // Cards with fixed content: the Bible verse, service note, golf invitation and wedding photo.
   function initCards() {
     for (const [trigger, id] of [
       ['.bible-toggle', 'verse-dialog'],
       ['.uniform-toggle', 'service-dialog'],
       ['.golf-toggle', 'golf-dialog'],
+      ['.rebecca', 'wedding-dialog'],
     ]) {
       const button = document.querySelector(trigger);
       const dialog = document.getElementById(id);
@@ -199,7 +196,8 @@
       button.disabled = false;
       button.addEventListener('click', () => {
         if (!dialog.open) dialog.showModal();
-        dialog.querySelector('.quote-passage').scrollTop = 0;
+        const passage = dialog.querySelector('.quote-passage');
+        if (passage) passage.scrollTop = 0;
       });
     }
   }

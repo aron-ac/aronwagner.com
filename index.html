@@ -232,6 +232,19 @@
             <span class="dog-heart" aria-hidden="true">♥</span>
             <span class="dog-squeak" aria-hidden="true">Squeak!</span>
           </button>
+          <button
+            class="scene-hotspot rebecca"
+            type="button"
+            aria-label="See Aron and Rebecca’s wedding photo"
+            aria-haspopup="dialog"
+            aria-controls="wedding-dialog"
+            style="--x: 1105; --y: 365; --w: 180; --h: 290"
+            disabled
+          >
+            <span class="label" aria-hidden="true"
+              >Our wedding day <span class="arrow">↴</span></span
+            >
+          </button>
           <!-- The fetched squeak toy's flight from the toy bin to Maggie. -->
           <svg class="squeak-toy" viewBox="0 0 64 40" aria-hidden="true" focusable="false">
             <path
@@ -589,6 +602,32 @@
           <span aria-hidden="true">↻</span> Another photo
         </button>
       </div>
+    </dialog>
+    <dialog id="wedding-dialog" class="polaroid-dialog" aria-labelledby="wedding-title">
+      <h2 id="wedding-title" class="sr-only">Our wedding day</h2>
+      <button
+        class="polaroid-close"
+        type="button"
+        aria-label="Close wedding photo"
+        data-dialog-close
+        autofocus
+      >
+        ×
+      </button>
+      <figure class="polaroid-frame">
+        <div class="polaroid-media">
+          <!-- Lazy: the photo downloads only when the card opens. -->
+          <img
+            class="polaroid-photo"
+            src="assets/polaroids/wedding-day.jpg"
+            width="1065"
+            height="1600"
+            loading="lazy"
+            alt="Aron and Rebecca on their wedding day in front of a historic stone church."
+          />
+        </div>
+        <figcaption class="polaroid-caption"><span>Our wedding day</span></figcaption>
+      </figure>
     </dialog>
   </body>
 </html>

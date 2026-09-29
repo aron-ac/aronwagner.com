@@ -26,6 +26,7 @@ The office illustration has day and night versions that follow the time of day i
 | Bible          | John 3:16 (King James Version)                         |
 | Golf bag       | An invitation to play a round, with an email link      |
 | Camera         | Photos from the camera roll, in a Polaroid frame       |
+| Rebecca        | Their wedding-day photo                                |
 | Maggie         | Pet her                                                |
 | Toy bin        | Play fetch: a squeak toy flies to Maggie               |
 
