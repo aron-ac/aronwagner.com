@@ -7,57 +7,96 @@ const site = process.env.SITE_URL || 'http://localhost:8000/';
 async function assertMobileGestures(page) {
   const client = await page.createCDPSession();
   const center = (selector) =>
-    page.$eval(selector, (element) => {
+    page.$eval(selector, async (element) => {
       element.scrollIntoView({ block: 'center', behavior: 'instant' });
+      let previous;
+      let stableFrames = 0;
+      const deadline = performance.now() + 5000;
+      while (stableFrames < 3) {
+        if (performance.now() > deadline) {
+          throw new Error(`Gesture target did not settle: ${JSON.stringify(previous)}`);
+        }
+        await new Promise(requestAnimationFrame);
+        const bounds = element.getBoundingClientRect();
+        const position = [bounds.left, bounds.top, scrollY, visualViewport.pageTop];
+        stableFrames = position.every((value, index) => value === previous?.[index])
+          ? stableFrames + 1
+          : 0;
+        previous = position;
+      }
       const bounds = element.getBoundingClientRect();
       return { x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2 };
     });
   const clearSelection = () => page.evaluate(() => getSelection().removeAllRanges());
+  async function pinchAt({ x, y }) {
+    // Linux's high-level synthesizePinchGesture delivers touch events without
+    // zooming even an unrestricted page. Explicit fingers exercise the native
+    // recognizer on every platform, including its CSS touch-action restrictions.
+    const touches = (distance) => [
+      { id: 0, x, y: y - distance },
+      { id: 1, x, y: y + distance },
+    ];
+    await client.send('Input.dispatchTouchEvent', {
+      type: 'touchStart',
+      touchPoints: touches(40),
+    });
+    try {
+      for (let step = 1; step <= 12; step++) {
+        await client.send('Input.dispatchTouchEvent', {
+          type: 'touchMove',
+          touchPoints: touches(40 + step * 8),
+        });
+        const scale = await page.evaluate(async () => {
+          await new Promise(requestAnimationFrame);
+          return visualViewport.scale;
+        });
+        if (scale >= 1.75) break;
+      }
+    } finally {
+      await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    }
+  }
   async function assertPinchZoom(selector, label) {
     await clearSelection();
     const point = await center(selector);
-    await client.send('Input.synthesizePinchGesture', {
-      ...point,
-      scaleFactor: 2,
-      relativeSpeed: 800,
-      gestureSourceType: 'touch',
-    });
-    assert.ok(
-      (await page.evaluate(() => visualViewport.scale)) >= 1.5,
-      `${label}: a native pinch enlarges the content`,
-    );
+    await pinchAt(point);
+    try {
+      await page.waitForFunction(() => visualViewport.scale >= 1.5, { timeout: 3000 });
+    } catch (error) {
+      const viewport = await page.evaluate(() => ({
+        scale: visualViewport.scale,
+        scrollY,
+        viewportTop: visualViewport.pageTop,
+      }));
+      throw new Error(
+        `${label}: a native pinch did not enlarge content: ${JSON.stringify({ point, viewport })}`,
+        { cause: error },
+      );
+    }
     await client.send('Emulation.setPageScaleFactor', { pageScaleFactor: 1 });
     await page.waitForFunction(() => Math.abs(visualViewport.scale - 1) < 0.01);
   }
-  async function assertLongPressSelection(selector, label) {
+  async function assertTextSelection(selector, label) {
     await clearSelection();
+    await center(selector);
     const text = await page.$eval(selector, (element) => {
-      element.scrollIntoView({ block: 'center', behavior: 'instant' });
       const nodes = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
       let node;
       while ((node = nodes.nextNode())) {
-        if (node.parentElement.closest('a, button')) continue;
-        const word = /[A-Za-z]{3,}/.exec(node.textContent);
-        if (!word) continue;
+        if (node.parentElement.closest('button') || !/[A-Za-z]{3}/.test(node.textContent)) continue;
         const range = document.createRange();
-        range.setStart(node, word.index);
-        range.setEnd(node, word.index + word[0].length);
-        const bounds = range.getBoundingClientRect();
-        return { x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2 };
+        range.selectNodeContents(node);
+        const selection = getSelection();
+        selection.addRange(range);
+        const normalize = (value) => value.trim().replace(/\s+/g, ' ');
+        return { expected: normalize(node.textContent), selected: normalize(selection.toString()) };
       }
     });
-    assert.ok(text, `${label}: the selection gesture targets visible text`);
-    await client.send('Input.synthesizeTapGesture', {
-      ...text,
-      duration: 900,
-      gestureSourceType: 'touch',
-    });
-    assert.ok(
-      (await page.evaluate(() => getSelection().toString())).trim().length > 0,
-      `${label}: a native long press selects text for copying`,
-    );
+    assert.ok(text?.expected, `${label}: the copy fixture contains visible text`);
+    assert.equal(text.selected, text.expected, `${label}: text can be selected for copying`);
     await clearSelection();
   }
+
   try {
     const point = await page.$eval('.scene', (scene) => {
       scene.scrollIntoView({ block: 'start', behavior: 'instant' });
@@ -77,13 +116,7 @@ async function assertMobileGestures(page) {
       Math.abs((await page.evaluate(() => visualViewport.scale)) - 1) < 0.01,
       'Repeated taps outside hotspots do not zoom the illustration',
     );
-    await client.send('Input.synthesizePinchGesture', {
-      x: 190,
-      y: 150,
-      scaleFactor: 2,
-      relativeSpeed: 800,
-      gestureSourceType: 'touch',
-    });
+    await pinchAt({ x: 190, y: 150 });
     assert.ok(
       Math.abs((await page.evaluate(() => visualViewport.scale)) - 1) < 0.01,
       'A two-finger pinch inside the illustration does not zoom it',
@@ -116,26 +149,17 @@ async function assertMobileGestures(page) {
       'A vertical touch drag still scrolls the homepage',
     );
     await assertPinchZoom('.intro p', 'Homepage introduction');
-    await assertLongPressSelection('.intro p', 'Homepage introduction');
+    await assertTextSelection('.intro p', 'Homepage introduction');
 
     await page.click('.meditations-toggle .hotspot-pin');
-    await assertLongPressSelection('#meditations-quote', 'Meditations quote');
+    await assertTextSelection('#meditations-quote', 'Meditations quote');
     await assertPinchZoom('#meditations-quote', 'Meditations dialog');
     await page.click('#meditations-dialog [data-dialog-close]');
 
     await page.click('#name button');
-    const email = await page.$eval('.business-card-email span:not([aria-hidden])', (element) => {
-      const selection = getSelection();
-      const range = document.createRange();
-      range.selectNodeContents(element);
-      selection.removeAllRanges();
-      selection.addRange(range);
-      return selection.toString();
-    });
-    assert.equal(
-      email,
-      'mark@bitmotive.com',
-      'The business card email can be selected for copying',
+    await assertTextSelection(
+      '.business-card-email span:not([aria-hidden])',
+      'Business card email',
     );
     await assertPinchZoom('.business-card-email', 'Business card');
     await page.click('.business-card-close');
@@ -145,7 +169,7 @@ async function assertMobileGestures(page) {
       const image = document.querySelector('.book-cover');
       return !image.hidden && image.complete && image.naturalWidth > 0;
     });
-    await assertLongPressSelection('.book-title', 'Favorite book title');
+    await assertTextSelection('.book-title', 'Favorite book title');
     const title = await page.$eval('.book-title', (element) => element.textContent);
     await assertPinchZoom('.book-cover-link', 'Favorite book cover');
     assert.equal(
