@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const { settleCamera } = require('./browser.cjs');
-const { exerciseMapWhileSteering } = require('./driving-controls.cjs');
+const { exerciseMapWhileSteering, dragTowardVehicle } = require('./driving-controls.cjs');
 
 async function resetBoat(page) {
   await page.evaluate(() => {
@@ -220,13 +220,7 @@ async function exerciseBoatTouch(page) {
     'Holding a finger still preserves the selected throttle as the camera follows',
   );
   assert.equal(held.touch.heading, full.touch.heading);
-  // Move clearly beyond native touch slop first: after manual simulation steps,
-  // a near target can project onto almost the same pixel as the original touch.
-  const side = await groundPoint(page, 5, Math.PI / 2);
-  await finger.move(side.x, side.y);
-  const closer = await groundPoint(page, 5);
-  await finger.move(closer.x, closer.y);
-  await page.waitForFunction(() => bayDebug.touchDrive.snapshot().progress < 0.5);
+  await dragTowardVehicle(page, finger, 'bayDebug', groundPoint);
   const slowed = await stepBoat(page, 30);
   assert.ok(
     slowed.input.gas < 0.25 && slowed.speed > 0 && slowed.speed < held.speed,

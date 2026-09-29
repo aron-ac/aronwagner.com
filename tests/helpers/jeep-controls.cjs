@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const { settleCamera } = require('./browser.cjs');
-const { exerciseMapWhileSteering } = require('./driving-controls.cjs');
+const { exerciseMapWhileSteering, dragTowardVehicle } = require('./driving-controls.cjs');
 
 async function resetJeep(page) {
   await page.evaluate(() => {
@@ -227,13 +227,7 @@ async function exerciseJeepTouch(page) {
     'A held command stays stable as the camera and Jeep move',
   );
   assert.equal(held.touch.heading, full.touch.heading);
-  // Cross native touch slop before aiming closer. After the Jeep and camera
-  // move, the near ground target can project onto the original touch pixel.
-  const sidePoint = await jeepGroundPoint(page, 5, Math.PI / 2);
-  await finger.move(sidePoint.x, sidePoint.y);
-  const closerPoint = await jeepGroundPoint(page, 5);
-  await finger.move(closerPoint.x, closerPoint.y);
-  await page.waitForFunction(() => surfDebug.touchDrive.snapshot().progress < 0.5);
+  await dragTowardVehicle(page, finger, 'surfDebug', jeepGroundPoint);
   const slowed = await stepJeep(page, 20);
   assert.ok(
     slowed.input.gas < 0.25 && slowed.speed > 0 && slowed.speed < held.speed,

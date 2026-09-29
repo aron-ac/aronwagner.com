@@ -142,8 +142,86 @@ async function exerciseMapWhileSteering(page, debugName) {
   }
 }
 
+async function dragTowardVehicle(page, finger, debugName, groundPoint) {
+  await page.evaluate((debugName) => {
+    const samples = [];
+    const record = (event) => {
+      if (event.pointerType !== 'touch') return;
+      const game = window[debugName];
+      samples.push({
+        x: event.clientX,
+        y: event.clientY,
+        trusted: event.isTrusted,
+        touch: game.touchDrive.snapshot(),
+        vehicle: { x: game.state.x, z: game.state.z, speed: game.state.speed },
+      });
+    };
+    window.addEventListener('pointermove', record);
+    window.__drivingDrag = { samples, record };
+  }, debugName);
+  const move = async (point) => {
+    await finger.move(point.x, point.y);
+    // DevTools can acknowledge touch dispatch before a busy renderer delivers
+    // pointermove. Wait for that real event so consecutive moves cannot coalesce.
+    try {
+      await page.waitForFunction(
+        ({ x, y }) => {
+          const last = window.__drivingDrag.samples.at(-1);
+          return last && Math.abs(last.x - x) <= 1 && Math.abs(last.y - y) <= 1;
+        },
+        {},
+        point,
+      );
+    } catch (error) {
+      const samples = await page.evaluate(() => window.__drivingDrag.samples);
+      throw new Error(`Native drag was not delivered: ${JSON.stringify({ point, samples })}`, {
+        cause: error,
+      });
+    }
+  };
+  try {
+    const center = await groundPoint(page, 0);
+    const excursion = await page.$eval(
+      '#viewport',
+      (viewport, center) => {
+        const bounds = viewport.getBoundingClientRect();
+        return {
+          x: center.x < bounds.left + bounds.width / 2 ? bounds.right - 20 : bounds.left + 20,
+          y: center.y,
+        };
+      },
+      center,
+    );
+    assert.ok(Math.abs(excursion.x - center.x) >= 80, 'The drag crosses native touch slop');
+    await move(excursion);
+    // Aim inside the broad neutral ring. A small world-space move can project
+    // back onto the original pixel while the live camera follows the vehicle.
+    const near = await groundPoint(page, 2);
+    await move(near);
+    const samples = await page.evaluate(() => window.__drivingDrag.samples);
+    const last = samples.at(-1);
+    assert.ok(
+      samples.length >= 2 &&
+        last.trusted &&
+        Math.abs(last.x - near.x) <= 1 &&
+        Math.abs(last.y - near.y) <= 1,
+      `The native drag reaches the chosen near point: ${JSON.stringify({ near, samples })}`,
+    );
+    assert.ok(
+      last.touch.active && last.touch.progress < 0.5,
+      `Dragging toward the moving vehicle reduces throttle: ${JSON.stringify({ near, samples })}`,
+    );
+  } finally {
+    await page.evaluate(() => {
+      window.removeEventListener('pointermove', window.__drivingDrag.record);
+      delete window.__drivingDrag;
+    });
+  }
+}
+
 module.exports = {
   assertCompactDrivingUI,
   exerciseCompactDrivingUI,
   exerciseMapWhileSteering,
+  dragTowardVehicle,
 };
