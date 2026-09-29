@@ -1,6 +1,7 @@
 /* Driving controls and compact HUD, loaded after each game's visual theme. */
 .driving-game {
   --dpad-cell: 52px;
+  --dpad-gap: 8px;
 }
 .driving-controls.touch-controls {
   left: 16px;
@@ -11,9 +12,7 @@
 .driving-controls .driving-dpad {
   display: grid;
   grid-template: repeat(3, var(--dpad-cell)) / repeat(3, var(--dpad-cell));
-  gap: 0;
-  border-radius: 24px;
-  background: #10252e30;
+  gap: var(--dpad-gap);
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
@@ -23,50 +22,29 @@
   min-width: var(--dpad-cell);
   height: var(--dpad-cell);
   padding: 0;
+  border-radius: 12px;
   font: bold 28px/1 monospace;
   background: #153642e8;
   color: var(--cream);
 }
 .driving-dpad [data-control='up'] {
   grid-area: 1 / 2;
-  border-radius: 12px 12px 0 0;
-  border-bottom: 0;
 }
 .driving-dpad [data-control='left'] {
   grid-area: 2 / 1;
-  border-radius: 12px 0 0 12px;
-  border-right: 0;
 }
 .driving-dpad [data-control='right'] {
   grid-area: 2 / 3;
-  border-radius: 0 12px 12px 0;
-  border-left: 0;
 }
 .driving-dpad [data-control='down'] {
   grid-area: 3 / 2;
-  border-radius: 0 0 12px 12px;
-  border-top: 0;
-}
-.driving-dpad .dpad-center {
-  grid-area: 2 / 2;
-  display: grid;
-  place-items: center;
-  background: #153642e8;
-  pointer-events: none;
-}
-.dpad-center::before {
-  content: '';
-  width: 12px;
-  height: 12px;
-  border: 2px solid #fff4;
-  border-radius: 50%;
 }
 .driving-controls .driving-dpad button.pressed {
   background: var(--mint);
   color: var(--dark);
 }
 .driving-controls .driving-actions {
-  margin-bottom: var(--dpad-cell);
+  margin-bottom: calc(var(--dpad-cell) + var(--dpad-gap));
 }
 .driving-controls .driving-auxiliary {
   width: 64px;

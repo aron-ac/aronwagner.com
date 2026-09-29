@@ -5,11 +5,11 @@ A standalone 3D arcade driving game for Mark's site. Serve the repository over H
 ## Play
 
 - **Arrow keys / WASD:** hold one direction to turn the vehicle’s nose toward that part of the screen and drive forward. The vehicle can turn from rest and slows for sharp turns; pressing behind it makes a U-turn.
-- **Up + Right:** keep circling clockwise. **Up + Left:** keep circling counter-clockwise. A lower corner of the D-pad circles in the same left/right sense. Opposite arrows cancel each other; releasing the pad lets the vehicle coast.
+- Only one direction is active at a time. If two arrows are held, the most recently pressed direction wins; releasing it returns to the other held direction. Releasing all arrows lets the vehicle coast.
 - **Space:** brake. Stop inside a destination ring for 1.1 seconds to complete the stop.
 - **P / Escape:** pause/resume. Losing focus or hiding the page pauses the shift.
 - **R / Unstuck:** return to the nearest road for a five-second shift penalty.
-- Touch devices have one left-thumb D-pad with the same screen-relative directions and circling combinations, plus a separate Brake button on the right. Slide between arrows to change direction. The center is neutral; lifting or leaving the pad releases that finger. Brake can be held with a second finger.
+- Touch devices have four separated left-thumb arrow buttons with the same screen-relative directions, plus a separate Brake button on the right. Slide between arrows to change direction. The gaps, corners, and center are neutral; lifting or leaving the pad releases that finger. Brake can be held with a second finger.
 - On compact screens, the map is visible by default; **Map** hides or shows it. **Pause → Unstuck** returns the Jeep to the nearest road and resumes the shift with the usual five-second penalty. Unstuck remains unavailable during its recovery cooldown. Entering a menu hides the map; starting or resuming play shows it again.
 - Sound is optional and off initially. It uses synthesized tones after user interaction.
 
@@ -23,7 +23,7 @@ The driving camera uses a 25-degree perspective lens with a 45-degree diagonal b
 
 The shared `../shared/arcade.css` defines the arcade shell and common controls. `../shared/driving.css` owns both driving games' direction pads and compact HUD layouts. Each game stylesheet retains its palette and desktop scene presentation. HUD labels stay at least 10px; compact minimaps omit cramped decorative text while retaining their accessible names and visual markers.
 
-`../shared/directional-drive.js` maps single screen directions to a heading and held corner combinations to a continuous turn. Its shared heading assistance turns the nose before accelerating, including from rest, without automatic reversing. Both keyboard and touch use it; each simulation retains vehicle acceleration, traction and collisions.
+`../shared/input.js` selects the latest held direction. `../shared/directional-drive.js` maps that screen direction to a heading. Its shared heading assistance turns the nose before accelerating, including from rest, without automatic reversing. Both keyboard and touch use it; each simulation retains vehicle acceleration, traction and collisions.
 
 `../shared/driving-ui.js` manages map visibility and the pause-menu recovery button for both driving games. CSS selects the compact layout; the controllers retain each game's recovery rules and penalties.
 

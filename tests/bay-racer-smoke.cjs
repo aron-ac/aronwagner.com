@@ -441,7 +441,7 @@ test('bay racer smoke', { timeout: 300_000 }, async () => {
     }
     assert.deepEqual(errors, [], 'No JavaScript errors or failed game assets');
     console.log(
-      `PASS: ${mechanical.length} race checks, nose-first screen-relative travel, keyboard and one-/two-thumb circling chords, D-pad sliding, pause keys, independent boost, default-visible map/recovery, portrait/landscape layout and new-tab navigation.\n${mechanical.join('\n')}`,
+      `PASS: ${mechanical.length} race checks, nose-first screen-relative travel, exclusive cardinal keyboard/touch controls, neutral gaps, D-pad sliding, pause keys, independent boost, default-visible map/recovery, portrait/landscape layout and new-tab navigation.\n${mechanical.join('\n')}`,
     );
   } finally {
     await closeBrowser(browser);

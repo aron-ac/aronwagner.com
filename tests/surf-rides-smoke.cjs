@@ -21,7 +21,7 @@ const gameURL = new URL(
 );
 gameURL.searchParams.set('debug', '1');
 const url = gameURL.href;
-// The intersection by the coast leaves room for assisted U-turns and circles.
+// The intersection by the coast leaves room for assisted U-turns.
 // Real map obstacles remain active; the helper verifies this patch's clearance.
 const drivingOptions = {
   debugName: 'surfDebug',
@@ -382,7 +382,7 @@ test('surf rides smoke', { timeout: 300_000 }, async () => {
     assert.equal(redirected.hash, '#start', 'The redirect retains the fragment');
     assert.deepEqual(errors, [], 'No page errors or failed asset requests');
     console.log(
-      `PASS: ${mechanical.length} mechanics, nose-first screen-relative travel, keyboard and one-/two-thumb circling chords, D-pad sliding, pause keys, independent brake, default-visible map/recovery, portrait and landscape layouts.\n${mechanical.join('\n')}`,
+      `PASS: ${mechanical.length} mechanics, nose-first screen-relative travel, exclusive cardinal keyboard/touch controls, neutral gaps, D-pad sliding, pause keys, independent brake, default-visible map/recovery, portrait and landscape layouts.\n${mechanical.join('\n')}`,
     );
   } finally {
     await closeBrowser(browser);

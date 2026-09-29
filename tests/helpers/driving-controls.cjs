@@ -51,7 +51,9 @@ async function assertDrivingControls(page, label) {
     pads.map((pad) => {
       const bounds = pad.getBoundingClientRect();
       return {
+        left: bounds.left,
         right: bounds.right,
+        center: bounds.left + bounds.width / 2,
         viewportWidth: innerWidth,
         actions: [...pad.querySelectorAll('[data-control]')]
           .map((button) => button.dataset.control)
@@ -61,7 +63,7 @@ async function assertDrivingControls(page, label) {
   );
   assert.equal(pads.length, 1, `${label}: one D-pad holds all four directions`);
   assert.deepEqual(pads[0].actions, ['down', 'left', 'right', 'up']);
-  assert.ok(pads[0].right <= pads[0].viewportWidth / 2, `${label}: the D-pad stays on the left`);
+  assert.ok(pads[0].center < pads[0].viewportWidth / 2, `${label}: the D-pad stays on the left`);
   const auxiliary = Object.keys(controls).filter(
     (action) => !['up', 'down', 'left', 'right'].includes(action),
   );
@@ -69,6 +71,15 @@ async function assertDrivingControls(page, label) {
   assert.ok(
     controls[auxiliary[0]].x > pads[0].viewportWidth / 2,
     `${label}: the auxiliary action remains reachable by the right thumb`,
+  );
+  assert.ok(
+    pads[0].right < controls[auxiliary[0]].x - controls[auxiliary[0]].width / 2,
+    `${label}: the D-pad and auxiliary action have separate touch areas`,
+  );
+  assert.ok(
+    controls.up.x - controls.up.width / 2 - (controls.left.x + controls.left.width / 2) >= 7 &&
+      controls.left.y - controls.left.height / 2 - (controls.up.y + controls.up.height / 2) >= 7,
+    `${label}: visible gaps separate each arrow from its neighbors`,
   );
 }
 
@@ -206,17 +217,24 @@ function assertScreenTravel(travel, directions, label) {
   assert.equal(travel.bumps, 0, `${label}: direction check does not rely on a collision`);
 }
 
-function assertCircling(travel, horizontal, label) {
-  const clockwise = horizontal === 'right';
-  assert.ok(
-    travel.rotation * (clockwise ? -1 : 1) > 1.3,
-    `${label}: the held chord keeps turning ${clockwise ? 'clockwise' : 'counter-clockwise'} (${JSON.stringify(travel)})`,
+async function assertPressed(page, expected, label) {
+  // Chromium may deliver a captured touch move on the following frame.
+  await page.waitForFunction(
+    (expected) =>
+      [...document.querySelectorAll('[data-control].pressed')]
+        .map((button) => button.dataset.control)
+        .sort()
+        .join(',') === expected.join(','),
+    { timeout: 5000 },
+    expected.toSorted(),
   );
-  assert.ok(
-    Math.hypot(travel.x, travel.y) > 0.75 && travel.speed > 0.5 && travel.minimumSpeed >= 0,
-    `${label}: circling drives the vehicle forward along a real arc`,
+  assert.deepEqual(
+    await page.$$eval('[data-control].pressed', (buttons) =>
+      buttons.map((button) => button.dataset.control).sort(),
+    ),
+    expected.toSorted(),
+    label,
   );
-  assert.equal(travel.bumps, 0, `${label}: the turn does not rely on a collision`);
 }
 
 async function exerciseDrivingKeyboard(page, options) {
@@ -238,17 +256,23 @@ async function exerciseDrivingKeyboard(page, options) {
     await page.keyboard.up(aliases[action]);
     assertScreenTravel(travel, [action], `${aliases[action]} matches its arrow key`);
   }
-  for (const horizontal of ['left', 'right']) {
+  for (const action of ['left', 'right', 'down']) {
     await resetDriving(page, options);
     await page.keyboard.down('ArrowUp');
-    await page.keyboard.down(screenDirections[horizontal].key);
-    assertCircling(
-      await measureDriving(page, options.debugName, 45, 0),
-      horizontal,
-      `Keyboard Up + ${horizontal}`,
+    await page.keyboard.down(screenDirections[action].key);
+    await assertPressed(page, [action], 'The latest arrow key selects one screen direction');
+    assertScreenTravel(
+      await measureDriving(page, options.debugName),
+      [action],
+      `Holding Up then ${action} drives only ${action}`,
     );
-    await page.keyboard.up(screenDirections[horizontal].key);
+    // A held key's repeat events must not steal priority back from the new key.
+    await page.keyboard.down('ArrowUp');
+    await assertPressed(page, [action], 'Key repeat preserves the latest distinct press');
+    await page.keyboard.up(screenDirections[action].key);
+    await assertPressed(page, ['up'], 'Releasing the latest key resumes the earlier held arrow');
     await page.keyboard.up('ArrowUp');
+    await assertPressed(page, [], 'Releasing all arrow keys clears driving input');
   }
 }
 
@@ -277,34 +301,19 @@ async function exerciseDrivingControls(page, options) {
       { vertical, horizontal },
     );
   const reset = (facing) => resetDriving(page, options, facing);
-  const assertPressed = async (expected, label) => {
-    // Chromium may deliver a captured touch move on the following frame.
-    await page.waitForFunction(
-      (expected) =>
-        [...document.querySelectorAll('[data-control].pressed')]
-          .map((button) => button.dataset.control)
-          .sort()
-          .join(',') === expected.join(','),
-      { timeout: 5000 },
-      expected.toSorted(),
-    );
-    assert.deepEqual(
-      await page.$$eval('[data-control].pressed', (buttons) =>
-        buttons.map((button) => button.dataset.control).sort(),
-      ),
-      expected.toSorted(),
-      label,
-    );
-  };
   for (const facing of Object.keys(screenDirections)) {
     for (const action of Object.keys(screenDirections)) {
       await reset(facing);
       const touch = await press(action);
-      await assertPressed([action], `${action}: touching a cardinal holds only that direction`);
+      await assertPressed(
+        page,
+        [action],
+        `${action}: touching a cardinal holds only that direction`,
+      );
       const travel = await measureDriving(page, debugName);
       assertScreenTravel(travel, [action], `${facing}-facing vehicle, ${action} touch`);
       await touch.end();
-      await assertPressed([], `${action}: lifting the thumb releases input`);
+      await assertPressed(page, [], `${action}: lifting the thumb releases input`);
     }
   }
   for (const vertical of ['up', 'down']) {
@@ -312,88 +321,81 @@ async function exerciseDrivingControls(page, options) {
       await reset(vertical);
       const corner = await padPoint(vertical, horizontal);
       const touch = await page.touchscreen.touchStart(corner.x, corner.y);
-      await assertPressed([vertical, horizontal], 'One finger in a corner holds both directions');
-      assertCircling(
-        await measureDriving(page, debugName, 45, 0),
-        horizontal,
-        `One-finger ${vertical} + ${horizontal}`,
-      );
-      if (vertical === 'up')
-        assertCircling(
-          await measureDriving(page, debugName, 45, 0),
-          horizontal,
-          `Holding one-finger ${vertical} + ${horizontal} continues the circle`,
-        );
+      await assertPressed(page, [], 'Empty corners do not select a direction');
+      const movement = await measureDriving(page, debugName, 15, 0);
+      assert.equal(movement.speed, 0, 'Touching an empty corner leaves the vehicle stopped');
+      assert.equal(movement.rotation, 0, 'Touching an empty corner does not turn the vehicle');
       await touch.end();
-      await assertPressed([], 'Lifting the thumb releases both axes');
     }
   }
-  // The same captured finger can select a circling chord, return to neutral, or leave.
+  // The same captured finger can move between distinct arrows through neutral space.
   await reset();
   const drivingTouch = await press('up');
   const upperLeft = await padPoint('up', 'left');
   await drivingTouch.move(upperLeft.x, upperLeft.y);
-  await assertPressed(['up', 'left'], 'Sliding into a corner selects a circling chord');
-  const lowerRight = await padPoint('down', 'right');
-  await drivingTouch.move(lowerRight.x, lowerRight.y);
-  await assertPressed(['down', 'right'], 'Sliding across the pad changes the circling direction');
-  assertCircling(
-    await measureDriving(page, debugName, 45, 0),
-    'right',
-    'Sliding to the opposite corner changes real turning',
+  await assertPressed(page, [], 'Sliding into a corner releases the arrow');
+  const left = await center('left');
+  await drivingTouch.move(left.x, left.y);
+  await assertPressed(page, ['left'], 'Sliding onto the left arrow selects only left');
+  assertScreenTravel(
+    await measureDriving(page, debugName),
+    ['left'],
+    'Sliding to left drives left',
   );
+  const right = await center('right');
+  await drivingTouch.move(right.x, right.y);
+  await assertPressed(page, ['right'], 'Sliding across the pad switches to the right arrow');
   const neutral = await padPoint();
   await drivingTouch.move(neutral.x, neutral.y);
-  await assertPressed([], 'The center of the D-pad is neutral');
+  await assertPressed(page, [], 'The center of the D-pad is neutral');
+  const gap = await page.$eval('[data-dpad]', (pad) => {
+    const up = pad.querySelector('[data-control="up"]').getBoundingClientRect();
+    const left = pad.querySelector('[data-control="left"]').getBoundingClientRect();
+    return { x: up.left + up.width / 2, y: (up.bottom + left.top) / 2 };
+  });
+  await drivingTouch.move(gap.x, gap.y);
+  await assertPressed(page, [], 'The visible space between arrows is neutral');
   const viewport = page.viewport();
   await drivingTouch.move(viewport.width / 2, viewport.height / 2);
-  await assertPressed([], 'Sliding off the D-pad releases both directions');
+  await assertPressed(page, [], 'Sliding off the D-pad releases the direction');
   const up = await center('up');
   await drivingTouch.move(up.x, up.y);
-  await assertPressed(['up'], 'Reentering the pad resumes the selected direction');
+  await assertPressed(page, ['up'], 'Reentering the pad resumes the selected direction');
   const auxiliary = await page.$eval(
     '.driving-actions [data-control]',
     (button) => button.dataset.control,
   );
   const auxiliaryCenter = await center(auxiliary);
   await drivingTouch.move(auxiliaryCenter.x, auxiliaryCenter.y);
-  await assertPressed([], 'A captured D-pad finger cannot activate the right action button');
+  await assertPressed(page, [], 'A captured D-pad finger cannot activate the right action button');
   await drivingTouch.end();
-  await assertPressed([], 'Ending a sliding gesture leaves no controls held');
+  await assertPressed(page, [], 'Ending a sliding gesture leaves no controls held');
+
+  for (const action of ['left', 'right', 'down']) {
+    await reset();
+    const firstTouch = await press('up');
+    const newestTouch = await press(action);
+    await assertPressed(page, [action], 'The newest finger chooses a single direction');
+    assertScreenTravel(
+      await measureDriving(page, debugName),
+      [action],
+      `Holding Up then ${action} with two fingers drives only ${action}`,
+    );
+    await newestTouch.end();
+    await assertPressed(page, ['up'], 'Releasing the newest finger restores the earlier arrow');
+    await firstTouch.end();
+    await assertPressed(page, [], 'Releasing both fingers clears the direction');
+  }
 
   await reset();
-  const rightTouch = await press('right');
-  const secondUpTouch = await press('up');
-  await assertPressed(['up', 'right'], 'Two fingers can hold the clockwise circling chord');
-  assertCircling(await measureDriving(page, debugName, 45, 0), 'right', 'Two-finger Up + Right');
-  assertCircling(
-    await measureDriving(page, debugName, 45, 0),
-    'right',
-    'Holding two-finger Up + Right continues the circle',
-  );
-  await rightTouch.end();
-  await secondUpTouch.end();
-  await assertPressed([], 'Releasing both circling fingers clears the chord');
-
-  await reset();
-  const leftTouch = await press('left');
   const upTouch = await press('up');
-  await assertPressed(['up', 'left'], 'Separate fingers on the D-pad remain independent');
-  assertCircling(await measureDriving(page, debugName, 45, 0), 'left', 'Two-finger Up + Left');
-  assertCircling(
-    await measureDriving(page, debugName, 45, 0),
-    'left',
-    'Holding two-finger Up + Left continues the circle',
-  );
-  await leftTouch.end();
-  await assertPressed(['up'], 'Releasing left keeps the other finger driving up');
   const beforeAuxiliary = await page.evaluate((debugName) => {
     const game = window[debugName];
     for (let i = 0; i < 45; i++) game.update(1 / 60);
     return { speed: game.state.speed, boost: game.state.boost };
   }, debugName);
   const auxiliaryTouch = await press(auxiliary);
-  await assertPressed(['up', auxiliary], 'The right thumb can use its action while driving');
+  await assertPressed(page, ['up', auxiliary], 'The right thumb can use its action while driving');
   const afterAuxiliary = await page.evaluate((debugName) => {
     const game = window[debugName];
     for (let i = 0; i < 30; i++) game.update(1 / 60);
@@ -406,9 +408,9 @@ async function exerciseDrivingControls(page, options) {
     `${auxiliary}: the independent action changes actual vehicle behavior`,
   );
   await auxiliaryTouch.end();
-  await assertPressed(['up'], 'Releasing the right action preserves the left thumb’s input');
+  await assertPressed(page, ['up'], 'Releasing the right action preserves the left thumb’s input');
   await upTouch.end();
-  await assertPressed([], 'All fingers released leaves no stuck controls');
+  await assertPressed(page, [], 'All fingers released leaves no stuck controls');
 }
 
 async function assertCompactDrivingUI(page, label) {

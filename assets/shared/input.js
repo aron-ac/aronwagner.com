@@ -1,12 +1,17 @@
 // Movement controls only. Menus, pause, recovery and other shortcuts belong to
 // each game. Pointer IDs keep simultaneous fingers independent on touch devices.
+const DIRECTIONS = new Set(['up', 'down', 'left', 'right']);
+
 export function createGameInput({
   bindings,
   isActive,
   buttons = document.querySelectorAll('[data-control]'),
+  exclusiveDirections = false,
 }) {
   const keys = new Set();
+  const keyOrder = new Map();
   const pointers = new Map();
+  let pressOrder = 0;
   const controls = [...buttons];
   const directionalPads = [
     ...new Set(controls.map((button) => button.closest('[data-dpad]'))),
@@ -16,7 +21,30 @@ export function createGameInput({
   const listeners = new AbortController();
   const options = { signal: listeners.signal };
 
+  function activeDirection() {
+    let selected = null;
+    let latest = -1;
+    for (const code of keys) {
+      const action = actions.find(
+        ([action, codes]) => DIRECTIONS.has(action) && codes.includes(code),
+      );
+      const order = keyOrder.get(code) ?? 0;
+      if (action && order >= latest) {
+        selected = action[0];
+        latest = order;
+      }
+    }
+    for (const pointer of pointers.values()) {
+      const action = pointer.actions.find((action) => DIRECTIONS.has(action));
+      if (action && pointer.order > latest) {
+        selected = action;
+        latest = pointer.order;
+      }
+    }
+    return selected;
+  }
   function isDown(action) {
+    if (exclusiveDirections && DIRECTIONS.has(action)) return activeDirection() === action;
     if ((bindings[action] || []).some((code) => keys.has(code))) return true;
     for (const pointer of pointers.values()) if (pointer.actions.includes(action)) return true;
     return false;
@@ -26,18 +54,24 @@ export function createGameInput({
     return target;
   }
   function updateButtons() {
+    const direction = exclusiveDirections ? activeDirection() : null;
     for (const button of controls) {
       let pressed = false;
-      for (const pointer of pointers.values())
-        if (pointer.buttons.includes(button)) {
-          pressed = true;
-          break;
-        }
+      if (exclusiveDirections && DIRECTIONS.has(button.dataset.control)) {
+        pressed = direction === button.dataset.control;
+      } else {
+        for (const pointer of pointers.values())
+          if (pointer.buttons.includes(button)) {
+            pressed = true;
+            break;
+          }
+      }
       button.classList.toggle('pressed', pressed);
     }
   }
   function clear() {
     keys.clear();
+    keyOrder.clear();
     const held = [...pointers];
     pointers.clear();
     updateButtons();
@@ -57,11 +91,24 @@ export function createGameInput({
       )
         return;
       event.preventDefault();
-      keys.add(event.code);
+      // Repeated keydown events must not take priority from a newer direction.
+      if (!keys.has(event.code)) {
+        keys.add(event.code);
+        keyOrder.set(event.code, ++pressOrder);
+        updateButtons();
+      }
     },
     options,
   );
-  window.addEventListener('keyup', (event) => keys.delete(event.code), options);
+  window.addEventListener(
+    'keyup',
+    (event) => {
+      keys.delete(event.code);
+      keyOrder.delete(event.code);
+      updateButtons();
+    },
+    options,
+  );
   window.addEventListener('blur', clear, options);
   document.addEventListener(
     'visibilitychange',
@@ -71,27 +118,33 @@ export function createGameInput({
     options,
   );
 
-  function updateDirectionalPad(pointer, event) {
-    const bounds = pointer.pad.getBoundingClientRect();
-    const x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1;
-    const y = ((event.clientY - bounds.top) / bounds.height) * 2 - 1;
-    const actions = [];
-    if (bounds.width > 0 && bounds.height > 0 && Math.abs(x) <= 1 && Math.abs(y) <= 1) {
-      // The center is neutral. Corner sectors combine two screen directions
-      // so one thumb can select a diagonal.
-      if (x < -0.3) actions.push('left');
-      else if (x > 0.3) actions.push('right');
-      if (y < -0.3) actions.push('up');
-      else if (y > 0.3) actions.push('down');
+  function selectButtons(pointer, buttons) {
+    if (pointer.buttons.length !== buttons.length || pointer.buttons[0] !== buttons[0]) {
+      pointer.buttons = buttons;
+      pointer.actions = buttons.map((button) => button.dataset.control);
+      pointer.order = ++pressOrder;
     }
-    pointer.buttons = controls.filter(
-      (button) =>
-        button.closest('[data-dpad]') === pointer.pad && actions.includes(button.dataset.control),
-    );
-    pointer.actions = pointer.buttons.map((button) => button.dataset.control);
   }
 
-  // The pad itself receives presses between arrow buttons, including diagonals.
+  function updateDirectionalPad(pointer, event) {
+    // Only the visible arrows drive. Empty corners, the center and the gaps
+    // remain neutral, while capture lets a thumb slide onto another arrow.
+    const button = controls.find((button) => {
+      if (button.closest('[data-dpad]') !== pointer.pad) return false;
+      const bounds = button.getBoundingClientRect();
+      return (
+        bounds.width > 0 &&
+        bounds.height > 0 &&
+        event.clientX >= bounds.left &&
+        event.clientX < bounds.left + bounds.width &&
+        event.clientY >= bounds.top &&
+        event.clientY < bounds.top + bounds.height
+      );
+    });
+    selectButtons(pointer, button ? [button] : []);
+  }
+
+  // Starting in a gap is neutral, but still allows sliding onto an arrow.
   // Pointer capture stays on the surface where that finger first touched down.
   for (const surface of [...controls, ...directionalPads]) {
     surface.addEventListener(
@@ -107,11 +160,13 @@ export function createGameInput({
         surface.setPointerCapture(event.pointerId);
         const pointer = {
           captureElement: surface,
-          buttons: controls.includes(surface) ? [surface] : [],
-          actions: controls.includes(surface) ? [surface.dataset.control] : [],
+          buttons: [],
+          actions: [],
+          order: 0,
           pad: surface.closest('[data-control-pad]'),
         };
         if (directionalPads.includes(pointer.pad)) updateDirectionalPad(pointer, event);
+        else selectButtons(pointer, controls.includes(surface) ? [surface] : []);
         pointers.set(event.pointerId, pointer);
         updateButtons();
       },
@@ -137,8 +192,7 @@ export function createGameInput({
           controls.includes(target) && target.closest('[data-control-pad]') === pointer.pad
             ? target
             : null;
-        pointer.buttons = next ? [next] : [];
-        pointer.actions = next ? [next.dataset.control] : [];
+        selectButtons(pointer, next ? [next] : []);
         updateButtons();
       },
       options,

@@ -161,7 +161,7 @@
           data-control-pad="driving"
           data-dpad
           role="group"
-          aria-label="Directional pad: arrows turn and drive toward that screen direction; combine a vertical and horizontal arrow to circle"
+          aria-label="Direction buttons: hold one arrow to turn and drive toward that part of the screen"
         >
           <button type="button" data-control="up" aria-label="Drive toward the top of the screen">
             ↑
@@ -173,7 +173,6 @@
           >
             ←
           </button>
-          <span class="dpad-center" aria-hidden="true"></span>
           <button
             type="button"
             data-control="right"
@@ -229,10 +228,10 @@
           </button>
           <p class="menu-note" id="menu-note">
             <span class="keyboard-instructions"
-              >Arrows aim · ↑ + ← / → circle<br />WASD also works · Space to brake</span
+              >Hold one arrow to turn and drive<br />WASD also works · Space to brake</span
             >
             <span class="touch-instructions"
-              >Hold an arrow to turn and drive. Hold a corner to circle. Brake on the right.</span
+              >Hold one arrow to turn and drive that way. Brake on the right.</span
             ><br />
             Best score: <span id="best">0 pts</span>
           </p>

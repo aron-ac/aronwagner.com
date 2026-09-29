@@ -102,6 +102,7 @@ const camera = createCamera();
 const race = createRace(world, raceEvent);
 const state = race.state;
 const controls = createGameInput({
+  exclusiveDirections: true,
   bindings: {
     up: ['KeyW', 'ArrowUp'],
     down: ['KeyS', 'ArrowDown'],

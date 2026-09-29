@@ -114,6 +114,7 @@ const { state, score } = session;
 const coconuts = createCoconuts(session.coconuts);
 scene.add(coconuts.group);
 const input = createGameInput({
+  exclusiveDirections: true,
   bindings: {
     up: ['KeyW', 'ArrowUp'],
     down: ['KeyS', 'ArrowDown'],

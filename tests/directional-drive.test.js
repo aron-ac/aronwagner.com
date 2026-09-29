@@ -51,7 +51,6 @@ test('cardinal arrows always request nose-first travel in their screen direction
       const output = makeDrive().update(direction.input, { heading, speed: 0 });
       assert.equal(output.gas, true);
       assert.equal(output.reverse, false);
-      assert.equal(output.turnRate, 0);
       assertDirection(
         project(Math.sin(output.targetHeading), Math.cos(output.targetHeading)),
         direction,
@@ -60,25 +59,25 @@ test('cardinal arrows always request nose-first travel in their screen direction
   }
 });
 
-test('holding vertical + right circles clockwise and vertical + left circles counterclockwise', () => {
-  for (const vertical of ['up', 'down']) {
-    for (const [horizontal, sign] of [
-      ['right', -1],
-      ['left', 1],
-    ]) {
-      const output = makeDrive().update({ [vertical]: true, [horizontal]: true }, { heading: 0 });
-      assert.equal(output.gas, true);
-      assert.equal(output.reverse, false);
-      assert.equal(output.targetHeading, null);
-      assert.equal(Math.sign(output.turnRate), sign);
-      near(Math.abs(output.turnRate), 2.4);
-    }
+test('ambiguous multi-arrow input coasts instead of creating diagonals or circles', () => {
+  const keys = ['up', 'down', 'left', 'right'];
+  for (let mask = 1; mask < 16; mask++) {
+    const active = keys.filter((_, index) => mask & (1 << index));
+    if (active.length < 2) continue;
+    const input = Object.fromEntries(active.map((key) => [key, true]));
+    const output = makeDrive().update(input, { heading: 1 });
+    assert.equal(output.gas, false);
+    assert.equal(output.reverse, false);
+    assert.equal(output.targetHeading, null);
+    const state = { heading: 1, steer: 0 };
+    assert.equal(applyDirectionalHeading(state, output, 1 / 60), null);
+    assert.equal(state.heading, 1);
   }
 });
 
-test('neutral inputs coast, preserve brake/boost and erase stale aiming or circle commands', () => {
+test('neutral inputs coast, preserve brake/boost and erase stale aiming commands', () => {
   const drive = makeDrive();
-  const target = drive.update({ up: true, right: true }, { heading: 0 });
+  const target = drive.update({ up: true }, { heading: 0 });
   Object.assign(target, {
     up: true,
     down: true,
@@ -95,20 +94,18 @@ test('neutral inputs coast, preserve brake/boost and erase stale aiming or circl
     brake: true,
     boost: true,
     targetHeading: null,
-    turnRate: 0,
   });
   drive.reset();
-  const singleAxis = drive.update({ up: true, down: true, right: true }, { heading: 0 }, target);
-  assert.equal(singleAxis.turnRate, 0);
+  const cardinal = drive.update({ right: true }, { heading: 0 }, target);
+  assert.equal(cardinal.gas, true);
   assertDirection(
-    project(Math.sin(singleAxis.targetHeading), Math.cos(singleAxis.targetHeading)),
+    project(Math.sin(cardinal.targetHeading), Math.cos(cardinal.targetHeading)),
     directions[3],
   );
   for (const heading of [undefined, NaN, Infinity]) {
     const output = drive.update({ up: true }, { heading, speed: 0 }, target);
     assert.equal(output.gas, false);
     assert.equal(output.targetHeading, null);
-    assert.equal(output.turnRate, 0);
   }
 });
 
@@ -244,43 +241,10 @@ for (const [name, createSimulation] of [
     }
   });
 
-  test(`${name} held arrow combinations complete continuous circles in the requested direction`, () => {
-    for (const frameRate of [20, 60]) {
-      for (const vertical of ['up', 'down']) {
-        for (const [horizontal, sign] of [
-          ['right', -1],
-          ['left', 1],
-        ]) {
-          const simulation = start(0);
-          const drive = makeDrive();
-          const input = { [vertical]: true, [horizontal]: true };
-          let previous = simulation.state.heading;
-          let travel = 0;
-          for (let frame = 0; frame < frameRate * 3; frame++) {
-            const x = simulation.state.x,
-              z = simulation.state.z;
-            simulation.update(1 / frameRate, drive.update(input, simulation.state));
-            assert.ok((simulation.state.heading - previous) * sign > 0);
-            travel += Math.hypot(simulation.state.x - x, simulation.state.z - z);
-            previous = simulation.state.heading;
-          }
-          assert.ok(
-            simulation.state.heading * sign > Math.PI * 2,
-            'A held chord must continue beyond a full revolution',
-          );
-          assert.ok(travel > 20, 'The vehicle must drive a circle rather than only spin in place');
-          near(simulation.state.heading, sign * 7.2, 1e-8);
-        }
-      }
-    }
-  });
-
-  test(`${name} responds to repeated cardinal changes after leaving a circle`, () => {
+  test(`${name} responds to repeated cardinal changes without circling`, () => {
     const simulation = start(0, 12);
     const drive = makeDrive();
     const output = {};
-    for (let frame = 0; frame < 90; frame++)
-      simulation.update(1 / 60, drive.update({ up: true, right: true }, simulation.state, output));
     for (const direction of [
       directions[0],
       directions[3],
@@ -290,8 +254,12 @@ for (const [name, createSimulation] of [
     ]) {
       for (let frame = 0; frame < 60; frame++)
         simulation.update(1 / 60, drive.update(direction.input, simulation.state, output));
-      assert.equal(output.turnRate, 0);
       assert.equal(output.reverse, false);
+      assertDirection(velocity(simulation.state), direction);
+      const settledHeading = simulation.state.heading;
+      for (let frame = 0; frame < 120; frame++)
+        simulation.update(1 / 60, drive.update(direction.input, simulation.state, output));
+      near(simulation.state.heading, settledHeading, 0.001);
       assertDirection(velocity(simulation.state), direction);
     }
   });
