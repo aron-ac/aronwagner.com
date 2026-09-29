@@ -4,6 +4,8 @@ const assert = require('node:assert/strict');
 const { launchBrowser, closeBrowser, artifactPath, settlePage } = require('./helpers/browser.cjs');
 const identity = require('./helpers/identity.cjs');
 const site = process.env.SITE_URL || 'http://localhost:8000/';
+// Matches the camera roll's photo list in script.js.
+const PHOTO_COUNT = 8;
 
 async function assertMobileGestures(page) {
   const client = await page.createCDPSession();
@@ -135,27 +137,36 @@ async function assertMobileGestures(page) {
     );
     // Drive a real touch sequence. Chromium's synthesized scroll command can
     // complete without scrolling on headless Linux, even with touch enabled.
+    // The homepage can fit a tall phone without scrolling, so give it room to scroll:
+    // the check is that a drag starting on the illustration scrolls the page.
+    await page.evaluate(() => {
+      document.body.style.minHeight = `${innerHeight * 2}px`;
+    });
+    const minimumScroll = 100;
     const drag = await page.touchscreen.touchStart(point.x, point.y + 140);
     try {
       for (let step = 1; step <= 6; step++) {
         await drag.move(point.x, point.y + 140 - step * 30);
         await page.evaluate(() => new Promise(requestAnimationFrame));
       }
-      await page.waitForFunction(() => scrollY > 100);
+      await page.waitForFunction((minimum) => scrollY > minimum, {}, minimumScroll);
     } finally {
       await drag.end();
     }
     assert.ok(
-      await page.evaluate(() => scrollY > 100),
+      await page.evaluate((minimum) => scrollY > minimum, minimumScroll),
       'A vertical touch drag still scrolls the homepage',
     );
+    await page.evaluate(() => {
+      document.body.style.minHeight = '';
+    });
     await assertPinchZoom('.intro p', 'Homepage introduction');
     await assertTextSelection('.intro p', 'Homepage introduction');
 
-    await page.click('.meditations-toggle .hotspot-pin');
-    await assertTextSelection('#meditations-quote', 'Meditations quote');
-    await assertPinchZoom('#meditations-quote', 'Meditations dialog');
-    await page.click('#meditations-dialog [data-dialog-close]');
+    await page.click('.bible-toggle .hotspot-pin');
+    await assertTextSelection('#verse-text', 'John 3:16');
+    await assertPinchZoom('#verse-text', 'Verse card');
+    await page.click('#verse-dialog [data-dialog-close]');
 
     await page.click('#name button');
     await assertTextSelection(
@@ -165,20 +176,6 @@ async function assertMobileGestures(page) {
     await assertPinchZoom('.business-card-email', 'Business card');
     await page.click('.business-card-close');
 
-    await page.click('.books-toggle .hotspot-pin');
-    await page.waitForFunction(() => {
-      const image = document.querySelector('.book-cover');
-      return !image.hidden && image.complete && image.naturalWidth > 0;
-    });
-    await assertTextSelection('.book-title', 'Favorite book title');
-    const title = await page.$eval('.book-title', (element) => element.textContent);
-    await assertPinchZoom('.book-cover-link', 'Favorite book cover');
-    assert.equal(
-      await page.$eval('.book-title', (element) => element.textContent),
-      title,
-      'Pinching a book cover does not advance the carousel',
-    );
-    await page.click('#books-dialog [data-dialog-close]');
     await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
     await settlePage(page);
   } finally {
@@ -304,39 +301,35 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
       socialLinks,
       'Submenu contains only the two requested social links',
     );
-    const games = [
-      ['surf-riders.html', 'Surf Riders'],
-      ['bay-racer.html', 'Bay Racer'],
-      ['cici-treat-trail.html', 'CiCi’s Treat Trail'],
-    ];
-    assert.deepEqual(
-      await page.$$eval('.project-card', (els) =>
-        els
-          .map((el) => [el.getAttribute('href'), el.querySelector('h3').textContent.trim()])
-          .sort(),
+    // Games return in v2; until then the homepage neither lists nor links them.
+    assert.equal(
+      await page.$$eval(
+        '.project-card, a[href$="riders.html"], a[href$="racer.html"], a[href$="trail.html"]',
+        (els) => els.length,
       ),
-      [...games].sort(),
-      'All three current games appear on the homepage',
+      0,
+      'Games stay hidden until v2',
     );
-    const homeUrl = page.url();
-    for (const [href, title] of games) {
-      const gameTargetPromise = browser.waitForTarget(
-        (target) =>
-          target.type() === 'page' &&
-          target !== page.target() &&
-          new URL(target.url()).pathname.endsWith(`/${href}`),
-      );
-      await page.click(`.project-card[href="${href}"]`);
-      const gamePage = await (await gameTargetPromise).page();
-      assert.equal(page.url(), homeUrl, `Opening ${title} keeps the homepage in its original tab`);
-      assert.equal(
-        await gamePage.evaluate(() => window.opener === null),
-        true,
-        `${title} has no access to its opener`,
-      );
-      await gamePage.close();
-      await page.bringToFront();
-    }
+    assert.deepEqual(
+      await page.$$eval('.intro p a', (links) =>
+        links.map((link) => [link.textContent.trim(), link.getAttribute('href')]),
+      ),
+      [['American Cloud', identity.companyUrl]],
+      'The introduction links to American Cloud',
+    );
+    assert.deepEqual(
+      await page.$eval('footer .hosted-by', (link) => ({
+        text: link.textContent.replace(/\s+/g, ' ').trim(),
+        href: link.getAttribute('href'),
+        icon: Boolean(link.querySelector('svg[aria-hidden="true"]')),
+      })),
+      {
+        text: 'Hosted on American Cloud',
+        href: `${identity.companyUrl}?utm_source=aronwagner.com`,
+        icon: true,
+      },
+      'The footer credits American Cloud hosting',
+    );
     assert.equal(
       await page.evaluate(() => /Asteroids|CR Surf Rides/i.test(document.body.innerText)),
       false,
@@ -344,8 +337,8 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
     );
     assert.deepEqual(
       await page.$$eval('a[href^="mailto:"]', (els) => els.map((el) => el.getAttribute('href'))),
-      [`mailto:${identity.email}`],
-      'The business card provides the requested email address',
+      [`mailto:${identity.email}`, `mailto:${identity.email}?subject=Golf`],
+      'The business card and golf invitation provide the requested email address',
     );
     assert.equal(
       await page.evaluate(() => /Amor Fati/i.test(document.body.textContent)),
@@ -456,7 +449,7 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
     assert.equal(await polaroidOpen(), true, 'Camera opens the photo viewer');
     let previousPhoto = await loadedPhoto();
     const photoBag = new Set([previousPhoto]);
-    for (let i = 1; i < 6; i++) {
+    for (let i = 1; i < PHOTO_COUNT; i++) {
       if (i === 1) {
         await page.focus('.polaroid-next');
         await page.keyboard.press('Enter');
@@ -472,8 +465,8 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
     }
     assert.equal(
       photoBag.size,
-      6,
-      'All six photos appear once before the shuffled collection repeats',
+      PHOTO_COUNT,
+      'Every photo appears once before the shuffled collection repeats',
     );
     await page.click('.polaroid-next');
     previousPhoto = await loadedPhoto(previousPhoto);
@@ -499,38 +492,24 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
     await page.mouse.click(10, 10);
     assert.equal(await polaroidOpen(), false, 'Clicking the backdrop closes the photo viewer');
 
-    const pressed = () => page.$eval('.candle-toggle', (el) => el.getAttribute('aria-pressed'));
-    assert.equal(await pressed(), 'true', 'Candle starts lit');
-    await page.click('.candle-toggle');
-    assert.equal(await pressed(), 'false');
-    assert.equal(
-      await page.$eval('.scene', (el) => el.classList.contains('candle-lit')),
-      false,
-      'Click blows out candle',
+    const dogStatus = () => page.$eval('#dog-status', (status) => status.textContent);
+    await page.click('.toys-toggle');
+    assert.match(await dogStatus(), /Maggie|fetch/, 'Playing fetch announces what Maggie did');
+    await page.waitForFunction(() =>
+      document.querySelector('.dog').classList.contains('is-squeaking'),
     );
-    assert.match(await page.$eval('#candle-status', (el) => el.textContent), /out/);
-    await page.focus('.candle-toggle');
-    await page.keyboard.press('Enter');
-    assert.equal(await pressed(), 'true', 'Keyboard relights candle');
-    await page.click('.painting-toggle');
-    assert.equal(
-      await page.$eval('.painting-toggle', (el) => el.getAttribute('aria-expanded')),
-      'true',
+    assert.ok(
+      await page.$eval('.scene', (scene) => scene.classList.contains('toy-thrown')),
+      'Playing fetch tosses a squeak toy',
     );
-    assert.equal(await page.$eval('#wall-safe', (el) => el.getAttribute('aria-hidden')), 'false');
-    await settlePage(page);
-    await page.screenshot({ path: artifactPath('homepage-day-safe.png'), fullPage: true });
-    await page.keyboard.press('Escape');
-    assert.equal(
-      await page.$eval('.painting-toggle', (el) => el.getAttribute('aria-expanded')),
-      'false',
-    );
+    const fetched = await dogStatus();
+    await page.click('.toys-toggle');
+    assert.notEqual(await dogStatus(), fetched, 'Another round of fetch has a new message');
+    await page.click('.dog');
+    assert.match(await dogStatus(), /Maggie/, 'Petting Maggie announces her reaction');
     await page.evaluate(() => setTestClock('2026-01-16T02:00:00Z'));
-    await page.click('.candle-toggle');
     await settlePage(page);
-    await page.screenshot({ path: artifactPath('homepage-night-unlit.png'), fullPage: true });
-    await page.click('.candle-toggle');
-    await page.screenshot({ path: artifactPath('homepage-night-lit.png'), fullPage: true });
+    await page.screenshot({ path: artifactPath('homepage-night.png'), fullPage: true });
 
     const tapRegion = async (selector) => {
       const point = await page.$eval(selector, (region) => {
@@ -567,14 +546,11 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
             }),
           })),
         );
-        assert.equal(pins.length, 9, 'Nine scene objects have touch pins');
+        assert.equal(pins.length, 7, 'Seven scene objects have touch pins');
         assert.equal(
-          await page.$$eval(
-            '.portrait .hotspot-pin, .dog .hotspot-pin, .candle-toggle .hotspot-pin, .monitor .hotspot-pin',
-            (pins) => pins.length,
-          ),
+          await page.$$eval('.portrait .hotspot-pin, .dog .hotspot-pin', (pins) => pins.length),
           0,
-          'Mark, CiCi, the candle and the main monitor remain free of pin dots',
+          'Aron and Maggie remain free of pin dots',
         );
         for (const pin of pins) {
           assert.equal(pin.pulsing, true, `${pin.control} pin pulses with normal motion`);
@@ -609,84 +585,14 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
       assert.equal(await popupOpen(), false);
       if (width === 390) {
         await tapRegion('.portrait');
-        assert.equal(await popupOpen(), true, 'Tapping Mark opens the business card without a pin');
+        assert.equal(await popupOpen(), true, 'Tapping Aron opens the business card without a pin');
         await page.click('.business-card-close');
-        const dogStatus = await page.$eval('#dog-status', (status) => status.textContent);
+        const petted = await dogStatus();
         await tapRegion('.dog');
-        assert.notEqual(
-          await page.$eval('#dog-status', (status) => status.textContent),
-          dogStatus,
-          'Tapping CiCi still pets her without a pin',
-        );
-        await tapRegion('.candle-toggle');
-      } else await page.click('.candle-toggle');
-      assert.equal(await pressed(), 'false', 'Mobile candle toggle');
-      if (width === 390) await tapPin('.painting-toggle');
-      else await page.click('.painting-toggle');
-      assert.equal(
-        await page.$eval('.painting-toggle', (el) => el.getAttribute('aria-expanded')),
-        'true',
-        'Painting tap reveals the safe',
-      );
-      await settlePage(page);
-      if (width === 390) {
-        await tapPin('.painting-toggle');
-        assert.equal(
-          await page.$eval('.painting-toggle', (el) => el.getAttribute('aria-expanded')),
-          'false',
-          'The painting pin can close the revealed safe',
-        );
-        await settlePage(page);
-        await tapPin('.painting-toggle');
-        assert.equal(
-          await page.$eval('.painting-toggle', (el) => el.getAttribute('aria-expanded')),
-          'true',
-          'The painting pin can reopen the safe',
-        );
-        await settlePage(page);
-      }
-      if (width === 390) {
-        await page.$eval('.scene', (scene) =>
-          scene.scrollIntoView({ block: 'start', behavior: 'instant' }),
-        );
-        await settlePage(page);
-        const monitor = await page.$eval('.scene', (scene) => {
-          const bounds = scene.getBoundingClientRect();
-          const x = bounds.left + (860 / 1536) * bounds.width;
-          const y = bounds.top + (390 / 1024) * bounds.height;
-          return {
-            x,
-            y,
-            scroll: scrollY,
-            hash: location.hash,
-            interactive: document.elementFromPoint(x, y)?.closest('a, button')?.className || null,
-            display: getComputedStyle(document.querySelector('.monitor')).display,
-          };
-        });
-        assert.equal(monitor.display, 'none', 'The large monitor has no mobile hit region');
-        assert.equal(monitor.interactive, null, 'The large monitor is decorative on mobile');
-        await page.touchscreen.tap(monitor.x, monitor.y);
-        await settlePage(page);
-        assert.deepEqual(
-          await page.evaluate(() => ({ scroll: scrollY, hash: location.hash })),
-          { scroll: monitor.scroll, hash: monitor.hash },
-          'Tapping the large monitor does not scroll or navigate on mobile',
-        );
-      } else {
-        await page.click('.monitor');
-        await page.waitForFunction(() => {
-          const projects = document.querySelector('#projects');
-          const top = projects.getBoundingClientRect().top;
-          const anchorTop =
-            parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) +
-            parseFloat(getComputedStyle(projects).scrollMarginTop);
-          return location.hash === '#projects' && Math.abs(top - anchorTop) < 1;
-        });
-        assert.equal(
-          new URL(page.url()).hash,
-          '#projects',
-          'The large monitor still opens projects on devices with hover',
-        );
+        assert.notEqual(await dogStatus(), petted, 'Tapping Maggie pets her without a pin');
+        const beforeFetch = await dogStatus();
+        await tapPin('.toys-toggle');
+        assert.notEqual(await dogStatus(), beforeFetch, 'The toy bin pin plays fetch');
       }
       // Full-page capture resets Chromium's touch emulation. Capture only after
       // interaction checks; the next iteration configures its own input device.
@@ -701,7 +607,7 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
       await tapPin('.camera-toggle');
       assert.equal(await polaroidOpen(), true, 'Tapping the camera pin opens the photo viewer');
       let prior = '';
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < PHOTO_COUNT; i++) {
         if (i) await page.click('.polaroid-next');
         prior = await loadedPhoto(prior);
         const fit = await page.evaluate(() => {
@@ -744,7 +650,7 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
     }
     assert.deepEqual(errors, [], 'No JavaScript errors or failed homepage assets');
     console.log(
-      'PASS: Eastern schedule (winter/summer), manual override expiry, new-tab navigation and all three game launches, social screen and submenu links, American Cloud business card and email link, six-photo Polaroid shuffle and keyboard controls, candle click/keyboard, safe reveal/Escape, pulsing touch pins and touchscreen activation, scene-scoped gesture protection, selectable and zoomable page/dialog text, all three game cards, and responsive layouts.',
+      'PASS: Eastern schedule (winter/summer), manual override expiry, new-tab navigation, hidden games, social screen and submenu links, American Cloud business card and email link, eight-photo Polaroid shuffle and keyboard controls, Maggie’s fetch and pets, pulsing touch pins and touchscreen activation, scene-scoped gesture protection, selectable and zoomable page/dialog text, all three game cards, and responsive layouts.',
     );
   } finally {
     await closeBrowser(browser);

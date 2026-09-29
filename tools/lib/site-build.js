@@ -32,26 +32,11 @@ async function runtimeFiles(root) {
   }
   await include('assets/fonts', ['.ttf', '.txt']);
   await include('assets/polaroids', ['.jpg']);
-  await include('assets/books', ['.jpg', '.json']);
   await include('assets/social', ['.jpg']);
+  await include('assets/office', ['.webp']);
   for (const directory of ['shared', 'surf-rides', 'bay-racer', 'cici-treat-trail']) {
     await include(`assets/${directory}`, ['.js', '.css', '.webp', '.glb']);
   }
-  for (const filename of [
-    'office-day.webp',
-    'office-day-small.webp',
-    'office-day-v2.webp',
-    'office-day-v2-small.webp',
-    'office-night-v2.webp',
-    'office-night-v2-small.webp',
-    'avatar-day-v4.webp',
-    'avatar-night-v4.webp',
-    'tattoo-day-v5.webp',
-    'tampa-bay-screens.webp',
-    'wall-safe-day.svg',
-    'wall-safe-night.svg',
-  ])
-    files.add(`assets/workstation/${filename}`);
   return [...files].sort();
 }
 

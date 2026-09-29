@@ -15,6 +15,6 @@ module.exports = {
   email,
   companyUrl,
   socialLinks,
-  // Left screen, laptop, then right screen.
-  screenLinks: [...socialLinks, [companyUrl, 'American Cloud']],
+  // Left monitor (X feed), then right monitor (American Cloud dashboard).
+  screenLinks: [socialLinks[0], [companyUrl, 'American Cloud']],
 };

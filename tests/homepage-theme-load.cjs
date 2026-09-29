@@ -77,11 +77,7 @@ function assertFrames(samples, fixture, label) {
         `${frame}: night scene is fully shown or hidden`,
       );
     }
-    assert.deepEqual(
-      sample.wrongLayers,
-      [],
-      `${frame}: no opposite-theme avatar, safe or painting layer is visible`,
-    );
+    assert.deepEqual(sample.wrongLayers, [], `${frame}: no opposite-theme scene layer is visible`);
   }
 }
 
@@ -119,12 +115,7 @@ async function checkThemeLoads(site, fixtures) {
           const pathname = new URL(request.url()).pathname;
           if (holdScript && pathname.endsWith('/script.js')) pendingScripts.push(request);
           else if (holdStyles && pathname.endsWith('/styles.css')) pendingStyles.push(request);
-          else if (
-            holdNight &&
-            /(?:office-night-v2(?:-small)?|avatar-night-v4|wall-safe-night)\.(?:webp|svg)$/.test(
-              pathname,
-            )
-          )
+          else if (holdNight && /office-night(?:-small)?\.webp$/.test(pathname))
             pendingImages.push(request);
           else request.continue().catch(() => {});
         });
@@ -187,9 +178,7 @@ async function checkThemeLoads(site, fixtures) {
                 rootStyle = getComputedStyle(root);
               const day = document.querySelector('.scene-day'),
                 night = document.querySelector('.scene-night');
-              const wrongSelector = fixture.night
-                ? '.scene-day,.avatar-day,.safe-day,.crop-day'
-                : '.scene-night,.avatar-night,.safe-night,.crop-night';
+              const wrongSelector = fixture.night ? '.scene-day' : '.scene-night';
               probe.samples.push({
                 time: performance.now(),
                 phase: probe.phase,

@@ -78,12 +78,12 @@
   const preload = document.createElement('link');
   const scene = night
     ? {
-        full: 'assets/workstation/office-night-v2.webp',
-        small: 'assets/workstation/office-night-v2-small.webp',
+        full: 'assets/office/office-night.webp',
+        small: 'assets/office/office-night-small.webp',
       }
     : {
-        full: 'assets/workstation/office-day-v2.webp',
-        small: 'assets/workstation/office-day-v2-small.webp',
+        full: 'assets/office/office-day.webp',
+        small: 'assets/office/office-day-small.webp',
       };
   preload.rel = 'preload';
   preload.as = 'image';

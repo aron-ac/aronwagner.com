@@ -143,86 +143,22 @@ main {
   user-select: none;
   -webkit-user-drag: none;
   pointer-events: none;
-  mask-image: url('assets/workstation/office-day.webp');
-  mask-mode: alpha;
-  mask-size: 100% 100%;
-  mask-repeat: no-repeat;
 }
 /* Both sides of each themed layer are explicit: delayed art must never reveal
    the opposite theme underneath it. Keep these rules together. */
-.scene-night,
-.avatar-night,
-.safe-night,
-.crop-night {
+.scene-night {
   opacity: 0;
   transition: opacity 0.4s ease;
 }
-.scene-day,
-.avatar-day,
-.safe-day,
-.crop-day {
+.scene-day {
   opacity: 1;
   transition: opacity 0.4s ease;
 }
-.night .scene-day,
-.night .avatar-day,
-.night .safe-day,
-.night .crop-day {
+.night .scene-day {
   opacity: 0;
 }
-.night .scene-night,
-.night .avatar-night,
-.night .safe-night,
-.night .crop-night {
+.night .scene-night {
   opacity: 1;
-}
-.avatar-layer {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-  pointer-events: none;
-}
-.tattoo-art {
-  transition: filter 0.4s ease;
-}
-.night .tattoo-art {
-  filter: saturate(1.12) hue-rotate(-6deg) brightness(0.98);
-}
-.screen-wallpapers {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-  pointer-events: none;
-  transition: filter 0.4s ease;
-}
-.night .screen-wallpapers {
-  filter: brightness(0.9) saturate(1.1);
-}
-.candle-art {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-  pointer-events: none;
-}
-.candle-unlit,
-.candle-dark-halo {
-  opacity: 0;
-  transition: opacity 0.35s ease;
-}
-.scene:not(.candle-lit) .candle-unlit {
-  opacity: 1;
-}
-.night .scene:not(.candle-lit) .candle-dark-halo {
-  opacity: 1;
-}
-.night .candle-unlit {
-  filter: brightness(0.62) saturate(0.55);
 }
 .scene-hotspot {
   position: absolute;
@@ -282,41 +218,16 @@ main {
   opacity: 1;
   transform: translate(-50%, 0);
 }
+/* The arrow sits under the middle of its centred label, so it points at the
+   middle of the object. Its glyph's downward tip is right of centre. */
 .arrow {
   position: absolute;
-  right: 10px;
+  left: 50%;
   bottom: -24px;
+  translate: -65% 0;
   font-size: 1.8em;
   line-height: 0.8;
   text-shadow: 0 1px var(--paper);
-}
-.laptop .label {
-  bottom: auto;
-  top: calc(100% + 30px);
-}
-.laptop .arrow {
-  bottom: auto;
-  top: -20px;
-  transform: rotate(180deg);
-}
-.screen-link {
-  pointer-events: none;
-  border-radius: 0;
-}
-.screen-link::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: auto;
-}
-.left-screen::before {
-  clip-path: polygon(7% 0, 100% 5%, 91% 94%, 0 87%);
-}
-.laptop::before {
-  clip-path: polygon(14% 0, 100% 5%, 96% 74%, 72% 100%, 0 82%, 13% 64%);
-}
-.right-screen::before {
-  clip-path: polygon(23% 0, 100% 14%, 76% 100%, 0 77%);
 }
 .left-screen .label,
 .right-screen .label {
@@ -329,9 +240,6 @@ main {
   top: -20px;
   transform: rotate(180deg);
 }
-.candle-toggle .label {
-  left: 45%;
-}
 .camera-toggle::before {
   content: '';
   position: absolute;
@@ -340,85 +248,6 @@ main {
   width: max(100%, 44px);
   height: max(100%, 44px);
   transform: translate(-50%, -50%);
-}
-.portrait .label {
-  left: 15%;
-}
-/* Keep nearby objects distinct even when the illustration shrinks on phones. */
-.katana-toggle {
-  min-height: 24px;
-}
-@media (max-width: 650px) {
-  .meditations-toggle {
-    min-width: 24px;
-    min-height: 24px;
-    left: calc((var(--x) + var(--w) / 2) / 1536 * 100%);
-    transform: translateX(-50%);
-    top: auto;
-    bottom: calc((1024 - 330) / 1024 * 100%);
-  }
-  .katana-toggle {
-    height: calc(80 / 1024 * 100%);
-    top: auto;
-    bottom: calc((1024 - 430) / 1024 * 100%);
-  }
-  .camera-toggle::before {
-    width: max(100%, 24px);
-    height: max(100%, 24px);
-    top: auto;
-    bottom: 1px;
-    transform: translateX(-50%);
-  }
-}
-.books-toggle {
-  min-width: 44px;
-  left: calc((var(--x) + var(--w) / 2) / 1536 * 100%);
-  transform: translateX(-50%);
-}
-/* The statue sits in front of the painting; only its silhouette receives clicks. */
-.scene-hotspot.sisyphus-toggle {
-  z-index: 5;
-  min-width: 24px;
-  min-height: 24px;
-  pointer-events: none;
-}
-.sisyphus-toggle::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: auto;
-  clip-path: polygon(
-    72% 0,
-    90% 12%,
-    100% 32%,
-    98% 55%,
-    90% 72%,
-    100% 91%,
-    100% 100%,
-    0 100%,
-    0 75%,
-    15% 65%,
-    25% 59%,
-    34% 43%,
-    44% 38%,
-    46% 24%,
-    57% 11%
-  );
-}
-.books-toggle .label,
-.sisyphus-toggle .label {
-  left: auto;
-  right: 0;
-  transform: translateY(5px);
-}
-.books-toggle:hover .label,
-.books-toggle:focus-visible .label,
-.sisyphus-toggle:hover .label,
-.sisyphus-toggle:focus-visible .label {
-  transform: translateY(0);
-}
-.dog .label {
-  left: 100%;
 }
 .dog-heart {
   position: absolute;
@@ -435,122 +264,48 @@ main {
 .dog.is-petted .dog-heart {
   animation: heart-float 1.25s ease-out forwards;
 }
-
-/* The picture is a separate hinged layer over the original scene. */
-.wall-secret {
+/* The Bible is a narrow spine beside the books; keep a usable target. */
+.bible-toggle {
+  min-width: 24px;
+  min-height: 24px;
+  left: calc((var(--x) + var(--w) / 2) / 1536 * 100%);
+  transform: translateX(-50%);
+}
+/* Playing fetch: a squeak toy arcs from the toy bin into Maggie's mouth. */
+.squeak-toy {
   position: absolute;
-  left: calc(var(--x) / 1536 * 100%);
-  top: calc(var(--y) / 1024 * 100%);
-  width: calc(var(--w) / 1536 * 100%);
-  height: calc(var(--h) / 1024 * 100%);
+  left: calc(420 / 1536 * 100%);
+  top: calc(730 / 1024 * 100%);
+  width: 4cqw;
   z-index: 4;
-  perspective: 700px;
-  isolation: isolate;
-}
-.clip-definitions {
-  position: absolute;
+  opacity: 0;
   pointer-events: none;
 }
-.safe-panel,
-.safe-panel img,
-.painting-toggle,
-.painting-door,
-.painting-front,
-.painting-back,
-.wall-crop,
-.frame-foreground {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+.toy-thrown .squeak-toy {
+  animation: toy-toss 0.8s ease-in-out forwards;
 }
-.safe-panel {
+.dog-squeak {
+  position: absolute;
+  left: 58%;
+  top: -9%;
+  padding: 3px 10px;
+  border: 2px solid #1d1d1d;
+  border-radius: 14px 14px 14px 3px;
+  background: #fffef4;
+  color: #1d1d1d;
+  font-family: 'Caveat Brush', cursive;
+  font-size: 22px;
+  font-size: 2.1cqw;
+  line-height: 1.1;
+  white-space: nowrap;
+  opacity: 0;
   pointer-events: none;
 }
-.safe-panel img {
-  display: block;
+.dog.is-squeaking .dog-squeak {
+  animation: squeak-pop 1.2s ease-out forwards;
 }
-.painting-toggle {
-  border: 0;
-  padding: 0;
-  margin: 0;
-  background: none;
-  cursor: pointer;
-  color: var(--accent);
-  overflow: visible;
-  perspective: 700px;
-  touch-action: manipulation;
-}
-.painting-toggle::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  min-width: 44px;
-  min-height: 44px;
-}
-.painting-toggle:focus-visible {
-  outline: 2px dashed var(--accent);
-  outline-offset: 5px;
-}
-.painting-door {
-  transform-origin: 1.5625% 50%;
-  transform-style: preserve-3d;
-  transition: transform 0.75s cubic-bezier(0.22, 0.8, 0.22, 1);
-  pointer-events: auto;
-}
-.painting-front,
-.painting-back {
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-.painting-front {
-  background: #292b2d;
-  clip-path: polygon(1.6% 12.9%, 95.8% 0, 99.5% 2.6%, 99.5% 92.3%, 1.6% 98.9%);
-}
-.painting-front .wall-crop {
-  clip-path: url(#painting-front-clip);
-}
-.wall-crop {
-  background-image: url('assets/workstation/office-day-v2.webp');
-  background-size: calc(1536 / var(--w) * 100%) calc(1024 / var(--h) * 100%);
-  background-position: calc(var(--x) / (1536 - var(--w)) * 100%)
-    calc(var(--y) / (1024 - var(--h)) * 100%);
-  background-repeat: no-repeat;
-}
-.wall-crop.crop-night {
-  background-image: url('assets/workstation/office-night-v2.webp');
-}
-.painting-back {
-  transform: rotateY(180deg);
-}
-.painting-back svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-  transform: scaleX(-1);
-}
-.wall-secret.is-open .painting-door {
-  transform: rotateY(-112deg);
-}
-.painting-toggle .label {
-  left: auto;
-  right: 0;
-  transform: translateY(5px);
-}
-.painting-toggle:hover .label,
-.painting-toggle:focus-visible .label {
-  opacity: 1;
-  transform: translateY(0);
-}
-.frame-foreground {
-  clip-path: url(#painting-statue-clip);
-  pointer-events: none;
-}
-.night .painting-front {
-  background: #0a142b;
-}
-.night .painting-back {
-  filter: brightness(0.52) saturate(0.7);
+.dog.is-squeaking .dog-heart {
+  animation: heart-float 1.25s ease-out 0.15s forwards;
 }
 
 .intro {
@@ -739,7 +494,6 @@ main {
 
 /* A quiet reading card, with room to scroll on short landscape screens. */
 .quote-dialog,
-.books-dialog,
 .external-link-dialog {
   width: min(600px, calc(100vw - 32px));
   max-width: none;
@@ -755,13 +509,11 @@ main {
   text-align: left;
 }
 .quote-dialog::backdrop,
-.books-dialog::backdrop,
 .external-link-dialog::backdrop {
   background: #101b2c99;
   backdrop-filter: blur(5px);
 }
 .quote-dialog[open],
-.books-dialog[open],
 .external-link-dialog[open] {
   display: flex;
   flex-direction: column;
@@ -870,10 +622,17 @@ main {
   padding-left: 20px;
   border-left: 3px solid color-mix(in srgb, var(--accent) 45%, var(--line));
 }
-.quote-passage blockquote p {
+.quote-passage blockquote p,
+.quote-statement {
   margin: 0;
   font-size: clamp(18px, 3vw, 23px);
   line-height: 1.65;
+}
+/* The golf invitation's mail link borrows the round action button's look. */
+a.quote-next {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
 }
 .quote-author {
   margin: 0 0 7px;
@@ -954,222 +713,6 @@ main {
   }
   .quote-dialog .quote-actions {
     padding-top: 12px;
-  }
-}
-
-/* A single, user-controlled book slide: no autoplay or off-screen focus targets. */
-.books-dialog {
-  width: min(740px, calc(100vw - 32px));
-  padding: 32px;
-}
-.books-status {
-  margin: 30px 0 12px;
-  font-size: 15px;
-  line-height: 1.7;
-}
-.book-carousel {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  margin-top: 26px;
-}
-.book-slide {
-  display: grid;
-  grid-template-columns: 220px minmax(0, 1fr);
-  align-items: center;
-  gap: 36px;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
-  padding: 8px;
-}
-.book-cover-link {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 290px;
-  min-width: 0;
-  touch-action: pan-y pinch-zoom;
-}
-.book-cover {
-  display: block;
-  /* Keep first paint independent of intrinsic dimensions while the cover loads. */
-  width: 100%;
-  height: 100%;
-  min-width: 0;
-  min-height: 0;
-  object-fit: contain;
-  filter: drop-shadow(0 8px 6px #0003);
-}
-.book-cover-fallback {
-  padding: 32px 20px;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  color: var(--ink);
-  font-size: 14px;
-  text-align: center;
-}
-.book-eyebrow {
-  margin: 0 0 12px;
-  color: var(--ink);
-  font:
-    10px/1.6 Arial,
-    sans-serif;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-}
-.book-title {
-  margin: 0;
-  font:
-    300 clamp(21px, 3vw, 27px)/1.45 Merriweather,
-    Georgia,
-    serif;
-  overflow-wrap: anywhere;
-}
-.book-author {
-  margin: 14px 0 24px;
-  color: var(--ink);
-  font:
-    14px/1.65 Arial,
-    sans-serif;
-}
-.book-amazon {
-  display: inline-flex;
-  align-items: center;
-  gap: 16px;
-  min-height: 44px;
-  padding: 11px 16px;
-  border: 1px solid var(--line);
-  border-radius: 24px;
-  background: var(--paper);
-  color: var(--accent);
-  font:
-    13px/1.5 Arial,
-    sans-serif;
-}
-.book-amazon:hover {
-  border-color: var(--accent);
-}
-.book-controls {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  gap: 24px;
-  margin-top: 26px;
-  padding-top: 18px;
-  border-top: 1px solid var(--line);
-}
-.book-position {
-  margin: 0;
-  min-width: 52px;
-  color: var(--ink);
-  font:
-    13px/1.5 Arial,
-    sans-serif;
-  font-variant-numeric: tabular-nums;
-  text-align: center;
-}
-.book-prev,
-.book-next,
-.books-retry {
-  min-width: 44px;
-  min-height: 44px;
-  padding: 6px 12px;
-  border: 1px solid var(--line);
-  border-radius: 24px;
-  background: var(--paper);
-  color: var(--strong);
-  font:
-    24px/1 Arial,
-    sans-serif;
-  cursor: pointer;
-}
-.books-retry {
-  align-self: flex-start;
-  font-size: 13px;
-}
-.book-prev:hover,
-.book-next:hover,
-.books-retry:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-@media (max-width: 600px) {
-  .books-dialog {
-    padding: 26px 20px 20px;
-  }
-  .books-dialog .quote-heading h2 {
-    font-size: 30px;
-  }
-  .book-carousel {
-    margin-top: 16px;
-  }
-  .book-slide {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 20px;
-    text-align: center;
-  }
-  .book-cover-link {
-    height: clamp(130px, 28dvh, 220px);
-  }
-  .book-eyebrow {
-    display: none;
-  }
-  .book-title {
-    font-size: 21px;
-  }
-  .book-author {
-    margin: 8px 0 12px;
-    font-size: 13px;
-  }
-  .book-controls {
-    margin-top: 18px;
-    padding-top: 14px;
-  }
-}
-@media (max-width: 600px) and (max-height: 650px) {
-  .book-cover-link {
-    height: clamp(96px, 22dvh, 150px);
-  }
-  .book-slide {
-    gap: 14px;
-  }
-}
-@media (max-height: 500px) {
-  .books-dialog {
-    padding: 20px 28px;
-  }
-  .books-dialog .quote-heading h2 {
-    font-size: 28px;
-  }
-  .book-carousel {
-    margin-top: 10px;
-  }
-  .book-slide {
-    grid-template-columns: minmax(70px, 30%) minmax(0, 1fr);
-    gap: 22px;
-    text-align: left;
-  }
-  .book-cover-link {
-    height: 128px;
-  }
-  .book-eyebrow {
-    display: none;
-  }
-  .book-title {
-    font-size: 18px;
-    line-height: 1.4;
-  }
-  .book-author {
-    margin: 6px 0 8px;
-    font-size: 12px;
-  }
-  .book-controls {
-    margin-top: 10px;
-    padding-top: 10px;
   }
 }
 
@@ -1483,6 +1026,33 @@ footer {
 footer span {
   padding: 0 8px;
 }
+/* "Hosted on American Cloud", on its own line beneath the signature line. */
+footer .hosted-by {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  margin: 10px auto 0;
+  color: var(--ink);
+  text-decoration: none;
+  opacity: 0.8;
+}
+footer .hosted-by:hover {
+  color: var(--accent);
+  opacity: 1;
+}
+footer .hosted-by span {
+  padding: 0;
+}
+footer .hosted-by svg {
+  display: block;
+  flex: none;
+}
+footer .hosted-by strong {
+  font-weight: 700;
+  color: var(--strong);
+}
 
 /* The same artwork and coordinates remain visible at every viewport size. */
 @media (max-width: 650px) {
@@ -1491,15 +1061,6 @@ footer span {
   }
   .hero {
     margin-top: 32px;
-  }
-  .scene-art {
-    mask-image: url('assets/workstation/office-day-small.webp');
-  }
-  .wall-crop {
-    background-image: url('assets/workstation/office-day-v2-small.webp');
-  }
-  .wall-crop.crop-night {
-    background-image: url('assets/workstation/office-night-v2-small.webp');
   }
   .intro {
     max-width: 480px;
@@ -1554,27 +1115,15 @@ footer span {
     font-size: 8px;
     letter-spacing: 2px;
   }
-  .scene-hotspot.monitor,
   .scene-hotspot.dog {
     min-width: 44px;
     min-height: 44px;
   }
-  .scene-hotspot.monitor {
-    top: auto;
-    bottom: calc((1024 - var(--y) - var(--h)) / 1024 * 100%);
-  }
   .label {
     font-size: 14px;
   }
-  .laptop .label {
-    top: calc(100% + 12px);
-  }
 }
 @media (hover: none) {
-  /* The illustrated monitor is decorative on touch devices. */
-  .scene-hotspot.monitor {
-    display: none;
-  }
   /* Protect the illustration from missed taps while preserving page scrolling.
      Intro text and dialogs keep native zoom, selection, and touch callouts. */
   .scene {
@@ -1592,92 +1141,59 @@ footer span {
   .scene {
     --pin-spread: max(0px, calc(40px - 4.6cqw));
   }
-  /* Keep whole pin circles above neighboring artwork hit regions. The lower
-     screens also overlap the bookcase and one another's original rectangles. */
+  /* Keep whole pin circles above neighboring artwork hit regions. */
   .scene-hotspot:has(.hotspot-pin) {
     z-index: 6;
   }
-  .scene-hotspot.right-screen,
-  .scene-hotspot.sisyphus-toggle {
-    z-index: 7;
+  /* Pins are the touch targets, so the small shelf objects need no enlarged boxes
+     that would cover their neighbors' pins. */
+  .bible-toggle {
+    min-width: 0;
+    min-height: 0;
   }
-  .scene-hotspot.laptop {
-    z-index: 8;
+  .camera-toggle::before {
+    content: none;
   }
-  .scene-hotspot.candle-toggle {
-    z-index: 5;
-  }
-  .candle-toggle::before {
-    content: '';
-    position: absolute;
-    left: 50%;
-    /* Keep the invisible tap circle below the crowded katana and camera shelf. */
-    top: calc(50% + 22px);
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-  }
-  .scene-hotspot:not(:disabled):has(.hotspot-pin)::after,
-  .painting-toggle::after {
+  .scene-hotspot:not(:disabled):has(.hotspot-pin)::after {
     content: '';
     position: absolute;
     left: var(--pin-x, 50%);
     top: var(--pin-y, 50%);
-    width: calc(hypot(var(--pin-dx), var(--pin-dy)) * var(--pin-spread));
+    width: calc(hypot(var(--pin-dx, 0), var(--pin-dy, 0)) * var(--pin-spread));
     height: 1px;
     background: var(--accent);
     box-shadow: 0 0 0 1px #ffffff80;
     transform-origin: left center;
-    transform: rotate(atan2(var(--pin-dy), var(--pin-dx)));
+    transform: rotate(atan2(var(--pin-dy, 0), var(--pin-dx, 1)));
     pointer-events: none;
   }
+  /* The bookcase shelves are the crowded corner: fan its three pins apart. */
   .camera-toggle {
-    --pin-dx: -0.329;
-    --pin-dy: -0.751;
+    --pin-dx: -0.3;
+    --pin-dy: -0.75;
   }
-  .meditations-toggle {
-    --pin-dx: 0.594;
-    --pin-dy: -0.538;
+  .bible-toggle {
+    --pin-dx: 0.85;
+    --pin-dy: -0.2;
   }
-  .katana-toggle {
-    --pin-y: calc(18 / 1536 * 100cqw);
-    --pin-dx: -0.963;
-    --pin-dy: 0.256;
+  .emac {
+    --pin-dx: 0.15;
+    --pin-dy: 0.85;
   }
   .left-screen {
-    --pin-dx: -0.027;
-    --pin-dy: -0.739;
-  }
-  .laptop {
-    --pin-dx: 0.308;
-    --pin-dy: 0.808;
+    --pin-dx: -0.4;
+    --pin-dy: -0.55;
   }
   .right-screen {
-    --pin-dx: 0.828;
-    --pin-dy: -0.115;
+    --pin-dx: 0.4;
+    --pin-dy: -0.55;
   }
-  .painting-toggle {
-    --pin-dx: -0.42;
-    --pin-dy: -0.035;
-  }
-  .sisyphus-toggle {
-    --pin-x: 35%;
-    --pin-y: 85%;
-    --pin-dx: 1.057;
-    --pin-dy: 0.448;
-  }
-  .books-toggle {
-    --pin-dx: 0.219;
-    --pin-dy: 1.136;
-  }
-  .scene-hotspot:not(:disabled) .hotspot-pin,
-  .painting-toggle .hotspot-pin {
+  .scene-hotspot:not(:disabled) .hotspot-pin {
     display: block;
     position: absolute;
     z-index: 1;
-    left: calc(var(--pin-x, 50%) + var(--pin-dx) * var(--pin-spread));
-    top: calc(var(--pin-y, 50%) + var(--pin-dy) * var(--pin-spread));
+    left: calc(var(--pin-x, 50%) + var(--pin-dx, 0) * var(--pin-spread));
+    top: calc(var(--pin-y, 50%) + var(--pin-dy, 0) * var(--pin-spread));
     width: 44px;
     height: 44px;
     border-radius: 50%;
@@ -1711,15 +1227,8 @@ footer span {
     opacity: 0.7;
     animation: hotspot-pulse 2s ease-out infinite;
   }
-  .scene-hotspot:not(:focus-visible) .label,
-  .painting-toggle:not(:focus-visible) .label {
+  .scene-hotspot:not(:focus-visible) .label {
     display: none;
-  }
-}
-@media (hover: none) and (max-width: 650px) {
-  .katana-toggle {
-    /* Anchor the leader to the blade, not the expanded button's center. */
-    --pin-y: calc(100% - 62 / 1536 * 100cqw);
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1732,7 +1241,9 @@ footer span {
     animation: none !important;
     transition: none !important;
   }
-  .dog.is-petted .dog-heart {
+  .dog.is-petted .dog-heart,
+  .dog.is-squeaking .dog-heart,
+  .dog.is-squeaking .dog-squeak {
     opacity: 1;
   }
 }
@@ -1745,6 +1256,45 @@ footer span {
 }
 .night .moon-icon {
   display: block;
+}
+@keyframes toy-toss {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(0) scale(0.6);
+  }
+  15% {
+    opacity: 1;
+  }
+  50% {
+    transform: translate(6cqw, -9cqw) rotate(200deg) scale(1);
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(13cqw, -2.5cqw) rotate(360deg) scale(0.8);
+  }
+}
+@keyframes squeak-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.6);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(0) scale(1.08);
+  }
+  30% {
+    transform: scale(1);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
 }
 @keyframes heart-float {
   0% {

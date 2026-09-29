@@ -8,7 +8,7 @@
     <script src="assets/homepage/theme-bootstrap.js" data-inline></script>
     <meta
       name="description"
-      content="Welcome to Aron Wagner's little corner of the internet. Explore the desk, play a few arcade games, and meet Maggie, a Goldendoodle who goes shopping in her toy bucket."
+      content="Welcome to Aron Wagner's little corner of the internet. Explore the desk, play a few arcade games, and meet Maggie, my Goldendoodle and full-time shadow."
     />
     <title>Aron Wagner</title>
     <link rel="canonical" href="https://aronwagner.com/" />
@@ -17,22 +17,28 @@
     <meta property="og:title" content="Aron Wagner" />
     <meta
       property="og:description"
-      content="Welcome to Aron Wagner's little corner of the internet. Explore the desk, play a few arcade games, and meet Maggie, a Goldendoodle who goes shopping in her toy bucket."
+      content="Welcome to Aron Wagner's little corner of the internet. Explore the desk, play a few arcade games, and meet Maggie, my Goldendoodle and full-time shadow."
     />
     <meta property="og:url" content="https://aronwagner.com/" />
     <meta property="og:image" content="https://aronwagner.com/assets/social/aron-wagner-og.jpg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:type" content="image/jpeg" />
-    <meta property="og:image:alt" content="Aron Wagner and CiCi in an illustrated home office." />
+    <meta
+      property="og:image:alt"
+      content="Aron Wagner with Rebecca, Jack and their Goldendoodle Maggie in an illustrated home office."
+    />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Aron Wagner" />
     <meta
       name="twitter:description"
-      content="Welcome to Aron Wagner's little corner of the internet. Explore the desk, play a few arcade games, and meet Maggie, a Goldendoodle who goes shopping in her toy bucket."
+      content="Welcome to Aron Wagner's little corner of the internet. Explore the desk, play a few arcade games, and meet Maggie, my Goldendoodle and full-time shadow."
     />
     <meta name="twitter:image" content="https://aronwagner.com/assets/social/aron-wagner-og.jpg" />
-    <meta name="twitter:image:alt" content="Aron Wagner and CiCi in an illustrated home office." />
+    <meta
+      name="twitter:image:alt"
+      content="Aron Wagner with Rebecca, Jack and their Goldendoodle Maggie in an illustrated home office."
+    />
     <meta name="twitter:creator" content="@aronwagner" />
     <link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48" />
     <link rel="icon" href="assets/favicon-32.png" type="image/png" sizes="32x32" />
@@ -70,27 +76,24 @@
 
     <main>
       <section class="hero" aria-label="Aron's illustrated home office">
-        <div class="scene candle-lit">
+        <div class="scene">
           <img
             class="scene-art scene-day"
             draggable="false"
-            src="assets/workstation/office-day-v2.webp"
-            srcset="
-              assets/workstation/office-day-v2-small.webp  768w,
-              assets/workstation/office-day-v2.webp       1536w
-            "
+            src="assets/office/office-day.webp"
+            srcset="assets/office/office-day-small.webp 768w, assets/office/office-day.webp 1536w"
             sizes="(max-width:650px) calc(100vw - 30px), (max-width:1060px) calc(100vw - 60px), 1000px"
             width="1536"
             height="1024"
-            alt="Mark in a fitted black V-neck T-shirt, black jeans, his sailing-ship forearm tattoo, a black watch and black-and-white Nike sneakers, seated beside CiCi, his little white pomsky. His home office has a black L-shaped standing desk, a Tampa skyline across the monitors, floating shelves, a wood bookcase, cassette and The World Is Yours posters, and a framed picture of Warsaw's Palace of Culture and Science."
+            alt="Aron, in a black T-shirt with an American flag print, sits in his hunter-green home office. His Goldendoodle Maggie sits beside him holding a duck toy next to an overflowing toy bin, his son Jack army-crawls across the Persian rug, and his wife Rebecca relaxes in a tan leather chair with a coffee. The office has a dark wood desk with two curved monitors, built-in bookshelves with a vintage eMac and a red BMW model car, a framed Army Class A uniform, a framed Tampa Tribune 'Man on the Moon' front page, and a golf bag in the corner."
           />
           <img
             class="scene-art scene-night"
             draggable="false"
-            src="assets/workstation/office-night-v2.webp"
+            src="assets/office/office-night.webp"
             srcset="
-              assets/workstation/office-night-v2-small.webp  768w,
-              assets/workstation/office-night-v2.webp       1536w
+              assets/office/office-night-small.webp  768w,
+              assets/office/office-night.webp       1536w
             "
             sizes="(max-width:650px) calc(100vw - 30px), (max-width:1060px) calc(100vw - 60px), 1000px"
             width="1536"
@@ -100,378 +103,13 @@
             decoding="sync"
           />
 
-          <!-- Replace only the avatar/chair area; retain the approved room and CiCi artwork. -->
-          <svg class="avatar-layer" viewBox="0 0 1536 1024" aria-hidden="true" focusable="false">
-            <defs>
-              <filter id="avatar-edge-blend" x="-5%" y="-5%" width="110%" height="110%">
-                <feMorphology operator="dilate" radius="1" />
-                <feGaussianBlur stdDeviation="1.5" />
-              </filter>
-              <filter id="tattoo-edge-blend" x="-5%" y="-5%" width="110%" height="110%">
-                <feGaussianBlur stdDeviation=".7" />
-              </filter>
-              <mask
-                id="tattoo-outline"
-                maskUnits="userSpaceOnUse"
-                x="428"
-                y="544"
-                width="112"
-                height="72"
-                mask-type="alpha"
-              >
-                <path
-                  fill="white"
-                  filter="url(#tattoo-edge-blend)"
-                  d="M441 550 Q448 547 462 553 L486 567 L515 581 Q530 586 534 595 L528 607 Q520 610 508 606 L449 595 Q439 592 435 586 L433 576 L434 564 Q436 554 441 550 Z"
-                />
-              </mask>
-              <mask
-                id="avatar-outline"
-                maskUnits="userSpaceOnUse"
-                x="380"
-                y="314"
-                width="350"
-                height="572"
-                mask-type="alpha"
-              >
-                <path
-                  fill="white"
-                  filter="url(#avatar-edge-blend)"
-                  d="M515 435 Q509 405 518 375 Q518 340 554 330 Q602 321 625 350 Q634 382 613 429 L607 443 Q640 471 671 520 Q689 546 672 575 L651 586 L647 607 Q677 619 688 640 Q698 659 682 688 L657 734 L646 769 Q656 780 665 789 Q692 787 699 815 L694 822 Q708 838 706 856 Q704 866 685 867 Q651 871 605 844 L601 816 L586 814 L583 805 L587 782 L576 761 L559 715 Q551 695 533 688 Q508 683 479 674 L453 671 L444 658 L452 633 L455 610 Q437 604 427 589 L414 592 L395 543 Q387 513 410 505 L427 501 Q434 470 453 458 Z"
-                />
-              </mask>
-            </defs>
-            <g mask="url(#avatar-outline)">
-              <image
-                class="avatar-day"
-                href="assets/workstation/avatar-day-v4.webp"
-                x="390"
-                y="324"
-                width="330"
-                height="552"
-              />
-              <image
-                class="avatar-night"
-                href="assets/workstation/avatar-night-v4.webp"
-                x="390"
-                y="324"
-                width="330"
-                height="552"
-              />
-              <!-- One tattoo drawing in both themes; only its lighting changes in CSS. -->
-              <g mask="url(#tattoo-outline)">
-                <image
-                  class="tattoo-art"
-                  href="assets/workstation/tattoo-day-v5.webp"
-                  x="428"
-                  y="544"
-                  width="112"
-                  height="72"
-                />
-              </g>
-            </g>
-          </svg>
-
-          <!-- Clip the new wallpaper to the display interiors, preserving bezels and foreground devices. -->
-          <svg
-            class="screen-wallpapers"
-            viewBox="0 0 1536 1024"
-            aria-hidden="true"
-            focusable="false"
-          >
-            <defs>
-              <clipPath id="ultrawide-interior" clipPathUnits="userSpaceOnUse">
-                <path
-                  d="M663 342 L1073 327 L1076 472 L980 453 Q975 451 973 457 L970 468 L917 465 L917 455 Q917 450 911 449 L819 446 Q813 446 812 452 L811 461 L777 459 L778 453 Q778 449 772 448 L691 446 Q685 445 684 451 L683 454 L671 454 Z"
-                />
-              </clipPath>
-              <clipPath id="tablet-interior" clipPathUnits="userSpaceOnUse">
-                <path d="M690 453 L770 457 L764 509 C756 507 749 509 746 516 L683 511 Z" />
-              </clipPath>
-              <clipPath id="laptop-interior" clipPathUnits="userSpaceOnUse">
-                <path d="M818 455 L909 459 L905 527 L814 521 Z" />
-              </clipPath>
-              <clipPath id="side-display-interior" clipPathUnits="userSpaceOnUse">
-                <path d="M980 460 L1067 478 L1042 579 L954 550 Z" />
-              </clipPath>
-            </defs>
-            <image
-              href="assets/workstation/tampa-bay-screens.webp"
-              x="660"
-              y="324"
-              width="420"
-              height="258"
-              clip-path="url(#ultrawide-interior)"
-            />
-
-            <!-- Three crops of one continuous composition, aligned to each screen's perspective. -->
-            <g clip-path="url(#tablet-interior)">
-              <rect x="680" y="450" width="100" height="80" fill="#061a22" />
-              <g transform="matrix(.1 .005 -.011666667 .096666667 690 453)">
-                <svg width="800" height="600" viewBox="0 0 800 600">
-                  <svg width="2400" height="600" viewBox="14 10 393 118" preserveAspectRatio="none">
-                    <image
-                      href="assets/workstation/tampa-bay-screens.webp"
-                      width="420"
-                      height="258"
-                    />
-                  </svg>
-                </svg>
-              </g>
-            </g>
-            <g clip-path="url(#laptop-interior)">
-              <rect x="810" y="450" width="110" height="85" fill="#061a22" />
-              <g transform="matrix(.11375 .005 -.006666667 .113333333 818 455)">
-                <svg width="800" height="600" viewBox="800 0 800 600">
-                  <svg width="2400" height="600" viewBox="14 10 393 118" preserveAspectRatio="none">
-                    <image
-                      href="assets/workstation/tampa-bay-screens.webp"
-                      width="420"
-                      height="258"
-                    />
-                  </svg>
-                </svg>
-              </g>
-            </g>
-            <g clip-path="url(#side-display-interior)">
-              <rect x="950" y="455" width="125" height="130" fill="#061a22" />
-              <g transform="matrix(.10875 .0225 -.043333333 .168333333 980 460)">
-                <svg width="800" height="600" viewBox="1600 0 800 600">
-                  <svg width="2400" height="600" viewBox="14 10 393 118" preserveAspectRatio="none">
-                    <image
-                      href="assets/workstation/tampa-bay-screens.webp"
-                      width="420"
-                      height="258"
-                    />
-                  </svg>
-                </svg>
-              </g>
-            </g>
-          </svg>
-
-          <!-- An unlit version of the glass candle replaces its painted flame. -->
-          <svg class="candle-art" viewBox="0 0 1536 1024" aria-hidden="true" focusable="false">
-            <defs>
-              <linearGradient id="candle-glass" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0" stop-color="#4a4032" />
-                <stop offset=".55" stop-color="#65513a" />
-                <stop offset="1" stop-color="#21272b" />
-              </linearGradient>
-              <linearGradient id="candle-wax" x1="0" y1="0" x2="0" y2="1">
-                <stop stop-color="#b9a67f" />
-                <stop offset="1" stop-color="#766344" />
-              </linearGradient>
-              <filter id="candle-soft-edge"><feGaussianBlur stdDeviation=".35" /></filter>
-              <radialGradient id="candle-halo-mask">
-                <stop offset="0" stop-color="white" />
-                <stop offset=".45" stop-color="white" />
-                <stop offset="1" stop-color="black" />
-              </radialGradient>
-              <mask
-                id="candle-halo"
-                maskUnits="userSpaceOnUse"
-                x="238"
-                y="362"
-                width="166"
-                height="145"
-              >
-                <ellipse cx="321" cy="434" rx="82" ry="71" fill="url(#candle-halo-mask)" />
-              </mask>
-              <mask
-                id="candle-reflection"
-                maskUnits="userSpaceOnUse"
-                x="272"
-                y="555"
-                width="78"
-                height="40"
-              >
-                <ellipse cx="311" cy="575" rx="39" ry="20" fill="url(#candle-halo-mask)" />
-              </mask>
-              <filter id="candle-cool-light" color-interpolation-filters="sRGB">
-                <feColorMatrix
-                  type="matrix"
-                  values=".10 .05 .025 0 0 .15 .10 .05 0 0 .30 .20 .10 0 0 0 0 0 1 0"
-                />
-              </filter>
-              <filter id="candle-cool-reflection" color-interpolation-filters="sRGB">
-                <feColorMatrix
-                  type="matrix"
-                  values=".13 .10 .05 0 0 .21 .16 .06 0 0 .58 .30 .15 0 0 0 0 0 1 0"
-                />
-              </filter>
-            </defs>
-            <image
-              class="candle-dark-halo"
-              href="assets/workstation/office-night-v2.webp"
-              width="1536"
-              height="1024"
-              mask="url(#candle-halo)"
-              filter="url(#candle-cool-light)"
-            />
-            <image
-              class="candle-dark-halo"
-              href="assets/workstation/office-night-v2.webp"
-              width="1536"
-              height="1024"
-              mask="url(#candle-reflection)"
-              filter="url(#candle-cool-reflection)"
-            />
-            <g class="candle-unlit" filter="url(#candle-soft-edge)">
-              <path
-                d="M291.5 447Q292 442 321 442Q347 442 350.5 446L350.5 477Q348 486 322 486Q295 485 292 478Z"
-                fill="url(#candle-glass)"
-                stroke="#29261f"
-                stroke-width="1.4"
-              />
-              <path
-                d="M295 447V476Q299 481 315 482"
-                fill="none"
-                stroke="#aa8e66"
-                stroke-width="1.5"
-                opacity=".6"
-              />
-              <ellipse
-                cx="321"
-                cy="447"
-                rx="27"
-                ry="4"
-                fill="#342e25"
-                stroke="#987e59"
-                stroke-width="1"
-              />
-              <path
-                d="M303 456Q321 453 339 456V473Q322 477 303 473Z"
-                fill="url(#candle-wax)"
-                opacity=".8"
-              />
-              <ellipse cx="321" cy="456" rx="18" ry="2.5" fill="#c7b58e" />
-              <path d="m321 456-.5-4" stroke="#302d2a" stroke-width="1.5" stroke-linecap="round" />
-              <path
-                d="M296 477Q321 484 347 477"
-                fill="none"
-                stroke="#b9aa8d"
-                stroke-width="1"
-                opacity=".5"
-              />
-              <path d="M344 449V473" stroke="#aec4cc" stroke-width="1.5" opacity=".22" />
-            </g>
-          </svg>
-          <button
-            class="scene-hotspot candle-toggle"
-            type="button"
-            aria-label="Blow out the candle"
-            aria-pressed="true"
-            aria-describedby="candle-status"
-            disabled
-            style="--x: 287; --y: 434; --w: 69; --h: 55"
-          >
-            <span class="label" aria-hidden="true"
-              ><span class="candle-hint">Blow out the candle</span>
-              <span class="arrow">↴</span></span
-            >
-          </button>
-          <p class="sr-only" id="candle-status" role="status" aria-live="polite"></p>
-
-          <div class="wall-secret" style="--x: 1174; --y: 38; --w: 192; --h: 272" hidden>
-            <svg class="clip-definitions" width="0" height="0" aria-hidden="true">
-              <defs>
-                <clipPath id="painting-front-clip" clipPathUnits="objectBoundingBox">
-                  <path
-                    clip-rule="evenodd"
-                    d="M .016 .129 L .958 0 L .995 .026 L .995 .923 L .016 .989 Z M 1 .852 C .91 .835 .79 .899 .776 1 L 1 1 Z"
-                  />
-                </clipPath>
-                <clipPath id="painting-statue-clip" clipPathUnits="objectBoundingBox">
-                  <path d="M 1 .852 C .91 .835 .79 .899 .776 1 L 1 1 Z" />
-                </clipPath>
-              </defs>
-            </svg>
-            <div
-              class="safe-panel"
-              id="wall-safe"
-              role="img"
-              aria-label="A hidden steel wall safe with a combination dial and handle"
-              aria-hidden="true"
-            >
-              <img
-                class="safe-day"
-                draggable="false"
-                src="assets/workstation/wall-safe-day.svg"
-                width="192"
-                height="272"
-                alt=""
-              />
-              <img
-                class="safe-night"
-                draggable="false"
-                src="assets/workstation/wall-safe-night.svg"
-                width="192"
-                height="272"
-                alt=""
-              />
-            </div>
-            <button
-              class="painting-toggle"
-              type="button"
-              aria-label="Move the Warsaw painting to reveal a hidden safe"
-              aria-expanded="false"
-              aria-controls="wall-safe"
-            >
-              <span class="hotspot-pin" aria-hidden="true"></span>
-              <span class="painting-door" aria-hidden="true">
-                <span class="painting-front">
-                  <span class="wall-crop crop-day"></span>
-                  <span class="wall-crop crop-night"></span>
-                </span>
-                <span class="painting-back">
-                  <svg viewBox="0 0 192 272" fill="none">
-                    <path
-                      d="M3 35 184 0 191 7 191 251 3 269Z"
-                      fill="#49382c"
-                      stroke="#1c1917"
-                      stroke-width="3"
-                    />
-                    <path
-                      d="M15 44 177 14 177 239 15 254Z"
-                      fill="#9c7752"
-                      stroke="#292322"
-                      stroke-width="2"
-                    />
-                    <path
-                      d="M25 69 164 44M25 89 166 64M24 215 164 197M24 233 166 216"
-                      stroke="#795a3e"
-                      stroke-width="1.5"
-                      opacity=".6"
-                    />
-                    <path d="M36 96 99 131 155 75" stroke="#c3b9a3" stroke-width="2" />
-                    <path
-                      d="m35 91 2 11m115-31 3 10"
-                      stroke="#383531"
-                      stroke-width="5"
-                      stroke-linecap="round"
-                    />
-                  </svg>
-                </span>
-              </span>
-              <span class="label" aria-hidden="true"
-                ><span class="painting-hint">A little secret…</span>
-                <span class="arrow">↴</span></span
-              >
-            </button>
-            <span class="frame-foreground" aria-hidden="true">
-              <span class="wall-crop crop-day"></span>
-              <span class="wall-crop crop-night"></span>
-            </span>
-          </div>
-          <p class="sr-only" id="safe-status" role="status" aria-live="polite"></p>
-
           <button
             class="scene-hotspot camera-toggle"
             type="button"
             aria-label="Show a random photo from my camera roll"
             aria-haspopup="dialog"
             aria-controls="polaroid-dialog"
-            style="--x: 263; --y: 232; --w: 86; --h: 76"
+            style="--x: 135; --y: 138; --w: 68; --h: 60"
             disabled
           >
             <span class="hotspot-pin" aria-hidden="true"></span>
@@ -480,41 +118,28 @@
             >
           </button>
           <button
-            class="scene-hotspot meditations-toggle"
+            class="scene-hotspot bible-toggle"
             type="button"
-            aria-label="Read a random quote from Meditations"
+            aria-label="Read John 3:16"
             aria-haspopup="dialog"
-            aria-controls="meditations-dialog"
-            style="--x: 412; --y: 263; --w: 68; --h: 66"
+            aria-controls="verse-dialog"
+            style="--x: 186; --y: 334; --w: 36; --h: 62"
             disabled
           >
             <span class="hotspot-pin" aria-hidden="true"></span>
-            <span class="label" aria-hidden="true">Meditations <span class="arrow">↴</span></span>
+            <span class="label" aria-hidden="true">John 3:16 <span class="arrow">↴</span></span>
           </button>
-          <button
-            class="scene-hotspot katana-toggle"
-            type="button"
-            aria-label="Read a random quote from The Art of War"
-            aria-haspopup="dialog"
-            aria-controls="art-of-war-dialog"
-            style="--x: 230; --y: 350; --w: 140; --h: 50"
-            disabled
-          >
-            <span class="hotspot-pin" aria-hidden="true"></span>
-            <span class="label" aria-hidden="true"
-              >The Art of War <span class="arrow">↴</span></span
-            >
-          </button>
+          <!-- Games return in v2: the eMac opens them.
           <a
-            class="scene-hotspot monitor"
+            class="scene-hotspot emac"
             href="#projects"
-            style="--x: 657; --y: 315; --w: 428; --h: 125"
-            aria-label="Explore my projects on the large monitor"
+            style="--x: 126; --y: 415; --w: 116; --h: 128"
+            aria-label="Play one of my games"
           >
-            <span class="label" aria-hidden="true"
-              >Stuff I've built <span class="arrow">↴</span></span
-            >
+            <span class="hotspot-pin" aria-hidden="true"></span>
+            <span class="label" aria-hidden="true">Play a game <span class="arrow">↴</span></span>
           </a>
+          -->
           <a
             class="scene-hotspot screen-link left-screen"
             data-confirm-external
@@ -524,26 +149,11 @@
             href="https://x.com/aronwagner"
             target="_blank"
             rel="noopener noreferrer"
-            style="--x: 681; --y: 449; --w: 97; --h: 73"
+            style="--x: 600; --y: 383; --w: 175; --h: 99"
             aria-label="Aron Wagner on X"
           >
             <span class="hotspot-pin" aria-hidden="true"></span>
             <span class="label" aria-hidden="true">X <span class="arrow">↴</span></span>
-          </a>
-          <a
-            class="scene-hotspot screen-link laptop"
-            data-confirm-external
-            data-destination="LinkedIn"
-            aria-haspopup="dialog"
-            aria-controls="external-link-dialog"
-            href="https://www.linkedin.com/in/aronwagner/"
-            target="_blank"
-            rel="noopener noreferrer"
-            style="--x: 793; --y: 450; --w: 128; --h: 112"
-            aria-label="Aron Wagner on LinkedIn"
-          >
-            <span class="hotspot-pin" aria-hidden="true"></span>
-            <span class="label" aria-hidden="true">LinkedIn <span class="arrow">↴</span></span>
           </a>
           <a
             class="scene-hotspot screen-link right-screen"
@@ -554,7 +164,7 @@
             href="https://americancloud.com/"
             target="_blank"
             rel="noopener noreferrer"
-            style="--x: 948; --y: 454; --w: 127; --h: 131"
+            style="--x: 778; --y: 383; --w: 219; --h: 104"
             aria-label="Visit American Cloud"
           >
             <span class="hotspot-pin" aria-hidden="true"></span>
@@ -563,30 +173,28 @@
             >
           </a>
           <button
-            class="scene-hotspot sisyphus-toggle"
+            class="scene-hotspot uniform-toggle"
             type="button"
-            aria-label="Read Albert Camus’s quote about Sisyphus"
+            aria-label="Read about my Army service"
             aria-haspopup="dialog"
-            aria-controls="sisyphus-dialog"
-            style="--x: 1250; --y: 258; --w: 165; --h: 127"
+            aria-controls="service-dialog"
+            style="--x: 1304; --y: 92; --w: 179; --h: 397"
             disabled
           >
             <span class="hotspot-pin" aria-hidden="true"></span>
-            <span class="label" aria-hidden="true">Sisyphus <span class="arrow">↴</span></span>
+            <span class="label" aria-hidden="true">My service <span class="arrow">↴</span></span>
           </button>
           <button
-            class="scene-hotspot books-toggle"
+            class="scene-hotspot golf-toggle"
             type="button"
-            aria-label="Browse my favorite books"
+            aria-label="Play a round of golf with me"
             aria-haspopup="dialog"
-            aria-controls="books-dialog"
-            style="--x: 1204; --y: 393; --w: 200; --h: 250"
+            aria-controls="golf-dialog"
+            style="--x: 1298; --y: 492; --w: 162; --h: 338"
             disabled
           >
             <span class="hotspot-pin" aria-hidden="true"></span>
-            <span class="label" aria-hidden="true"
-              >Favorite books <span class="arrow">↴</span></span
-            >
+            <span class="label" aria-hidden="true">Play a round? <span class="arrow">↴</span></span>
           </button>
           <button
             class="scene-hotspot portrait"
@@ -594,7 +202,7 @@
             data-business-card
             aria-haspopup="dialog"
             aria-controls="business-card-dialog"
-            style="--x: 430; --y: 330; --w: 242; --h: 310"
+            style="--x: 330; --y: 318; --w: 245; --h: 272"
             aria-label="Open Aron’s business card"
           >
             <span class="label" aria-hidden="true"
@@ -602,16 +210,38 @@
             >
           </button>
           <button
-            class="scene-hotspot dog"
-            style="--x: 724; --y: 698; --w: 143; --h: 195"
+            class="scene-hotspot toys-toggle"
             type="button"
-            aria-label="Pet CiCi"
+            aria-label="Play fetch with Maggie"
+            aria-describedby="dog-status"
+            style="--x: 330; --y: 722; --w: 216; --h: 162"
+            disabled
+          >
+            <span class="hotspot-pin" aria-hidden="true"></span>
+            <span class="label" aria-hidden="true">Play fetch <span class="arrow">↴</span></span>
+          </button>
+          <button
+            class="scene-hotspot dog"
+            style="--x: 548; --y: 582; --w: 205; --h: 312"
+            type="button"
+            aria-label="Pet Maggie"
             aria-describedby="dog-status"
             disabled
           >
-            <span class="label" aria-hidden="true">CiCi <span class="arrow">↴</span></span>
+            <span class="label" aria-hidden="true">Maggie <span class="arrow">↴</span></span>
             <span class="dog-heart" aria-hidden="true">♥</span>
+            <span class="dog-squeak" aria-hidden="true">Squeak!</span>
           </button>
+          <!-- The fetched squeak toy's flight from the toy bin to Maggie. -->
+          <svg class="squeak-toy" viewBox="0 0 64 40" aria-hidden="true" focusable="false">
+            <path
+              d="M14 12a8 8 0 1 1 6-12 8 8 0 0 1 4 8h16a8 8 0 0 1 4-8 8 8 0 1 1 6 12 8 8 0 1 1-6 12 8 8 0 0 1-4 8H24a8 8 0 0 1-4 8 8 8 0 1 1-6-12Z"
+              transform="translate(0 8) scale(1 0.62)"
+              fill="#f06fa4"
+              stroke="#1d1d1d"
+              stroke-width="2.5"
+            />
+          </svg>
           <p class="sr-only" id="dog-status" role="status" aria-live="polite"></p>
         </div>
       </section>
@@ -630,18 +260,21 @@
               Aron Wagner.
             </button></strong
           >
-          Faith and family come first; after that, I run American Cloud, play a lot of golf, and
-          have a soft spot for classic BMWs from before cars turned into computers.
+          Faith and family come first; after that, I run
+          <a href="https://americancloud.com/" target="_blank" rel="noopener noreferrer"
+            >American Cloud</a
+          >, play a lot of golf, and have a soft spot for classic BMWs from before cars turned into
+          computers.
         </p>
         <p>
-          Maggie is our Goldendoodle and my full-time shadow. When she digs through her toy bucket,
-          she's going shopping. Our son Jack is nine months old, has already needed a haircut, and
-          army-crawls faster than you'd think. His mom, Rebecca, and I met shooting pool at a dive
-          bar in Tampa. I don't drink, so I'm still not sure what I was doing there.
+          Maggie is our Goldendoodle and my full-time shadow. Our son Jack is nine months old, has
+          already needed a haircut, and army-crawls faster than you'd think. His mom, Rebecca, and I
+          met shooting pool at a dive bar in Tampa. I don't drink, so I'm still not sure what I was
+          doing there.
         </p>
         <p>
-          Make yourself at home and poke around the desk, or play one of the
-          <a href="#projects">games below</a>. If you're local and you golf, let's play a round.
+          Make yourself at home and poke around the desk. If you're local and you golf, let's play a
+          round.
         </p>
         <h1 id="name" class="signature">
           <button
@@ -666,6 +299,8 @@
         </nav>
       </section>
 
+      <!-- Games return in v2. Uncomment this section, the eMac link in the scene,
+           and the intro's game link to bring them back.
       <section class="projects" id="projects" aria-labelledby="projects-title">
         <div class="section-heading">
           <span></span>
@@ -738,6 +373,7 @@
           </div>
         </a>
       </section>
+      -->
     </main>
     <footer>
       <button
@@ -750,6 +386,29 @@
         Aron Wagner
       </button>
       <span aria-hidden="true">·</span> A little corner of the internet.
+      <a
+        class="hosted-by"
+        href="https://americancloud.com/?utm_source=aronwagner.com"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <span>Hosted on</span>
+        <svg
+          viewBox="0 0 500 500"
+          width="16"
+          height="16"
+          fill="currentColor"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <g transform="translate(0,500) scale(0.1,-0.1)">
+            <path
+              d="M655 4994 c-108 -22 -138 -30 -190 -51 -236 -99 -414 -323 -454 -574 -7 -41 -11 -430 -11 -1106 l0 -1043 2500 0 2500 0 0 280 0 280 -1250 0 -1250 0 0 275 0 275 1250 0 1250 0 0 280 0 280 -1250 0 -1250 0 0 280 0 280 1236 0 1235 0 -6 23 c-3 12 -27 64 -52 116 -101 208 -311 363 -543 400 -62 10 -3665 15 -3715 5z m666 -870 c69 -21 121 -47 184 -93 45 -33 55 -36 100 -31 245 24 464 -144 505 -390 39 -234 -126 -470 -365 -520 -34 -7 -235 -10 -586 -8 l-534 3 -56 26 c-115 54 -182 157 -183 284 0 61 4 81 33 139 37 76 105 138 174 158 56 15 64 23 71 63 4 18 22 65 41 103 61 122 195 229 332 267 69 19 218 18 284 -1z"
+            />
+          </g>
+        </svg>
+        <strong>American Cloud</strong>
+      </a>
     </footer>
     <dialog
       id="external-link-dialog"
@@ -814,152 +473,96 @@
       </a>
     </dialog>
     <dialog
-      id="meditations-dialog"
+      id="verse-dialog"
       class="quote-dialog"
-      aria-labelledby="meditations-title"
-      aria-describedby="meditations-quote"
+      aria-labelledby="verse-title"
+      aria-describedby="verse-text"
     >
-      <button class="quote-close" type="button" aria-label="Close Meditations" data-dialog-close>
+      <button class="quote-close" type="button" aria-label="Close John 3:16" data-dialog-close>
         <span aria-hidden="true">×</span>
       </button>
       <header class="quote-heading">
         <p>From the bookshelf</p>
-        <h2 id="meditations-title">Meditations</h2>
+        <h2 id="verse-title">John 3:16</h2>
       </header>
-      <div
-        class="quote-passage"
-        role="region"
-        aria-label="Quote and citation"
-        aria-live="polite"
-        aria-atomic="true"
-        tabindex="0"
-      >
-        <blockquote><p id="meditations-quote"></p></blockquote>
-        <p class="quote-author">Marcus Aurelius</p>
-        <a
-          class="quote-source"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Read the source passage from Meditations"
-        ></a>
-      </div>
-      <div class="quote-actions">
-        <span>George Long translation</span>
-        <button class="quote-next" type="button">
-          Another quote <span aria-hidden="true">↻</span>
-        </button>
-      </div>
-    </dialog>
-    <dialog
-      id="art-of-war-dialog"
-      class="quote-dialog"
-      aria-labelledby="art-of-war-title"
-      aria-describedby="art-of-war-quote"
-    >
-      <button class="quote-close" type="button" aria-label="Close The Art of War" data-dialog-close>
-        <span aria-hidden="true">×</span>
-      </button>
-      <header class="quote-heading">
-        <p>A little strategy</p>
-        <h2 id="art-of-war-title">The Art of War</h2>
-      </header>
-      <div
-        class="quote-passage"
-        role="region"
-        aria-label="Quote and citation"
-        aria-live="polite"
-        aria-atomic="true"
-        tabindex="0"
-      >
-        <blockquote><p id="art-of-war-quote"></p></blockquote>
-        <p class="quote-author">Sun Tzu</p>
-        <a
-          class="quote-source"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Read the source passage from The Art of War"
-        ></a>
-      </div>
-      <div class="quote-actions">
-        <span>Lionel Giles translation, 1910</span>
-        <button class="quote-next" type="button">
-          Another quote <span aria-hidden="true">↻</span>
-        </button>
-      </div>
-    </dialog>
-    <dialog
-      id="sisyphus-dialog"
-      class="quote-dialog sisyphus-dialog"
-      aria-labelledby="sisyphus-title"
-      aria-describedby="sisyphus-quote"
-    >
-      <button class="quote-close" type="button" aria-label="Close Sisyphus quote" data-dialog-close>
-        <span aria-hidden="true">×</span>
-      </button>
-      <header class="quote-heading">
-        <h2 id="sisyphus-title">Sisyphus</h2>
-      </header>
-      <div class="quote-passage" role="region" aria-label="Quote and attribution" tabindex="0">
-        <blockquote>
-          <p id="sisyphus-quote">
-            The struggle itself towards the heights is enough to fill a man's heart. One must
-            imagine Sisyphus happy.
+      <div class="quote-passage" role="region" aria-label="Verse and citation" tabindex="0">
+        <blockquote cite="https://www.kingjamesbibleonline.org/John-3-16/">
+          <p id="verse-text">
+            For God so loved the world, that he gave his only begotten Son, that whosoever believeth
+            in him should not perish, but have everlasting life.
           </p>
         </blockquote>
-        <p class="quote-author">Albert Camus</p>
         <a
           class="quote-source"
-          href="https://www.penguin.co.uk/books/56970/the-myth-of-sisyphus-by-albert-camus-trans-justin-obrien-intro-james-wood/9780141182001"
+          href="https://www.kingjamesbibleonline.org/John-3-16/"
           target="_blank"
           rel="noopener noreferrer"
-          aria-label="View The Myth of Sisyphus at Penguin (opens in a new tab)"
-          >The Myth of Sisyphus</a
+          aria-label="Read John chapter 3 in the King James Version (opens in a new tab)"
+          >Read John 3 ↗</a
         >
       </div>
       <div class="quote-actions">
-        <span>Justin O’Brien translation · Penguin Modern Classics, 2013</span>
+        <span>King James Version</span>
       </div>
     </dialog>
-    <dialog id="books-dialog" class="books-dialog" aria-labelledby="books-title">
-      <button class="quote-close" type="button" aria-label="Close favorite books" data-dialog-close>
+    <dialog
+      id="service-dialog"
+      class="quote-dialog"
+      aria-labelledby="service-title"
+      aria-describedby="service-text"
+    >
+      <button
+        class="quote-close"
+        type="button"
+        aria-label="Close my Army service"
+        data-dialog-close
+      >
         <span aria-hidden="true">×</span>
       </button>
       <header class="quote-heading">
-        <p>From my bookshelf</p>
-        <h2 id="books-title">A few favorite books</h2>
+        <p>On the wall</p>
+        <h2 id="service-title">U.S. Army</h2>
       </header>
-      <p class="books-status" role="status" aria-live="polite"></p>
-      <button class="books-retry" type="button" hidden>Try again</button>
-      <section
-        class="book-carousel"
-        aria-label="Favorite books"
-        aria-roledescription="carousel"
-        hidden
+      <div class="quote-passage" role="region" aria-label="About my service" tabindex="0">
+        <p id="service-text" class="quote-statement">
+          Airborne Infantryman with the 82nd Airborne Division, Ranger Tab, One Tour to Iraq
+        </p>
+      </div>
+      <div class="quote-actions">
+        <span>Class A uniform, framed</span>
+      </div>
+    </dialog>
+    <dialog
+      id="golf-dialog"
+      class="quote-dialog"
+      aria-labelledby="golf-title"
+      aria-describedby="golf-text"
+    >
+      <button
+        class="quote-close"
+        type="button"
+        aria-label="Close golf invitation"
+        data-dialog-close
       >
-        <div class="book-slide" role="group" aria-roledescription="slide">
-          <a class="book-cover-link" target="_blank" rel="noopener noreferrer">
-            <img class="book-cover" alt="" width="240" height="320" decoding="async" hidden />
-            <span class="book-cover-fallback" hidden>Cover unavailable</span>
-          </a>
-          <div class="book-details">
-            <p class="book-eyebrow">Worth a place on the shelf</p>
-            <h3 class="book-title"></h3>
-            <p class="book-author"></p>
-            <a class="book-amazon" target="_blank" rel="noopener noreferrer">
-              View on Amazon <span aria-hidden="true">↗</span>
-            </a>
-          </div>
-        </div>
-        <div class="book-controls">
-          <button class="book-prev" type="button" aria-label="Previous book">
-            <span aria-hidden="true">←</span>
-          </button>
-          <p class="book-position" aria-live="polite" aria-atomic="true"></p>
-          <button class="book-next" type="button" aria-label="Next book">
-            <span aria-hidden="true">→</span>
-          </button>
-        </div>
-      </section>
+        <span aria-hidden="true">×</span>
+      </button>
+      <header class="quote-heading">
+        <p>In the corner</p>
+        <h2 id="golf-title">Play a round?</h2>
+      </header>
+      <div class="quote-passage" role="region" aria-label="Golf invitation" tabindex="0">
+        <p id="golf-text" class="quote-statement">Email me if you'd like to play a round.</p>
+      </div>
+      <div class="quote-actions">
+        <span>aron@americancloud.com</span>
+        <a
+          class="quote-next"
+          href="mailto:aron@americancloud.com?subject=Golf"
+          aria-label="Email Aron about golf at aron@americancloud.com (opens your email app)"
+        >
+          Email me <span aria-hidden="true">✉</span>
+        </a>
+      </div>
     </dialog>
     <dialog id="polaroid-dialog" class="polaroid-dialog" aria-labelledby="polaroid-title">
       <h2 id="polaroid-title" class="sr-only">From my camera roll</h2>

@@ -22,16 +22,16 @@ test('release build resolves immutable assets, secures scripts, and excludes pro
   }
   assert.ok(manifest['assets/shared/arcade.css']);
   assert.ok(manifest['assets/vendor/three/three.core.js']);
-  assert.ok(manifest['assets/books/catalog.json']);
-  const catalog = JSON.parse(
-    await readFile(join(output, manifest['assets/books/catalog.json']), 'utf8'),
-  );
-  for (const book of catalog) assert.ok(Object.values(manifest).includes(book.cover));
+  for (const theme of ['day', 'night']) {
+    for (const size of ['', '-small'])
+      assert.ok(manifest[`assets/office/office-${theme}${size}.webp`]);
+  }
   const script = await readFile(join(output, manifest['script.js']), 'utf8');
-  assert.ok(
-    script.includes(`fetch('${manifest['assets/books/catalog.json']}')`),
-    'Catalog fetch goes directly to its immutable URL',
-  );
+  const photos = Object.keys(manifest).filter((file) => file.startsWith('assets/polaroids/'));
+  assert.ok(photos.length > 0, 'Camera photos are part of the release');
+  for (const photo of photos) {
+    assert.ok(script.includes(`'${manifest[photo]}'`), `${photo} loads from its immutable URL`);
+  }
   const headers = await readFile(join(output, '_headers'), 'utf8');
   for (const header of [
     'Content-Security-Policy',
@@ -117,7 +117,7 @@ test('asset references preserve imports, fragments, srcsets and unrelated URLs',
     'assets/shared/input.js': '/immutable/code/assets/shared/input.js',
     'assets/books/catalog.json': '/immutable/code/assets/books/catalog.json',
     'assets/fonts/font.ttf': '/immutable/font/assets/fonts/font.ttf',
-    'assets/workstation/scene.webp': '/immutable/image/assets/workstation/scene.webp',
+    'assets/office/scene.webp': '/immutable/image/assets/office/scene.webp',
   };
   assert.equal(
     rewriteReferences(
@@ -129,15 +129,15 @@ test('asset references preserve imports, fragments, srcsets and unrelated URLs',
   );
   assert.equal(
     rewriteReferences(
-      'assets/workstation/scene.webp 768w, assets/workstation/scene.webp 1536w',
+      'assets/office/scene.webp 768w, assets/office/scene.webp 1536w',
       'index.html',
       manifest,
     ),
-    '/immutable/image/assets/workstation/scene.webp 768w, /immutable/image/assets/workstation/scene.webp 1536w',
+    '/immutable/image/assets/office/scene.webp 768w, /immutable/image/assets/office/scene.webp 1536w',
   );
   assert.equal(
-    rewriteReferences(`${SITE_ORIGIN}/assets/workstation/scene.webp#view`, 'index.html', manifest),
-    `${SITE_ORIGIN}/immutable/image/assets/workstation/scene.webp#view`,
+    rewriteReferences(`${SITE_ORIGIN}/assets/office/scene.webp#view`, 'index.html', manifest),
+    `${SITE_ORIGIN}/immutable/image/assets/office/scene.webp#view`,
   );
   assert.equal(
     rewriteReferences('https://example.com/photo.jpg url(#clip)', 'styles.css', manifest),
