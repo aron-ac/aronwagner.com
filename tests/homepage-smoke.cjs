@@ -2,6 +2,7 @@ const { test } = require('node:test');
 /* Serve the repo, then run with Puppeteer. Optional PUPPETEER_MODULE / CHROME_BIN / SITE_URL. */
 const assert = require('node:assert/strict');
 const { launchBrowser, closeBrowser, artifactPath, settlePage } = require('./helpers/browser.cjs');
+const identity = require('./helpers/identity.cjs');
 const site = process.env.SITE_URL || 'http://localhost:8000/';
 
 async function assertMobileGestures(page) {
@@ -253,7 +254,7 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
     );
     await page.evaluate(() => setTestClock('2026-01-16T00:00:00Z'));
     assert.equal(
-      await page.evaluate(() => localStorage.getItem('mark-site-theme-override')),
+      await page.evaluate(() => localStorage.getItem('site-theme-override')),
       null,
       'Next scheduled boundary expires manual override',
     );
@@ -278,12 +279,8 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
       );
     }
 
-    const links = [
-      ['https://x.com/markhammonds', 'Twitter'],
-      ['https://www.linkedin.com/in/mhammonds/', 'LinkedIn'],
-      ['https://github.com/mhammonds', 'GitHub'],
-    ];
-    for (const [href, label] of links) {
+    const { socialLinks, screenLinks } = identity;
+    for (const [href, label] of screenLinks) {
       const selector = `.scene a[href="${href}"]`;
       assert.equal(
         await page.$$eval(selector, (els) => els.length),
@@ -304,8 +301,8 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
       await page.$$eval('.quick-links a', (els) =>
         els.map((el) => [el.getAttribute('href'), el.textContent.trim()]),
       ),
-      links,
-      'Submenu contains only the three requested social links',
+      socialLinks,
+      'Submenu contains only the two requested social links',
     );
     const games = [
       ['surf-riders.html', 'Surf Riders'],
@@ -345,19 +342,9 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
       false,
       'Retired game and old title are absent',
     );
-    assert.equal(
-      await page.evaluate(() =>
-        [...document.querySelectorAll('.screen-wallpapers image')].some((el) =>
-          (el.getAttribute('href') || '').includes('bitmotive'),
-        ),
-      ),
-      false,
-      'Small screens use Tampa rather than logo graphics',
-    );
-
     assert.deepEqual(
       await page.$$eval('a[href^="mailto:"]', (els) => els.map((el) => el.getAttribute('href'))),
-      ['mailto:mark@bitmotive.com'],
+      [`mailto:${identity.email}`],
       'The business card provides the requested email address',
     );
     assert.equal(
@@ -370,29 +357,30 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
     assert.equal(await popupOpen(), true, 'Signature opens the business card');
     assert.equal(
       await page.$eval('#business-card-name', (el) => el.textContent.trim()),
-      'Mark Hammonds',
+      identity.name,
     );
     assert.equal(
       await page.$eval('.business-card-title', (el) => el.textContent.trim()),
-      'CEO, Bitmotive',
+      identity.title,
     );
     assert.ok(
-      await page.$eval(
-        '.business-card-logo img',
-        (el) =>
-          new URL(el.src).origin === location.origin &&
-          new URL(el.src).pathname.endsWith('/assets/brand/bitmotive-logo.svg') &&
-          el.complete &&
-          el.naturalWidth > 0 &&
-          el.alt.includes('Bitmotive'),
-      ),
-      'Official local Bitmotive logo loads with accessible text',
+      await page.$eval('.business-card-logo', (el) => {
+        const img = el.querySelector('img');
+        return (
+          el.textContent.trim() === 'American Cloud' &&
+          new URL(img.src).origin === location.origin &&
+          new URL(img.src).pathname.endsWith('/assets/brand/american-cloud-icon.svg') &&
+          img.complete &&
+          img.naturalWidth > 0
+        );
+      }),
+      'Local American Cloud icon loads beside the wordmark',
     );
     for (const selector of ['.business-card-logo', '.business-card-website']) {
       assert.equal(
         await page.$eval(selector, (el) => el.href),
-        'https://www.bitmotive.com/',
-        'Card logo and website link to Bitmotive',
+        identity.companyUrl,
+        'Card logo and website link to American Cloud',
       );
     }
     assert.deepEqual(
@@ -404,11 +392,11 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
         label: link.getAttribute('aria-label'),
       })),
       {
-        text: 'mark@bitmotive.com',
-        href: 'mailto:mark@bitmotive.com',
+        text: identity.email,
+        href: `mailto:${identity.email}`,
         target: '',
         rel: [],
-        label: 'Email Mark at mark@bitmotive.com (opens your email app)',
+        label: `Email ${identity.firstName} at ${identity.email} (opens your email app)`,
       },
       'The email link opens the mail app without requesting an empty browser tab',
     );
@@ -597,7 +585,7 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
         );
         await assertMobileGestures(page);
       }
-      for (const [href, label] of links) {
+      for (const [href, label] of screenLinks) {
         assert.ok(
           await page.$eval(`.scene a[href="${href}"]`, (el) => {
             const r = el.getBoundingClientRect(),
@@ -756,7 +744,7 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
     }
     assert.deepEqual(errors, [], 'No JavaScript errors or failed homepage assets');
     console.log(
-      'PASS: Eastern schedule (winter/summer), manual override expiry, new-tab navigation and all three game launches, social screen and submenu links, Bitmotive business card and email link, six-photo Polaroid shuffle and keyboard controls, candle click/keyboard, safe reveal/Escape, pulsing touch pins and touchscreen activation, scene-scoped gesture protection, selectable and zoomable page/dialog text, all three game cards, and responsive layouts.',
+      'PASS: Eastern schedule (winter/summer), manual override expiry, new-tab navigation and all three game launches, social screen and submenu links, American Cloud business card and email link, six-photo Polaroid shuffle and keyboard controls, candle click/keyboard, safe reveal/Escape, pulsing touch pins and touchscreen activation, scene-scoped gesture protection, selectable and zoomable page/dialog text, all three game cards, and responsive layouts.',
     );
   } finally {
     await closeBrowser(browser);

@@ -3,6 +3,7 @@ import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, extname, join, posix, resolve } from 'node:path';
 import { inlineHomepage } from './inline-homepage.js';
 
+export const SITE_ORIGIN = 'https://aronwagner.com';
 export const pages = ['index.html', 'surf-riders.html', 'bay-racer.html', 'cici-treat-trail.html'];
 const textExtensions = new Set(['.js', '.css', '.json']);
 const digest = (value) => createHash('sha256').update(value).digest('hex').slice(0, 16);
@@ -17,7 +18,7 @@ async function runtimeFiles(root) {
     'assets/favicon-32.png',
     'assets/favicon-48.png',
     'assets/apple-touch-icon.png',
-    'assets/brand/bitmotive-logo.svg',
+    'assets/brand/american-cloud-icon.svg',
     'assets/vendor/three/three.module.js',
     'assets/vendor/three/three.core.js',
     'assets/vendor/three/LICENSE',
@@ -56,20 +57,22 @@ async function runtimeFiles(root) {
 
 // Sources use static relative URLs. Rewrite only references present in the
 // runtime manifest, including srcset entries, module imports, CSS and catalog URLs.
+const referencePattern = new RegExp(
+  String.raw`(?:${SITE_ORIGIN.replaceAll('.', '\\.')}\/|(?:\.\.?\/)+|\/)?[\w-][\w./-]*\.(?:json|js|css|jpg|jpeg|png|webp|svg|ttf|woff2|glb|ico)(?![\w.-])(?:\?v=[\w-]+)?(?:#[\w-]+)?`,
+  'g',
+);
+
 export function rewriteReferences(text, filename, manifest) {
-  return text.replace(
-    /(?:https:\/\/markhammonds\.com\/|(?:\.\.?\/)+|\/)?[\w-][\w./-]*\.(?:json|js|css|jpg|jpeg|png|webp|svg|ttf|woff2|glb|ico)(?![\w.-])(?:\?v=[\w-]+)?(?:#[\w-]+)?/g,
-    (reference) => {
-      const absolute = reference.startsWith('https://markhammonds.com/');
-      const local = reference.replace('https://markhammonds.com/', '').replace(/^\//, '');
-      const [withoutHash, fragment] = local.split('#');
-      const clean = withoutHash.replace(/\?v=[\w-]+$/, '');
-      const relative = posix.normalize(posix.join(posix.dirname(filename), clean));
-      const destination = manifest[clean] || manifest[relative];
-      if (!destination) return reference;
-      return `${absolute ? 'https://markhammonds.com' : ''}${destination}${fragment ? `#${fragment}` : ''}`;
-    },
-  );
+  return text.replace(referencePattern, (reference) => {
+    const absolute = reference.startsWith(`${SITE_ORIGIN}/`);
+    const local = reference.replace(`${SITE_ORIGIN}/`, '').replace(/^\//, '');
+    const [withoutHash, fragment] = local.split('#');
+    const clean = withoutHash.replace(/\?v=[\w-]+$/, '');
+    const relative = posix.normalize(posix.join(posix.dirname(filename), clean));
+    const destination = manifest[clean] || manifest[relative];
+    if (!destination) return reference;
+    return `${absolute ? SITE_ORIGIN : ''}${destination}${fragment ? `#${fragment}` : ''}`;
+  });
 }
 
 export async function buildSite({ root, output }) {

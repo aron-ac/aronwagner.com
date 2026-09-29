@@ -1,7 +1,6 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "markhammonds-site",
-  "account_id": "2f21a320c1fd6d65df1ac89f4f7662fb",
+  "name": "aronwagner-site",
   "compatibility_date": "2026-09-28",
   "workers_dev": false,
   "preview_urls": false,
@@ -13,5 +12,5 @@
     "html_handling": "none",
     "not_found_handling": "none",
   },
-  "routes": [{ "pattern": "markhammonds.com/*", "zone_name": "markhammonds.com" }],
+  "routes": [{ "pattern": "aronwagner.com/*", "zone_name": "aronwagner.com" }],
 }

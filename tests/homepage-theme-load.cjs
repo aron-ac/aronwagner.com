@@ -142,7 +142,7 @@ async function checkThemeLoads(site, fixtures) {
           if (!sessionStorage.getItem('theme-load-seeded')) {
             localStorage.clear();
             if (fixture.stored !== undefined)
-              localStorage.setItem('mark-site-theme-override', fixture.stored);
+              localStorage.setItem('site-theme-override', fixture.stored);
             sessionStorage.setItem('theme-load-seeded', '1');
           }
           if (fixture.blocked)

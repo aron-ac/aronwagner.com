@@ -8,6 +8,7 @@ const {
   artifactPath,
   settleCamera,
 } = require('./helpers/browser.cjs');
+const identity = require('./helpers/identity.cjs');
 const {
   assertCompactDrivingUI,
   exerciseCompactDrivingUI,
@@ -34,7 +35,11 @@ test('surf rides smoke', { timeout: 300_000 }, async () => {
     });
     await page.setViewport({ width: 1440, height: 1000 });
     await loadGame(page, url, 'surfDebug');
-    assert.equal(await page.title(), 'Surf Riders · Mark Hammonds', 'The game uses its new name');
+    assert.equal(
+      await page.title(),
+      `Surf Riders · ${identity.name}`,
+      'The game uses its new name',
+    );
     const navigationLinks = await page.$$eval('a[href]', (els) =>
       els
         .filter((el) => el.getAttribute('href') && !el.getAttribute('href').startsWith('#'))

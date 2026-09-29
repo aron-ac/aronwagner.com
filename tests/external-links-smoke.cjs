@@ -1,14 +1,15 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { launchBrowser, closeBrowser, settlePage } = require('./helpers/browser.cjs');
+const { screenLinks } = require('./helpers/identity.cjs');
 
 const site = process.env.SITE_URL || 'http://localhost:8000/';
 const dialogSelector = '#external-link-dialog';
-const destinations = [
-  { selector: '.left-screen', name: 'Twitter', url: 'https://x.com/markhammonds' },
-  { selector: '.laptop', name: 'LinkedIn', url: 'https://www.linkedin.com/in/mhammonds/' },
-  { selector: '.right-screen', name: 'GitHub', url: 'https://github.com/mhammonds' },
-];
+const destinations = ['.left-screen', '.laptop', '.right-screen'].map((selector, index) => ({
+  selector,
+  name: screenLinks[index][1],
+  url: screenLinks[index][0],
+}));
 
 // Attach before a popup's first request: regular page interception starts too
 // late for new tabs. The browser still follows each real external anchor URL.

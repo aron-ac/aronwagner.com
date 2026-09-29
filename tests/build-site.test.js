@@ -5,13 +5,13 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
-import { buildSite, pages, rewriteReferences } from '../tools/lib/site-build.js';
+import { SITE_ORIGIN, buildSite, pages, rewriteReferences } from '../tools/lib/site-build.js';
 import { inlineHomepage } from '../tools/lib/inline-homepage.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 
 test('release build resolves immutable assets, secures scripts, and excludes prototypes', async (t) => {
-  const output = await mkdtemp(join(tmpdir(), 'mark-site-build-'));
+  const output = await mkdtemp(join(tmpdir(), 'site-build-'));
   t.after(() => rm(output, { recursive: true, force: true }));
   const result = await buildSite({ root, output });
   const manifest = JSON.parse(await readFile(join(output, 'asset-manifest.json'), 'utf8'));
@@ -120,12 +120,8 @@ test('asset references preserve imports, fragments, srcsets and unrelated URLs',
     '/immutable/image/assets/workstation/scene.webp 768w, /immutable/image/assets/workstation/scene.webp 1536w',
   );
   assert.equal(
-    rewriteReferences(
-      'https://markhammonds.com/assets/workstation/scene.webp#view',
-      'index.html',
-      manifest,
-    ),
-    'https://markhammonds.com/immutable/image/assets/workstation/scene.webp#view',
+    rewriteReferences(`${SITE_ORIGIN}/assets/workstation/scene.webp#view`, 'index.html', manifest),
+    `${SITE_ORIGIN}/immutable/image/assets/workstation/scene.webp#view`,
   );
   assert.equal(
     rewriteReferences('https://example.com/photo.jpg url(#clip)', 'styles.css', manifest),
