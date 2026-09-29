@@ -9,11 +9,17 @@ import { createSiteServer } from './serve.js';
 const projectRoot = fileURLToPath(new URL('../', import.meta.url));
 const { values, positionals } = parseArgs({
   // --url targets an already running server (such as Caddy) instead of serving --root.
-  options: { root: { type: 'string', default: projectRoot }, url: { type: 'string' } },
+  // --shard k/n runs the kth of n balanced groups, for parallel CI jobs.
+  options: {
+    root: { type: 'string', default: projectRoot },
+    url: { type: 'string' },
+    shard: { type: 'string' },
+    list: { type: 'boolean', default: false },
+  },
   allowPositionals: true,
 });
 const tests = join(projectRoot, 'tests');
-const suites = positionals.length
+const discovered = positionals.length
   ? positionals.map((name) => {
       const filename = resolve(tests, name);
       if (dirname(filename) !== tests || !filename.endsWith('.cjs')) {
@@ -27,6 +33,37 @@ const suites = positionals.length
       )
       .sort()
       .map((name) => join(tests, name));
+const suites = values.shard ? shard(discovered, values.shard) : discovered;
+if (values.list) {
+  console.log(suites.map((file) => file.slice(tests.length + 1)).join('\n'));
+  process.exit(0);
+}
+
+// Approximate seconds per suite on a hosted runner with software WebGL. Unlisted
+// suites count as 30s, so new suites are always assigned to some shard.
+function shard(files, spec) {
+  const [index, count] = spec.split('/').map(Number);
+  if (!(Number.isInteger(index) && Number.isInteger(count) && index >= 1 && index <= count)) {
+    throw new Error(`Expected --shard k/n with 1 <= k <= n: ${spec}`);
+  }
+  const seconds = {
+    'responsive-bay.cjs': 117,
+    'bay-racer-smoke.cjs': 100,
+    'responsive-surf.cjs': 82,
+    'surf-rides-smoke.cjs': 79,
+    'responsive-home.cjs': 43,
+    'homepage-smoke.cjs': 33,
+  };
+  const weight = (file) => seconds[file.slice(tests.length + 1)] ?? 30;
+  // Longest first, each onto the currently lightest shard.
+  const groups = Array.from({ length: count }, () => ({ total: 0, files: [] }));
+  for (const file of [...files].sort((a, b) => weight(b) - weight(a) || a.localeCompare(b))) {
+    const lightest = groups.reduce((min, group) => (group.total < min.total ? group : min));
+    lightest.total += weight(file);
+    lightest.files.push(file);
+  }
+  return groups[index - 1].files.sort();
+}
 
 const artifactRoot = resolve(process.env.TEST_ARTIFACT_DIR || join(projectRoot, 'test-results'));
 await mkdir(artifactRoot, { recursive: true });

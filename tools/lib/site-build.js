@@ -101,7 +101,8 @@ export function formatCaddy(headerRules, redirectRules) {
         '}',
       ].join('\n'),
     ),
-    ...redirectRules.map(([from, to, status]) => `redir ${from} ${to} ${status}`),
+    // Like Cloudflare, redirects keep the request's query string.
+    ...redirectRules.map(([from, to, status]) => `redir ${from} ${to}{?query} ${status}`),
     '',
   ].join('\n');
 }

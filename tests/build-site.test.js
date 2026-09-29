@@ -72,7 +72,9 @@ test('release build resolves immutable assets, secures scripts, and excludes pro
   // The VM's Caddy rules must carry exactly the same redirects and headers.
   const caddy = await readFile(join(output, 'site.caddy'), 'utf8');
   assert.deepEqual(
-    [...caddy.matchAll(/^redir (\S+ \S+ \d+)$/gm)].map(([, rule]) => rule),
+    [...caddy.matchAll(/^redir (\S+) (\S+)\{\?query\} (\d+)$/gm)].map(
+      ([, from, to, status]) => `${from} ${to} ${status}`,
+    ),
     redirects.split('\n').filter((rule) => rule && !rule.endsWith(' 200')),
   );
   for (const [, path, block] of headers.matchAll(/^(\/\S*)\n((?: {2}.+\n)+)/gm)) {
