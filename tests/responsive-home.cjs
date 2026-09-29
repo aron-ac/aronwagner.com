@@ -115,6 +115,48 @@ async function assertThemeContrast(page, label) {
   }
 }
 
+async function assertCandleTouchTarget(page, label) {
+  const target = await page.$eval('.candle-toggle', (control) => {
+    const bounds = control.getBoundingClientRect();
+    const style = getComputedStyle(control, '::before');
+    const width = parseFloat(style.width);
+    const height = parseFloat(style.height);
+    const x = bounds.left + parseFloat(style.left);
+    const y = bounds.top + parseFloat(style.top);
+    const radius = Math.min(width, height) / 2;
+    const misses = [
+      [x, y],
+      ...[radius / 2, radius - 1].flatMap((distance) =>
+        Array.from({ length: 16 }, (_, index) => {
+          const angle = (index * Math.PI) / 8;
+          return [x + Math.cos(angle) * distance, y + Math.sin(angle) * distance];
+        }),
+      ),
+    ].filter(([x, y]) => !control.contains(document.elementFromPoint(x, y)));
+    return { width, height, x, y, documentX: x + scrollX, documentY: y + scrollY, misses };
+  });
+  assert.ok(target.width >= 44 && target.height >= 44, `${label}: candle has a 44px tap area`);
+  assert.deepEqual(target.misses, [], `${label}: candle owns its entire invisible tap circle`);
+  const before = await page.$eval('.candle-toggle', (control) =>
+    control.getAttribute('aria-pressed'),
+  );
+  for (const expected of [String(before !== 'true'), before]) {
+    await page.touchscreen.tap(target.x, target.y);
+    await page.waitForFunction(
+      (expected) =>
+        document.querySelector('.candle-toggle').getAttribute('aria-pressed') === expected,
+      {},
+      expected,
+    );
+  }
+  return {
+    selector: '.candle-toggle',
+    x: target.documentX,
+    y: target.documentY,
+    radius: Math.min(target.width, target.height) / 2,
+  };
+}
+
 async function assertHotspotPins(page, label, hasTouch) {
   assert.equal(
     await page.evaluate(() => matchMedia('(hover: none)').matches),
@@ -183,6 +225,9 @@ async function assertHotspotPins(page, label, hasTouch) {
     });
     if (['.portrait', '.dog', '.candle-toggle', '.monitor'].includes(selector)) {
       assert.equal(pin.count, 0, `${label}: ${selector} keeps its artwork free of pins`);
+      if (selector === '.candle-toggle' && hasTouch) {
+        circles.push(await assertCandleTouchTarget(page, label));
+      }
       continue;
     }
     assert.equal(pin.count, 1, `${label}: ${selector} has one pin`);

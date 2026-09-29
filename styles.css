@@ -987,7 +987,7 @@ main {
   width: 100%;
   height: 290px;
   min-width: 0;
-  touch-action: pan-y;
+  touch-action: pan-y pinch-zoom;
 }
 .book-cover {
   display: block;
@@ -1571,18 +1571,15 @@ footer span {
   .scene-hotspot.monitor {
     display: none;
   }
-  /* Missed taps must not zoom the page. Keep native vertical scrolling. */
-  html,
-  body {
+  /* Protect the illustration from missed taps while preserving page scrolling.
+     Intro text and dialogs keep native zoom, selection, and touch callouts. */
+  .scene {
     touch-action: pan-y;
-  }
-  body,
-  body * {
-    -webkit-user-select: none;
-    user-select: none;
   }
   .scene,
   .scene * {
+    -webkit-user-select: none;
+    user-select: none;
     -webkit-touch-callout: none;
     -webkit-user-drag: none;
   }
@@ -1602,6 +1599,20 @@ footer span {
   }
   .scene-hotspot.laptop {
     z-index: 8;
+  }
+  .scene-hotspot.candle-toggle {
+    z-index: 5;
+  }
+  .candle-toggle::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    /* Keep the invisible tap circle below the crowded katana and camera shelf. */
+    top: calc(50% + 22px);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
   }
   .scene-hotspot:not(:disabled):has(.hotspot-pin)::after,
   .painting-toggle::after {

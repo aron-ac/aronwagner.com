@@ -6,6 +6,58 @@ const site = process.env.SITE_URL || 'http://localhost:8000/';
 
 async function assertMobileGestures(page) {
   const client = await page.createCDPSession();
+  const center = (selector) =>
+    page.$eval(selector, (element) => {
+      element.scrollIntoView({ block: 'center', behavior: 'instant' });
+      const bounds = element.getBoundingClientRect();
+      return { x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2 };
+    });
+  const clearSelection = () => page.evaluate(() => getSelection().removeAllRanges());
+  async function assertPinchZoom(selector, label) {
+    await clearSelection();
+    const point = await center(selector);
+    await client.send('Input.synthesizePinchGesture', {
+      ...point,
+      scaleFactor: 2,
+      relativeSpeed: 800,
+      gestureSourceType: 'touch',
+    });
+    assert.ok(
+      (await page.evaluate(() => visualViewport.scale)) >= 1.5,
+      `${label}: a native pinch enlarges the content`,
+    );
+    await client.send('Emulation.setPageScaleFactor', { pageScaleFactor: 1 });
+    await page.waitForFunction(() => Math.abs(visualViewport.scale - 1) < 0.01);
+  }
+  async function assertLongPressSelection(selector, label) {
+    await clearSelection();
+    const text = await page.$eval(selector, (element) => {
+      element.scrollIntoView({ block: 'center', behavior: 'instant' });
+      const nodes = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+      let node;
+      while ((node = nodes.nextNode())) {
+        if (node.parentElement.closest('a, button')) continue;
+        const word = /[A-Za-z]{3,}/.exec(node.textContent);
+        if (!word) continue;
+        const range = document.createRange();
+        range.setStart(node, word.index);
+        range.setEnd(node, word.index + word[0].length);
+        const bounds = range.getBoundingClientRect();
+        return { x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2 };
+      }
+    });
+    assert.ok(text, `${label}: the selection gesture targets visible text`);
+    await client.send('Input.synthesizeTapGesture', {
+      ...text,
+      duration: 900,
+      gestureSourceType: 'touch',
+    });
+    assert.ok(
+      (await page.evaluate(() => getSelection().toString())).trim().length > 0,
+      `${label}: a native long press selects text for copying`,
+    );
+    await clearSelection();
+  }
   try {
     const point = await page.$eval('.scene', (scene) => {
       scene.scrollIntoView({ block: 'start', behavior: 'instant' });
@@ -34,35 +86,19 @@ async function assertMobileGestures(page) {
     });
     assert.ok(
       Math.abs((await page.evaluate(() => visualViewport.scale)) - 1) < 0.01,
-      'A two-finger pinch does not zoom the mobile homepage',
+      'A two-finger pinch inside the illustration does not zoom it',
     );
-    const text = await page.$eval('.intro p', (paragraph) => {
-      paragraph.scrollIntoView({ block: 'center', behavior: 'instant' });
-      const nodes = document.createTreeWalker(paragraph, NodeFilter.SHOW_TEXT);
-      let node;
-      while ((node = nodes.nextNode())) {
-        const start = node.textContent.indexOf('Welcome');
-        if (start < 0) continue;
-        const range = document.createRange();
-        range.setStart(node, start);
-        range.setEnd(node, start + 'Welcome'.length);
-        const bounds = range.getBoundingClientRect();
-        return { x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2 };
-      }
-    });
-    assert.ok(text, 'The selection gesture targets visible homepage text');
     await client.send('Input.synthesizeTapGesture', {
-      ...text,
+      x: point.x,
+      y: point.y,
       duration: 900,
       gestureSourceType: 'touch',
     });
     assert.equal(
       await page.evaluate(() => getSelection().toString()),
       '',
-      'Long presses do not select mobile homepage content',
+      'Long presses do not select the illustration',
     );
-    await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
-    await settlePage(page);
     // Drive a real touch sequence. Chromium's synthesized scroll command can
     // complete without scrolling on headless Linux, even with touch enabled.
     const drag = await page.touchscreen.touchStart(point.x, point.y + 140);
@@ -79,6 +115,45 @@ async function assertMobileGestures(page) {
       await page.evaluate(() => scrollY > 100),
       'A vertical touch drag still scrolls the homepage',
     );
+    await assertPinchZoom('.intro p', 'Homepage introduction');
+    await assertLongPressSelection('.intro p', 'Homepage introduction');
+
+    await page.click('.meditations-toggle .hotspot-pin');
+    await assertLongPressSelection('#meditations-quote', 'Meditations quote');
+    await assertPinchZoom('#meditations-quote', 'Meditations dialog');
+    await page.click('#meditations-dialog [data-dialog-close]');
+
+    await page.click('#name button');
+    const email = await page.$eval('.business-card-email span:not([aria-hidden])', (element) => {
+      const selection = getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      return selection.toString();
+    });
+    assert.equal(
+      email,
+      'mark@bitmotive.com',
+      'The business card email can be selected for copying',
+    );
+    await assertPinchZoom('.business-card-email', 'Business card');
+    await page.click('.business-card-close');
+
+    await page.click('.books-toggle .hotspot-pin');
+    await page.waitForFunction(() => {
+      const image = document.querySelector('.book-cover');
+      return !image.hidden && image.complete && image.naturalWidth > 0;
+    });
+    await assertLongPressSelection('.book-title', 'Favorite book title');
+    const title = await page.$eval('.book-title', (element) => element.textContent);
+    await assertPinchZoom('.book-cover-link', 'Favorite book cover');
+    assert.equal(
+      await page.$eval('.book-title', (element) => element.textContent),
+      title,
+      'Pinching a book cover does not advance the carousel',
+    );
+    await page.click('#books-dialog [data-dialog-close]');
     await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
     await settlePage(page);
   } finally {
@@ -162,7 +237,12 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
     assert.equal(await isNight(), false, 'Following morning automatically returns to day');
     const navigationLinks = await page.$$eval('a[href]', (els) =>
       els
-        .filter((el) => el.getAttribute('href') && !el.getAttribute('href').startsWith('#'))
+        .filter(
+          (el) =>
+            el.getAttribute('href') &&
+            !el.getAttribute('href').startsWith('#') &&
+            ['http:', 'https:'].includes(new URL(el.href).protocol),
+        )
         .map((el) => ({ href: el.getAttribute('href'), target: el.target, rel: [...el.relList] })),
     );
     assert.ok(navigationLinks.length > 0, 'Homepage has navigation links to check');
@@ -302,11 +382,11 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
       {
         text: 'mark@bitmotive.com',
         href: 'mailto:mark@bitmotive.com',
-        target: '_blank',
-        rel: ['noopener', 'noreferrer'],
+        target: '',
+        rel: [],
         label: 'Email Mark at mark@bitmotive.com (opens your email app)',
       },
-      'The card displays the exact email link with the shared navigation policy',
+      'The email link opens the mail app without requesting an empty browser tab',
     );
     await page.screenshot({ path: artifactPath('homepage-business-card-desktop.png') });
     await page.keyboard.press('Escape');
@@ -652,7 +732,7 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
     }
     assert.deepEqual(errors, [], 'No JavaScript errors or failed homepage assets');
     console.log(
-      'PASS: Eastern schedule (winter/summer), manual override expiry, new-tab navigation and all three game launches, social screen and submenu links, Bitmotive business card and email link, six-photo Polaroid shuffle and keyboard controls, candle click/keyboard, safe reveal/Escape, pulsing touch pins and touchscreen activation, all three game cards, and responsive layouts.',
+      'PASS: Eastern schedule (winter/summer), manual override expiry, new-tab navigation and all three game launches, social screen and submenu links, Bitmotive business card and email link, six-photo Polaroid shuffle and keyboard controls, candle click/keyboard, safe reveal/Escape, pulsing touch pins and touchscreen activation, scene-scoped gesture protection, selectable and zoomable page/dialog text, all three game cards, and responsive layouts.',
     );
   } finally {
     await closeBrowser(browser);

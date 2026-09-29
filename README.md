@@ -109,18 +109,20 @@ All four monitors use the Tampa panorama; the lower three display adjoining crop
 Bitmotive monitor treatment is historical. The official logo remains on the business card.
 
 On devices without hover, small pulsing pins mark interactive scene objects except Mark, CiCi,
-the candle, and the large monitor. Mark, CiCi, and the candle remain tappable without pins;
-the large monitor is decorative on touch devices and links to projects only on devices with hover.
+the candle, and the large monitor. Mark, CiCi, and the candle remain tappable without pins.
+The candle has an invisible 44px circular target below its artwork, clear of the katana target.
+The large monitor is decorative on touch devices and links to projects only on devices with hover.
 Each pin is part of its existing button or link, with a 44px circular touch target. On compact scenes, crowded pins
 spread apart with short connecting lines to their objects so neighboring targets do not overlap.
 The dot gently grows and shrinks while a contrasting ring expands and fades every two seconds.
 Pins stay still when reduced motion is enabled; desktop hover labels and keyboard focus behavior
 remain available.
 
-The mobile homepage permits vertical touch scrolling but suppresses double-tap and pinch zoom.
-Selection is disabled on touch devices; the illustration also disables image dragging and the
-iOS touch callout so scrolling cannot highlight or pick up the artwork. Desktop selection is
-unchanged.
+On touch devices, only the office illustration suppresses double-tap/pinch zoom, selection,
+image dragging, and the iOS touch callout so missed taps and scrolling cannot select or pick up
+the artwork. Vertical scrolling remains available. The rest of the page and its dialogs retain
+native zoom and text selection, including copying quotes and the business card email address.
+Book covers support pinch zoom alongside horizontal carousel swipes.
 
 - The ultrawide opens the project section. The left screen links to Twitter, the laptop to
   LinkedIn, and the right screen to GitHub. On phones and desktop, activating an external screen
@@ -148,9 +150,10 @@ unchanged.
   the Justin O’Brien translation credited and a link to Penguin's 2013 Modern Classics edition of
   _The Myth of Sisyphus_.
 
-All dialogs support Escape, the close button, backdrop dismissal, and focus restoration. Navigation
-links open in a new tab with `noopener noreferrer`; scene controls and section jumps stay on the
-current page. Download links retain their download behavior.
+All dialogs support Escape, the close button, backdrop dismissal, and focus restoration. Website
+links open in a new tab with `noopener noreferrer`; scene controls and section jumps stay on
+the current page. The email link opens the visitor's email app without requesting a new tab.
+Download links retain their download behavior.
 
 | Game               | Behavior                                                                                                                                                | Documentation                                                                                                 |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
