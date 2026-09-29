@@ -1,10 +1,9 @@
 import { applyDirectionalHeading } from '../shared/directional-drive.js';
 
 export const TOTAL_LAPS = 3;
-const SPEED_SCALE = 0.75;
-export const NORMAL_SPEED = 19 * SPEED_SCALE;
-export const BOOST_SPEED = 26 * SPEED_SCALE;
-export const REVERSE_SPEED = 5 * SPEED_SCALE;
+export const NORMAL_SPEED = 19;
+export const BOOST_SPEED = 26;
+export const REVERSE_SPEED = 5;
 export const BOAT_RADIUS = 1.1;
 const COOLDOWNS = ['collisionCooldown', 'recoverCooldown', 'missCooldown'];
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
