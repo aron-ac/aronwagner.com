@@ -345,7 +345,7 @@ function drawMap() {
   const width = ui.minimap.width,
     height = ui.minimap.height;
   const X = (x) => ((x + 110) / 220) * width,
-    Z = (z) => ((105 - z) / 210) * height;
+    Z = (z) => ((z + 105) / 210) * height;
   map.clearRect(0, 0, width, height);
   map.fillStyle = '#20525e';
   map.fillRect(0, 0, width, height);
@@ -375,12 +375,12 @@ function drawMap() {
   });
   map.save();
   map.translate(X(state.x), Z(state.z));
-  map.rotate(state.heading);
+  map.rotate(-state.heading);
   map.beginPath();
-  map.moveTo(0, -12);
-  map.lineTo(-7, 8);
-  map.lineTo(0, 5);
-  map.lineTo(7, 8);
+  map.moveTo(0, 12);
+  map.lineTo(-7, -8);
+  map.lineTo(0, -5);
+  map.lineTo(7, -8);
   map.closePath();
   map.fillStyle = '#ffffff';
   map.strokeStyle = '#153a45';
