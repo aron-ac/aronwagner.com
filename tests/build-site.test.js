@@ -5,13 +5,13 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
-import { buildSite, pages, rewriteReferences } from '../tools/lib/site-build.js';
+import { SITE_ORIGIN, buildSite, pages, rewriteReferences } from '../tools/lib/site-build.js';
 import { inlineHomepage } from '../tools/lib/inline-homepage.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 
 test('release build resolves immutable assets, secures scripts, and excludes prototypes', async (t) => {
-  const output = await mkdtemp(join(tmpdir(), 'mark-site-build-'));
+  const output = await mkdtemp(join(tmpdir(), 'site-build-'));
   t.after(() => rm(output, { recursive: true, force: true }));
   const result = await buildSite({ root, output });
   const manifest = JSON.parse(await readFile(join(output, 'asset-manifest.json'), 'utf8'));
@@ -69,6 +69,20 @@ test('release build resolves immutable assets, secures scripts, and excludes pro
   const redirects = await readFile(join(output, '_redirects'), 'utf8');
   assert.match(redirects, /^\/cr-surf-rides.html \/surf-riders.html 301$/m);
   assert.match(redirects, /^\/desk.html \/ 301$/m);
+  // The VM's Caddy rules must carry exactly the same redirects and headers.
+  const caddy = await readFile(join(output, 'site.caddy'), 'utf8');
+  assert.deepEqual(
+    [...caddy.matchAll(/^redir (\S+ \S+ \d+)$/gm)].map(([, rule]) => rule),
+    redirects.split('\n').filter((rule) => rule && !rule.endsWith(' 200')),
+  );
+  for (const [, path, block] of headers.matchAll(/^(\/\S*)\n((?: {2}.+\n)+)/gm)) {
+    const matcher = path === '/*' ? '' : `${path} `;
+    const expected = block
+      .trimEnd()
+      .split('\n')
+      .map((line) => line.trim().replace(/^([\w-]+): (.*)$/, '\t$1 "$2"'));
+    assert.ok(caddy.includes(`header ${matcher}{\n${expected.join('\n')}\n}`), `Caddy ${path}`);
+  }
   await assert.rejects(access(join(output, 'desk.html')));
   await assert.rejects(access(join(output, 'cr-surf-rides.html')));
   assert.ok(!Object.keys(manifest).some((file) => /desk\.|-source\.png|\.md$/.test(file)));
@@ -120,12 +134,8 @@ test('asset references preserve imports, fragments, srcsets and unrelated URLs',
     '/immutable/image/assets/workstation/scene.webp 768w, /immutable/image/assets/workstation/scene.webp 1536w',
   );
   assert.equal(
-    rewriteReferences(
-      'https://markhammonds.com/assets/workstation/scene.webp#view',
-      'index.html',
-      manifest,
-    ),
-    'https://markhammonds.com/immutable/image/assets/workstation/scene.webp#view',
+    rewriteReferences(`${SITE_ORIGIN}/assets/workstation/scene.webp#view`, 'index.html', manifest),
+    `${SITE_ORIGIN}/immutable/image/assets/workstation/scene.webp#view`,
   );
   assert.equal(
     rewriteReferences('https://example.com/photo.jpg url(#clip)', 'styles.css', manifest),

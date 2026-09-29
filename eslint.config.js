@@ -3,14 +3,7 @@ import globals from 'globals';
 
 export default [
   {
-    ignores: [
-      'assets/vendor/**',
-      'output/**',
-      'dist/**',
-      '.wrangler/**',
-      'test-results/**',
-      'coverage/**',
-    ],
+    ignores: ['assets/vendor/**', 'output/**', 'dist/**', 'test-results/**', 'coverage/**'],
   },
   js.configs.recommended,
   {

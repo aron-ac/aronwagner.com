@@ -4,11 +4,9 @@ coverage/
 test-results/
 *.log
 dist/
-.wrangler/
 .env
 .env.*
 !.env.example
 !.env.*.example
-.dev.vars
-.dev.vars.*
 output/
+.claude/

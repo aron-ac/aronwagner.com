@@ -8,6 +8,7 @@ const {
   artifactPath,
   settleCamera,
 } = require('./helpers/browser.cjs');
+const identity = require('./helpers/identity.cjs');
 const {
   assertCompactDrivingUI,
   exerciseCompactDrivingUI,
@@ -34,7 +35,7 @@ test('bay racer smoke', { timeout: 300_000 }, async () => {
     });
     await page.setViewport({ width: 1440, height: 1000 });
     await loadGame(page, url.href, 'bayDebug');
-    assert.equal(await page.title(), 'Bay Racer · Mark Hammonds');
+    assert.equal(await page.title(), `Bay Racer · ${identity.name}`);
     await page.screenshot({ path: artifactPath('bay-racer-menu-desktop.png') });
     assert.equal(
       await page.evaluate(() => bayDebug.camera.isPerspectiveCamera),

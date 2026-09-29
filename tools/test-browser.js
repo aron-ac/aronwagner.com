@@ -8,7 +8,8 @@ import { createSiteServer } from './serve.js';
 
 const projectRoot = fileURLToPath(new URL('../', import.meta.url));
 const { values, positionals } = parseArgs({
-  options: { root: { type: 'string', default: projectRoot } },
+  // --url targets an already running server (such as Caddy) instead of serving --root.
+  options: { root: { type: 'string', default: projectRoot }, url: { type: 'string' } },
   allowPositionals: true,
 });
 const tests = join(projectRoot, 'tests');
@@ -30,11 +31,17 @@ const suites = positionals.length
 const artifactRoot = resolve(process.env.TEST_ARTIFACT_DIR || join(projectRoot, 'test-results'));
 await mkdir(artifactRoot, { recursive: true });
 const artifacts = await mkdtemp(join(artifactRoot, 'browser-'));
-const server = createSiteServer({ root: resolve(values.root) });
-server.listen(0, '127.0.0.1');
-await once(server, 'listening');
-const baseURL = `http://127.0.0.1:${server.address().port}/`;
-console.log(`Browser test server: ${baseURL} (${resolve(values.root)})`);
+let server;
+let baseURL = values.url && new URL(values.url).href;
+if (baseURL) {
+  console.log(`Browser test target: ${baseURL}`);
+} else {
+  server = createSiteServer({ root: resolve(values.root) });
+  server.listen(0, '127.0.0.1');
+  await once(server, 'listening');
+  baseURL = `http://127.0.0.1:${server.address().port}/`;
+  console.log(`Browser test server: ${baseURL} (${resolve(values.root)})`);
+}
 console.log(`Artifacts: ${artifacts}`);
 let child;
 const stop = (signal) => child?.kill(signal);
@@ -61,8 +68,10 @@ try {
     process.exitCode = code || 1;
   }
 } finally {
-  server.closeAllConnections();
-  await new Promise((done) => server.close(done));
+  if (server) {
+    server.closeAllConnections();
+    await new Promise((done) => server.close(done));
+  }
   process.removeListener('SIGINT', interrupt);
   process.removeListener('SIGTERM', terminate);
 }

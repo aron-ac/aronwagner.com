@@ -2,7 +2,7 @@
 // script shares this controller instead of choosing the theme again.
 (() => {
   const root = document.documentElement;
-  const key = 'mark-site-theme-override';
+  const key = 'site-theme-override';
   const clock = new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/New_York',
     year: 'numeric',
@@ -73,7 +73,7 @@
   }
   readOverride();
   const night = refresh();
-  window.markTheme = { key, refresh, toggle };
+  window.siteTheme = { key, refresh, toggle };
 
   const preload = document.createElement('link');
   const scene = night

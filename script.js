@@ -166,7 +166,7 @@
     const root = document.documentElement;
     // The inline head controller is the only source of theme decisions. Keeping
     // that bootstrap inline prevents a network request from delaying first paint.
-    const theme = window.markTheme;
+    const theme = window.siteTheme;
     if (!toggle || !theme) return;
 
     function syncControl(night) {

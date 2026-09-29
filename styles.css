@@ -625,16 +625,21 @@ main {
   backdrop-filter: blur(3px);
 }
 .business-card-logo {
-  display: inline-block;
-  width: 205px;
-  max-width: 80%;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
   margin-bottom: 30px;
-  border-radius: 3px;
 }
 .business-card-logo img {
   display: block;
-  width: 100%;
+  width: 44px;
   height: auto;
+}
+.business-card-wordmark {
+  font:
+    700 24px/1.2 Arial,
+    sans-serif;
+  letter-spacing: 0.4px;
 }
 .business-card h2 {
   margin: 0 0 10px;
@@ -708,7 +713,6 @@ main {
     padding: 30px 25px 0;
   }
   .business-card-logo {
-    width: 180px;
     margin-bottom: 27px;
   }
   .business-card h2 {

@@ -1,5 +1,5 @@
 {
-  "name": "markhammonds-website",
+  "name": "aronwagner-website",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -10,9 +10,7 @@
     "dev": "node tools/serve.js",
     "build:site": "node tools/build-site.js",
     "render:branding": "node tools/render-favicon.js && node tools/render-social.js",
-    "preview:cloudflare": "wrangler dev",
-    "deploy": "wrangler deploy",
-    "deploy:redirect": "wrangler deploy --config wrangler.redirect.jsonc",
+    "deploy": "npm run build:site && deploy/deploy.sh",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
@@ -28,12 +26,6 @@
     "eslint": "10.11.0",
     "globals": "17.12.0",
     "prettier": "3.9.9",
-    "puppeteer": "25.12.0",
-    "wrangler": "4.142.0"
-  },
-  "overrides": {
-    "miniflare@5.20260926.0-alpha": {
-      "undici": "7.29.1"
-    }
+    "puppeteer": "25.12.0"
   }
 }

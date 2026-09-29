@@ -7,7 +7,7 @@ import test from 'node:test';
 import { createSiteServer } from '../tools/serve.js';
 
 test('local production server applies build headers and redirects without exposing tooling files', async (t) => {
-  const directory = await mkdtemp(join(tmpdir(), 'mark-site-server-'));
+  const directory = await mkdtemp(join(tmpdir(), 'site-server-'));
   t.after(() => rm(directory, { recursive: true, force: true }));
   await mkdir(join(directory, 'immutable', 'hash'), { recursive: true });
   await writeFile(join(directory, 'index.html'), '<!doctype html><h1>Home</h1>');
@@ -56,7 +56,7 @@ test('local production server applies build headers and redirects without exposi
 });
 
 test('matching header rules combine duplicate names case-insensitively without merging defaults', async (t) => {
-  const directory = await mkdtemp(join(tmpdir(), 'mark-site-header-rules-'));
+  const directory = await mkdtemp(join(tmpdir(), 'site-header-rules-'));
   t.after(() => rm(directory, { recursive: true, force: true }));
   await mkdir(join(directory, 'immutable'), { recursive: true });
   await writeFile(join(directory, 'index.html'), '<!doctype html><h1>Home</h1>');
@@ -96,7 +96,7 @@ test('matching header rules combine duplicate names case-insensitively without m
 });
 
 test('invalid server rules fail synchronously before a server can listen', async (t) => {
-  const directory = await mkdtemp(join(tmpdir(), 'mark-site-invalid-rules-'));
+  const directory = await mkdtemp(join(tmpdir(), 'site-invalid-rules-'));
   t.after(() => rm(directory, { recursive: true, force: true }));
   for (const [filename, contents, message] of [
     ['_headers', '/*\n  Missing colon\n', /Unsupported _headers line:.*Missing colon/],
@@ -111,7 +111,7 @@ test('invalid server rules fail synchronously before a server can listen', async
 });
 
 test('internal serving failures return 500 and retain useful diagnostics', async (t) => {
-  const directory = await mkdtemp(join(tmpdir(), 'mark-site-internal-error-'));
+  const directory = await mkdtemp(join(tmpdir(), 'site-internal-error-'));
   t.after(() => rm(directory, { recursive: true, force: true }));
   await writeFile(join(directory, 'index.html'), '<script src="unknown.js" data-inline></script>');
   const diagnostics = t.mock.method(console, 'error', () => {});
