@@ -24,6 +24,7 @@ export function createRace(world, onEvent = () => {}) {
     vx: 0,
     vz: 0,
     steer: 0,
+    directionalTurnRate: 0,
     elapsed: 0,
     penalties: 0,
     lap: 1,
@@ -65,7 +66,7 @@ export function createRace(world, onEvent = () => {}) {
     state.x = gate.x - gate.normal.x * 14;
     state.z = gate.z - gate.normal.z * 14;
     state.heading = Math.atan2(gate.normal.x, gate.normal.z);
-    state.speed = state.vx = state.vz = state.steer = 0;
+    state.speed = state.vx = state.vz = state.steer = state.directionalTurnRate = 0;
     state.elapsed += 5;
     state.penalties += 5;
     state.recoverCooldown = 3;
@@ -165,6 +166,7 @@ export function createRace(world, onEvent = () => {}) {
     state.elapsed += dt;
     for (const key of COOLDOWNS) state[key] = Math.max(0, state[key] - dt);
     const alignment = applyDirectionalHeading(state, input, dt);
+    const propulsion = alignment === null ? 1 : clamp(1 + alignment, 0, 1);
     if (!input.boost || state.boost >= 18) state.boostLocked = false;
     state.boosting = !!(
       input.boost &&
@@ -186,10 +188,10 @@ export function createRace(world, onEvent = () => {}) {
             ? state.boosting
               ? BOOST_SPEED
               : NORMAL_SPEED
-            : 0) * (alignment ?? 1);
+            : 0) * propulsion;
     const acceleration = Math.max(
       input.brake ? 3 : input.reverse ? 1.65 : input.gas ? 0.9 : 0.28,
-      alignment === null ? 0 : 12 * (1 - alignment),
+      alignment === null ? 0 : 12 * Math.max(0, -alignment),
     );
     state.speed = damp(state.speed, targetSpeed, acceleration, dt);
     if (alignment === null) {
@@ -210,7 +212,7 @@ export function createRace(world, onEvent = () => {}) {
     }
     // Direction assistance needs the water velocity to follow the nose promptly,
     // especially after a U-turn; otherwise the boat keeps sliding the old way.
-    const grip = alignment !== null ? 10 : input.brake ? 3.2 : 2.2;
+    const grip = alignment !== null ? 14 : input.brake ? 3.2 : 2.2;
     state.vx = damp(state.vx, Math.sin(state.heading) * state.speed, grip, dt);
     state.vz = damp(state.vz, Math.cos(state.heading) * state.speed, grip, dt);
     const previousX = state.x,

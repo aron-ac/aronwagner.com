@@ -4,12 +4,12 @@ A standalone 3D arcade driving game for Mark's site. Serve the repository over H
 
 ## Play
 
-- **Arrow keys / WASD:** hold one direction to turn the vehicle’s nose toward that part of the screen and drive forward. The vehicle can turn from rest and slows for sharp turns; pressing behind it makes a U-turn.
+- **Arrow keys / WASD:** hold one direction to turn the vehicle’s nose toward that part of the screen and drive forward. Steering eases between directions and keeps momentum through ordinary corners. The vehicle can turn from rest; pressing behind it slows the vehicle into a U-turn.
 - Only one direction is active at a time. If two arrows are held, the most recently pressed direction wins; releasing it returns to the other held direction. Releasing all arrows lets the vehicle coast.
 - **Space:** brake. Stop inside a destination ring for 1.1 seconds to complete the stop.
 - **P / Escape:** pause/resume. Losing focus or hiding the page pauses the shift.
 - **R / Unstuck:** return to the nearest road for a five-second shift penalty.
-- Touch devices have four separated left-thumb arrow buttons with the same screen-relative directions, plus a separate Brake button on the right. Slide between arrows to change direction. The gaps, corners, and center are neutral; lifting or leaving the pad releases that finger. Brake can be held with a second finger.
+- Touch devices have four separated left-thumb arrow buttons with the same screen-relative directions, plus a separate Brake button on the right. Slide between arrows to change direction. The gaps, corners, and center are neutral; lifting or leaving the pad releases that finger and eases the steering back. Brake can be held with a second finger.
 - On compact screens, the map is visible by default; **Map** hides or shows it. **Pause → Unstuck** returns the Jeep to the nearest road and resumes the shift with the usual five-second penalty. Unstuck remains unavailable during its recovery cooldown. Entering a menu hides the map; starting or resuming play shows it again.
 - Sound is optional and off initially. It uses synthesized tones after user interaction.
 

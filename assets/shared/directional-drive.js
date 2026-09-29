@@ -1,5 +1,7 @@
 const TURN_RATE = 6;
-const TURN_RESPONSE = 10;
+const TURN_RESPONSE = 12;
+const TURN_ACCELERATION = 60;
+const RELEASE_RESPONSE = 14;
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const angleDifference = (to, from) => {
   const difference = Math.atan2(Math.sin(to - from), Math.cos(to - from));
@@ -47,15 +49,48 @@ export function createDirectionalDrive({ azimuth, elevation }) {
 }
 
 // Apply assistance inside each simulation step, so aiming works at rest and at
-// every frame rate. The returned alignment scales propulsion/braking; null leaves
-// existing low-level gas, reverse and wheel-steering controls unchanged.
+// every frame rate. Angular momentum eases both the physical nose and steering
+// animation into a new course. Signed alignment lets ordinary corners retain
+// speed while turns facing away from the requested direction can slow down.
 export function applyDirectionalHeading(state, input, dt) {
-  if (!input.gas || !Number.isFinite(state.heading)) return null;
-  if (!Number.isFinite(input.targetHeading)) return null;
+  if (!Number.isFinite(state.heading) || !Number.isFinite(dt) || dt <= 0) return null;
+  if (!Object.hasOwn(input, 'targetHeading')) {
+    // Low-level gas/reverse/wheel inputs retain their original simulation path.
+    if (state.directionalTurnRate !== undefined) state.directionalTurnRate = 0;
+    return null;
+  }
+
+  const velocity = state.directionalTurnRate ?? 0;
+  if (!input.gas || !Number.isFinite(input.targetHeading)) {
+    // Passing through a gap between arrows eases out the current turn instead
+    // of abruptly switching to the unrelated wheel-steering gain.
+    const decay = Math.exp(-RELEASE_RESPONSE * dt);
+    state.heading += (velocity * (1 - decay)) / RELEASE_RESPONSE;
+    state.directionalTurnRate = velocity * decay;
+    state.steer = state.directionalTurnRate / TURN_RATE;
+    return 1;
+  }
 
   const error = angleDifference(input.targetHeading, state.heading);
-  const turn = clamp(error * (1 - Math.exp(-TURN_RESPONSE * dt)), -TURN_RATE * dt, TURN_RATE * dt);
+  // Exact critically damped spring step. Bound acceleration and top turn speed
+  // for large changes, integrating those bounded steps with their average rate.
+  const decay = Math.exp(-TURN_RESPONSE * dt);
+  const response = TURN_RESPONSE * error - velocity;
+  const nextError = (error + response * dt) * decay;
+  const freeVelocity = (velocity + TURN_RESPONSE * response * dt) * decay;
+  const nextVelocity = clamp(
+    clamp(freeVelocity, velocity - TURN_ACCELERATION * dt, velocity + TURN_ACCELERATION * dt),
+    -TURN_RATE,
+    TURN_RATE,
+  );
+  const turn =
+    Math.abs(freeVelocity - nextVelocity) > 1e-10
+      ? ((velocity + nextVelocity) * dt) / 2
+      : error - nextError;
+  state.directionalTurnRate = nextVelocity;
+  // A new target may sit inside the current stopping arc. Let the spring settle
+  // through that small overshoot instead of snapping the turning rate to zero.
   state.heading += turn;
-  state.steer = turn / (TURN_RATE * dt);
-  return Math.max(0, Math.cos(error - turn));
+  state.steer = state.directionalTurnRate / TURN_RATE;
+  return Math.cos(error - turn);
 }

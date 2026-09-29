@@ -64,6 +64,7 @@ export function createRideSession(world, onEvent = () => {}, { random = Math.ran
     heading: 0,
     speed: 0,
     steer: 0,
+    directionalTurnRate: 0,
     remaining: SHIFT_SECONDS,
     cash: 0,
     coconuts: 0,
@@ -145,6 +146,7 @@ export function createRideSession(world, onEvent = () => {}, { random = Math.ran
     state.z = road.z;
     state.heading = road.heading;
     state.speed = 0;
+    state.steer = state.directionalTurnRate = 0;
     state.remaining = Math.max(0, state.remaining - 5);
     state.recoverCooldown = 3;
     state.boardTime = 0;
@@ -234,9 +236,10 @@ export function createRideSession(world, onEvent = () => {}, { random = Math.ran
     state.onRoad = Boolean(road && road.distance < road.width / 2 + 1);
     const topSpeed = state.onRoad ? 19 : 10;
     const alignment = applyDirectionalHeading(state, input, dt);
-    if (alignment !== null) state.speed = damp(state.speed, 0, 12 * (1 - alignment), dt);
+    const propulsion = alignment === null ? 1 : clamp(1 + alignment, 0, 1);
+    if (alignment !== null) state.speed = damp(state.speed, 0, 12 * Math.max(0, -alignment), dt);
     if (input.brake) state.speed = damp(state.speed, 0, 7, dt);
-    else if (input.gas) state.speed += (state.speed < 0 ? 27 : 14) * (alignment ?? 1) * dt;
+    else if (input.gas) state.speed += (state.speed < 0 ? 27 : 14) * propulsion * dt;
     else if (input.reverse) state.speed -= state.speed > 0 ? 27 * dt : 10 * dt;
     else {
       const friction = state.onRoad ? 3.6 : 5.5;

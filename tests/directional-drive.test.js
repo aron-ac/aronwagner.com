@@ -70,7 +70,7 @@ test('ambiguous multi-arrow input coasts instead of creating diagonals or circle
     assert.equal(output.reverse, false);
     assert.equal(output.targetHeading, null);
     const state = { heading: 1, steer: 0 };
-    assert.equal(applyDirectionalHeading(state, output, 1 / 60), null);
+    assert.equal(applyDirectionalHeading(state, output, 1 / 60), 1);
     assert.equal(state.heading, 1);
   }
 });
@@ -262,6 +262,136 @@ for (const [name, createSimulation] of [
       near(simulation.state.heading, settledHeading, 0.001);
       assertDirection(velocity(simulation.state), direction);
     }
+  });
+
+  test(`${name} eases moving quarter-turns without snapping steering or shedding most of its speed`, () => {
+    for (const [from, to] of [
+      [directions[0], directions[3]],
+      [directions[3], directions[0]],
+      [directions[1], directions[2]],
+      [directions[2], directions[1]],
+    ]) {
+      const initialHeading = headingFor(from);
+      const simulation = start(initialHeading, 19);
+      const drive = makeDrive();
+      const dt = 1 / 60;
+      simulation.update(dt, drive.update(to.input, simulation.state));
+      const firstTurn = Math.abs(angleDifference(simulation.state.heading, initialHeading));
+      assert.ok(firstTurn > 0 && firstTurn < Math.PI / 90, 'The first frame eases into the turn');
+      assert.ok(Math.abs(simulation.state.steer) < 0.4, 'Wheels and boat banking ease in too');
+      assert.ok(simulation.state.speed > 19 * 0.95, 'Changing direction must not slam the brakes');
+      let minimumSpeed = simulation.state.speed;
+      let peakTurn = firstTurn;
+      for (let frame = 1; frame < 60; frame++) {
+        const previous = simulation.state.heading;
+        simulation.update(dt, drive.update(to.input, simulation.state));
+        peakTurn = Math.max(
+          peakTurn,
+          Math.abs(angleDifference(simulation.state.heading, previous)),
+        );
+        minimumSpeed = Math.min(minimumSpeed, simulation.state.speed);
+      }
+      assert.ok(peakTurn > firstTurn * 1.5, 'Turning builds gradually from its first frame');
+      assert.ok(minimumSpeed > 19 * 0.65, 'Ordinary corners preserve forward momentum');
+      assertDirection(velocity(simulation.state), to);
+      assert.ok(Math.abs(simulation.state.steer) < 0.02, 'Steering settles at the new direction');
+    }
+  });
+
+  test(`${name} eases through a brief neutral gap and an opposite steering request`, () => {
+    const simulation = start(headingFor(directions[0]), 19);
+    const drive = makeDrive();
+    const dt = 1 / 60;
+    for (let frame = 0; frame < 6; frame++)
+      simulation.update(dt, drive.update(directions[3].input, simulation.state));
+    let previousSteer = simulation.state.steer;
+    const turningSign = Math.sign(previousSteer);
+    assert.notEqual(turningSign, 0);
+    for (let frame = 0; frame < 3; frame++) {
+      simulation.update(dt, drive.update({}, simulation.state));
+      assert.equal(Math.sign(simulation.state.steer), turningSign);
+      assert.ok(Math.abs(simulation.state.steer) < Math.abs(previousSteer));
+      assert.ok(Math.abs(simulation.state.steer - previousSteer) < 0.4);
+      previousSteer = simulation.state.steer;
+    }
+    for (let frame = 0; frame < 60; frame++) {
+      simulation.update(dt, drive.update(directions[2].input, simulation.state));
+      assert.ok(
+        Math.abs(simulation.state.steer - previousSteer) < 0.4,
+        'Retargeting must not abruptly flip the wheels or boat bank',
+      );
+      previousSteer = simulation.state.steer;
+    }
+    assertDirection(velocity(simulation.state), directions[2]);
+  });
+
+  test(`${name} moving turns follow the same path across frame rates`, () => {
+    const outcomes = [20, 60, 120].map((fps) => {
+      const simulation = start(headingFor(directions[0]), 19);
+      const drive = makeDrive();
+      for (const [direction, seconds] of [
+        [directions[3], 0.3],
+        [null, 0.05],
+        [directions[2], 0.65],
+      ]) {
+        for (let frame = 0; frame < Math.round(fps * seconds); frame++)
+          simulation.update(1 / fps, drive.update(direction?.input ?? {}, simulation.state));
+      }
+      return simulation.state;
+    });
+    const reference = outcomes[1];
+    for (const state of outcomes) {
+      near(angleDifference(state.heading, reference.heading), 0, 0.04);
+      near(state.speed, reference.speed, 0.8);
+      assert.ok(
+        Math.hypot(state.x - reference.x, state.z - reference.z) < 0.8,
+        'Frame rate must not noticeably change the turning path',
+      );
+    }
+  });
+
+  test(`${name} settles smoothly when a new arrow falls inside an ongoing U-turn`, () => {
+    const simulation = start(headingFor(directions[0]), 19);
+    const drive = makeDrive();
+    const dt = 1 / 60;
+    for (let frame = 0; frame < 18; frame++)
+      simulation.update(dt, drive.update(directions[1].input, simulation.state));
+    let previousSteer = simulation.state.steer;
+    assert.ok(Math.abs(previousSteer) > 0.8, 'Retarget while still turning at speed');
+    for (let frame = 0; frame < 60; frame++) {
+      simulation.update(dt, drive.update(directions[2].input, simulation.state));
+      assert.ok(
+        Math.abs(simulation.state.steer - previousSteer) < 0.4,
+        'Crossing the new heading must not snap steering to zero',
+      );
+      previousSteer = simulation.state.steer;
+    }
+    assertDirection(velocity(simulation.state), directions[2]);
+    assert.ok(Math.abs(simulation.state.steer) < 0.02);
+  });
+
+  test(`${name} pauses turning momentum and clears it on recovery or restart`, () => {
+    const simulation = start(headingFor(directions[0]), 19);
+    const drive = makeDrive();
+    for (let frame = 0; frame < 6; frame++)
+      simulation.update(1 / 60, drive.update(directions[3].input, simulation.state));
+    assert.ok(Math.abs(simulation.state.directionalTurnRate) > 1);
+    simulation.pause();
+    const paused = { ...simulation.state };
+    simulation.update(0.1, drive.update(directions[2].input, simulation.state));
+    assert.deepEqual(simulation.state, paused, 'Paused steering must stay frozen');
+    simulation.resume();
+    simulation.recover();
+    assert.equal(simulation.state.directionalTurnRate, 0);
+    assert.equal(simulation.state.steer, 0);
+    const recoveredHeading = simulation.state.heading;
+    simulation.update(1 / 60, drive.update({}, simulation.state));
+    assert.equal(simulation.state.heading, recoveredHeading, 'Recovery cannot inherit an old turn');
+    simulation.update(1 / 60, drive.update(directions[1].input, simulation.state));
+    assert.notEqual(simulation.state.directionalTurnRate, 0);
+    simulation.start();
+    assert.equal(simulation.state.directionalTurnRate, 0);
+    assert.equal(simulation.state.steer, 0);
   });
 
   test(`${name} brake takes precedence over assisted acceleration and neutral permits coasting`, () => {
