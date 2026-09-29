@@ -69,6 +69,20 @@ test('release build resolves immutable assets, secures scripts, and excludes pro
   const redirects = await readFile(join(output, '_redirects'), 'utf8');
   assert.match(redirects, /^\/cr-surf-rides.html \/surf-riders.html 301$/m);
   assert.match(redirects, /^\/desk.html \/ 301$/m);
+  // The VM's Caddy rules must carry exactly the same redirects and headers.
+  const caddy = await readFile(join(output, 'site.caddy'), 'utf8');
+  assert.deepEqual(
+    [...caddy.matchAll(/^redir (\S+ \S+ \d+)$/gm)].map(([, rule]) => rule),
+    redirects.split('\n').filter((rule) => rule && !rule.endsWith(' 200')),
+  );
+  for (const [, path, block] of headers.matchAll(/^(\/\S*)\n((?: {2}.+\n)+)/gm)) {
+    const matcher = path === '/*' ? '' : `${path} `;
+    const expected = block
+      .trimEnd()
+      .split('\n')
+      .map((line) => line.trim().replace(/^([\w-]+): (.*)$/, '\t$1 "$2"'));
+    assert.ok(caddy.includes(`header ${matcher}{\n${expected.join('\n')}\n}`), `Caddy ${path}`);
+  }
   await assert.rejects(access(join(output, 'desk.html')));
   await assert.rejects(access(join(output, 'cr-surf-rides.html')));
   assert.ok(!Object.keys(manifest).some((file) => /desk\.|-source\.png|\.md$/.test(file)));

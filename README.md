@@ -64,8 +64,8 @@ npm run render:branding           # regenerate favicons and social sharing cards
 
 Browser checks use Puppeteer. If Chromium was not downloaded during installation, run
 `npm run setup:browser`, or set `CHROME_BIN` to an existing Chrome executable.
-GitHub Actions runs the locked install, pinned Chrome setup, static/unit checks, and both source
-and production browser suites on pushes and pull requests.
+GitHub Actions runs the locked install, pinned Chrome setup, static/unit checks, and the source, production and Caddy browser suites on pushes and pull requests. Pushes to
+`main` then deploy (see [Hosting and deployment](#hosting-and-deployment)).
 The shared browser launcher explicitly starts with desktop pointer and hover capabilities so
 headless Linux and macOS simulate the same input device. Puppeteer's touch emulation still
 overrides that baseline for phones and tablets; disabling it restores the desktop settings.
@@ -203,58 +203,73 @@ with their SIL Open Font Licenses.
 verification results as a historical record. This README describes the maintained architecture
 and workflows; the build and test runners report current totals.
 
-## Cloudflare deployment
+## Hosting and deployment
 
-`wrangler.jsonc` deploys Workers Static Assets to `markhammonds.com` as `markhammonds-site`.
-Wrangler is pinned as a development dependency. Authenticate with `npx wrangler login` when
-needed, then:
+The site is served by [Caddy](https://caddyserver.com/) on an American Cloud VM
+(`aronwagner-web`, Ubuntu 26.04, us-central-0). Cloudflare provides DNS and the CDN in front of
+it: both `aronwagner.com` and `www` are proxied records, SSL/TLS mode is **Full (strict)**, and the
+VM presents a Cloudflare Origin Certificate. The VM firewall only accepts HTTPS from
+[Cloudflare's IP ranges](https://www.cloudflare.com/ips/), so the origin cannot be reached directly.
+
+Pushes to `main` deploy automatically after every check passes: the `deploy` job in
+`.github/workflows/check.yml` builds `dist/`, publishes it with `deploy/deploy.sh`, and runs
+`deploy/smoke.sh` against the live site. It uses the `production` environment's secrets:
+
+| Secret               | Value                                                                |
+| -------------------- | -------------------------------------------------------------------- |
+| `DEPLOY_HOST`        | The VM's public IP address                                           |
+| `DEPLOY_SSH_KEY`     | Private key for the VM's `deploy` user                               |
+| `DEPLOY_KNOWN_HOSTS` | The VM's SSH host key line (`ssh-keyscan -t ed25519 <ip>`, verified) |
+
+To deploy manually, build and publish with the deploy key:
 
 ```sh
-npm run deploy
+DEPLOY_HOST=<vm-ip> DEPLOY_SSH_KEY_FILE=~/.ssh/aronwagner_deploy_ed25519 npm run deploy
 ```
 
-The current Miniflare version has a scoped `undici` override to patch
-[GHSA-3wwx-pv8p-q78v](https://github.com/advisories/GHSA-3wwx-pv8p-q78v). Remove the override when
-updating Wrangler to a version whose Miniflare dependency includes the fix.
+Each deploy uploads a timestamped release to `/srv/aronwagner.com/releases/`, switches the
+`current` link to it, and reloads Caddy. If Caddy rejects the release's rules, the previous release
+is restored. The five newest releases are kept. Fingerprinted files go to a shared
+`/srv/aronwagner.com/immutable/` directory that deploys never prune, so pages that are already
+open keep loading their assets after a release.
 
-Wrangler runs `npm run build:site` first. That script selects runtime files, assembles the theme
-fragments, and prepares ignored `dist/`; source notes, historical art, tests, development tools,
-and documentation are excluded. Build output reports the current file count and size;
-`dist/asset-manifest.json` maps source asset paths to their production URLs. Keep the workstation
-allowlist in `tools/lib/site-build.js` synchronized with artwork changes.
-`npm run preview:cloudflare` runs the packaged site locally;
-`npx wrangler deploy --dry-run` validates deployment without publishing.
+`deploy/Caddyfile` is the server configuration and `deploy/provision.sh` prepares a fresh VM. It
+installs Caddy, creates the `deploy` user (which may only reload Caddy), disables SSH passwords,
+configures the firewall, and installs the Caddyfile. Re-run it to refresh Cloudflare's IP ranges:
 
-Production assets use content-derived URLs under `/immutable/` with long-lived caching; HTML
-and stable metadata aliases revalidate. The build rewrites references consistently, so routine
-asset changes do not require hand-edited query version tokens. Small application scripts/styles
-share a version derived from their graph and referenced assets; large images, fonts, and the
-vendored library retain independent versions across unrelated code changes.
+```sh
+scp deploy/Caddyfile cloud@<vm-ip>:/tmp/Caddyfile
+ssh cloud@<vm-ip> sudo bash -s -- "'$(cat ~/.ssh/aronwagner_deploy_ed25519.pub)'" < deploy/provision.sh
+```
 
-HTML uses Cloudflare's default `public, max-age=0, must-revalidate` caching. Only `/immutable/*`
-gets an explicit one-year immutable cache policy. Avoid setting the same header in overlapping
-rules: Cloudflare combines matching values instead of overriding them. See the
-[Static Assets header documentation](https://developers.cloudflare.com/workers/static-assets/headers/).
-Stable asset aliases use temporary redirects to their current immutable versions.
+Install the origin certificate and key as `/etc/caddy/certs/aronwagner.com.pem` and `.key` (group
+`caddy`, mode 640), then run `sudo systemctl reload caddy`. Until then, provisioning leaves a
+self-signed stand-in, which Full (strict) rejects.
+
+### Build output and response policies
+
+`npm run build:site` selects runtime files, assembles the theme fragments, and prepares ignored
+`dist/`; source notes, historical art, tests, development tools, and documentation are excluded.
+Build output reports the current file count and size; `dist/asset-manifest.json` maps source asset
+paths to their production URLs. Keep the workstation allowlist in `tools/lib/site-build.js`
+synchronized with artwork changes.
+
+Production assets use content-derived URLs under `/immutable/` with a one-year immutable cache
+policy. The build rewrites references consistently, so routine asset changes do not require
+hand-edited query version tokens. Small application scripts/styles share a version derived from
+their graph and referenced assets; large images, fonts, and the vendored library retain
+independent versions across unrelated code changes. Stable asset aliases use temporary redirects
+to their current immutable versions.
 
 The build hashes inline scripts for its Content Security Policy instead of allowing arbitrary
-inline JavaScript. The policy permits local assets and Cloudflare analytics, prevents framing,
+inline JavaScript. The policy permits local assets and Cloudflare Web Analytics, prevents framing,
 and disables object embeds and form submissions. Inline styles remain allowed for the illustrated
 scene and dynamic game UI. Referrer, MIME-sniffing, and browser-permission headers are also emitted.
-Test the packaged site when changing loading behavior, headers, asset references, or redirects.
 
-The [Worker route](https://developers.cloudflare.com/workers/configuration/routing/routes/)
-serves every apex-domain path through its existing proxied Cloudflare DNS record. Keep that
-record proxied; its previous origin is not needed by the static site. HTTPS uses the zone's
-Cloudflare certificate. The root serves `index.html`; the desk and former game filename use
-server redirects.
-
-`www.markhammonds.com/*` uses the separate `markhammonds-www-redirect` Worker in
-`wrangler.redirect.jsonc`. It permanently redirects HTTP and HTTPS requests to
-`https://markhammonds.com`, preserving paths and query parameters. Keep the `www` DNS record
-proxied. Deploy redirect changes with `npm run deploy:redirect`; ordinary `npm run deploy`
-updates the main site independently.
-
-Credentials stay in Wrangler's local authentication store and are never copied into public
-assets. GitHub pushes do not deploy automatically; run `npm run deploy` after validating the
-changes you intend to publish.
+The build writes these headers and redirects from one rule list in two forms: `dist/site.caddy`,
+which the VM's Caddyfile imports for each release, and `dist/_headers`/`dist/_redirects`, which the
+local server in `tools/serve.js` uses for `npm run test:browser:production`. A unit test checks the
+two agree. CI also serves the build through `deploy/Caddyfile` itself and runs `deploy/smoke.sh`
+and every browser suite against it (`node tools/test-browser.js --url <site>` targets any running
+server). Test the packaged site when changing loading behavior, headers, asset references, or
+redirects.
