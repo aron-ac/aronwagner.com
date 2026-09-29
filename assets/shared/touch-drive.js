@@ -4,7 +4,7 @@ const INNER_RADIUS = 3.5;
 const OUTER_RADIUS = 8;
 
 // Touches choose a bearing and throttle, rather than a destination to chase.
-// Sampling only pointer events keeps that command stable as the Jeep and camera move.
+// Sampling only pointer events keeps that command stable as the vehicle and camera move.
 export function createTouchDrive({ element, camera, state, isActive }) {
   const listeners = new AbortController();
   const options = { signal: listeners.signal };

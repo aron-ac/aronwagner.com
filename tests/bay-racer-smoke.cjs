@@ -9,12 +9,14 @@ const {
   settleCamera,
 } = require('./helpers/browser.cjs');
 const {
-  assertDrivingControls,
-  exerciseDrivingControls,
-  exerciseDrivingKeyboard,
   assertCompactDrivingUI,
   exerciseCompactDrivingUI,
 } = require('./helpers/driving-controls.cjs');
+const {
+  assertBoatControls,
+  exerciseBoatKeyboard,
+  exerciseBoatTouch,
+} = require('./helpers/boat-controls.cjs');
 const url = new URL(
   process.env.GAME_URL ||
     new URL('bay-racer.html', process.env.SITE_URL || 'http://localhost:8000/').href,
@@ -102,7 +104,7 @@ test('bay racer smoke', { timeout: 300_000 }, async () => {
         'Initial HUD gate number matches the first numbered buoy signs',
       );
       const start = { x: s.x, z: s.z };
-      d.keys.add('KeyS');
+      d.keys.add('KeyW');
       step(1);
       d.clearInput();
       check(
@@ -175,12 +177,12 @@ test('bay racer smoke', { timeout: 300_000 }, async () => {
         'Collision cooldown prevents repeat penalties on consecutive frames',
       );
       ready();
-      d.keys.add('KeyS');
+      d.keys.add('KeyW');
       step(1.2);
       d.clearInput();
       const normalSpeed = s.speed;
       ready();
-      d.keys.add('KeyS');
+      d.keys.add('KeyW');
       d.keys.add('Space');
       step(1.2);
       d.clearInput();
@@ -269,11 +271,7 @@ test('bay racer smoke', { timeout: 300_000 }, async () => {
       step(3.1);
       return results;
     });
-    await exerciseDrivingKeyboard(page, {
-      debugName: 'bayDebug',
-      start: 'startRace',
-      countdownFrames: 186,
-    });
+    await exerciseBoatKeyboard(page);
     await page.keyboard.press('KeyP');
     assert.equal(await page.evaluate(() => bayDebug.state.mode), 'paused');
     await page.keyboard.press('Escape');
@@ -369,7 +367,7 @@ test('bay racer smoke', { timeout: 300_000 }, async () => {
         'Race HUD panels fit the viewport',
       );
       assert.ok(
-        layout.controls.length >= 4 &&
+        layout.controls.length === 2 &&
           layout.controls.every(
             (r) =>
               r.width > 0 &&
@@ -381,89 +379,16 @@ test('bay racer smoke', { timeout: 300_000 }, async () => {
           ),
         'All touch controls fit the viewport',
       );
-      await page.evaluate(() => {
-        bayDebug.state.heading = (-3 * Math.PI) / 4;
-      });
-      const client = await page.createCDPSession();
-      const rect = await (await page.$('[data-control="up"]')).boundingBox();
-      const touchPoints = [{ x: rect.x + rect.width / 2, y: rect.y + rect.height / 2, id: 1 }];
-      await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints });
-      assert.ok(
-        await page.evaluate(() => {
-          for (let i = 0; i < 45; i++) bayDebug.update(1 / 60);
-          return bayDebug.state.speed > 0;
-        }),
-        'Touch up accelerates toward the top of the screen',
-      );
-      await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-      assert.ok(
-        await page.evaluate(() => {
-          const before = bayDebug.state.speed;
-          for (let i = 0; i < 30; i++) bayDebug.update(1 / 60);
-          return (
-            bayDebug.state.speed < before &&
-            !document.querySelector('[data-control="up"]').classList.contains('pressed')
-          );
-        }),
-        'Releasing touch throttle clears input and lets the boat coast',
-      );
-      await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints });
-      await client.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] });
-      assert.ok(
-        await page.evaluate(
-          () => !document.querySelector('[data-control="up"]').classList.contains('pressed'),
-        ),
-        'Cancelled touch releases direction',
-      );
-      await client.detach();
-      const boostRect = await (await page.$('[data-control="boost"]')).boundingBox();
-      const gasTouch = await page.touchscreen.touchStart(
-        rect.x + rect.width / 2,
-        rect.y + rect.height / 2,
-      );
-      const boostTouch = await page.touchscreen.touchStart(
-        boostRect.x + boostRect.width / 2,
-        boostRect.y + boostRect.height / 2,
-      );
-      assert.ok(
-        await page.evaluate(() => {
-          for (let i = 0; i < 30; i++) bayDebug.update(1 / 60);
-          return bayDebug.state.boosting && bayDebug.state.boost < 100;
-        }),
-        'Two fingers can accelerate and boost together',
-      );
-      await boostTouch.end();
-      assert.ok(
-        await page.evaluate(() => {
-          bayDebug.update(1 / 60);
-          return (
-            !bayDebug.state.boosting &&
-            document.querySelector('[data-control="up"]').classList.contains('pressed') &&
-            !document.querySelector('[data-control="boost"]').classList.contains('pressed')
-          );
-        }),
-        'Releasing boost keeps the other finger on throttle',
-      );
-      await gasTouch.end();
-      assert.equal(
-        await page.$$eval('[data-control].pressed', (els) => els.length),
-        0,
-        'Releasing both fingers leaves no stuck controls',
-      );
-      await assertDrivingControls(page, `Bay Racer ${viewport.width}×${viewport.height}`);
+      await assertBoatControls(page, `Bay Racer ${viewport.width}×${viewport.height}`);
       await assertCompactDrivingUI(page, `Bay Racer ${viewport.width}×${viewport.height}`);
       if (viewport.width === 390)
         await exerciseCompactDrivingUI(page, { debugName: 'bayDebug', activeMode: 'racing' });
-      await exerciseDrivingControls(page, {
-        debugName: 'bayDebug',
-        start: 'startRace',
-        countdownFrames: 186,
-      });
+      await exerciseBoatTouch(page);
       await page.screenshot({ path: artifactPath(`bay-racer-${viewport.width}.png`) });
     }
     assert.deepEqual(errors, [], 'No JavaScript errors or failed game assets');
     console.log(
-      `PASS: ${mechanical.length} race checks, nose-first screen-relative travel, exclusive cardinal keyboard/touch controls, neutral gaps, D-pad sliding, pause keys, independent boost, default-visible map/recovery, portrait/landscape layout and new-tab navigation.\n${mechanical.join('\n')}`,
+      `PASS: ${mechanical.length} race checks, vehicle-relative keyboard steering, analog scene touch, progressive throttle, reverse, cancellation, pause keys, independent brake and boost, default-visible map/recovery, portrait/landscape layout and new-tab navigation.\n${mechanical.join('\n')}`,
     );
   } finally {
     await closeBrowser(browser);

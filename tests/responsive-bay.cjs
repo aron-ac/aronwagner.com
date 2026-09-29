@@ -1,8 +1,16 @@
 const { test } = require('node:test');
 /* Browser layout regression: compact phones, tablets, and laptop viewports. */
 const assert = require('node:assert/strict');
-const { launchBrowser, loadGame, closeBrowser, artifactPath } = require('./helpers/browser.cjs');
-const { assertDrivingControls, assertCompactDrivingUI } = require('./helpers/driving-controls.cjs');
+const {
+  launchBrowser,
+  loadGame,
+  closeBrowser,
+  artifactPath,
+  settleCamera,
+} = require('./helpers/browser.cjs');
+const { assertCompactDrivingUI } = require('./helpers/driving-controls.cjs');
+
+const { assertBoatControls, exerciseBoatResponsiveTouch } = require('./helpers/boat-controls.cjs');
 
 const url = new URL(
   process.env.GAME_URL ||
@@ -170,24 +178,12 @@ test('responsive bay', { timeout: 300_000 }, async () => {
         ],
         true,
       );
-      if (touch || hybrid) await assertDrivingControls(page, label);
-      await assertCompactDrivingUI(page, label);
-      if (touch) {
-        const button = await page.$('[data-control="up"]');
-        const box = await button.boundingBox();
-        const client = await page.createCDPSession();
-        await client.send('Input.dispatchTouchEvent', {
-          type: 'touchStart',
-          touchPoints: [{ x: box.x + box.width / 2, y: box.y + box.height / 2, id: 1 }],
-        });
-        assert.equal(
-          await page.$eval('[data-control="up"]', (el) => el.classList.contains('pressed')),
-          true,
-          `${label}: up accepts touch`,
-        );
-        await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-        await client.detach();
+      if (touch || hybrid) {
+        await settleCamera(page, 'bayDebug');
+        await assertBoatControls(page, label);
+        if (touch) await exerciseBoatResponsiveTouch(page, label);
       }
+      await assertCompactDrivingUI(page, label);
       await page.click('#pause');
       assert.equal(await page.evaluate(() => bayDebug.state.mode), 'paused');
       await assertLayout(page, `${label} pause`, ['.menu-card']);

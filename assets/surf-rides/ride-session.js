@@ -1,4 +1,5 @@
-import { MAX_WHEEL_ANGLE, WHEELBASE } from './vehicle-drive.js';
+export const MAX_WHEEL_ANGLE = 0.5;
+export const WHEELBASE = 3.04;
 
 export const SHIFT_SECONDS = 180;
 export const COCONUT_POINTS = 25;

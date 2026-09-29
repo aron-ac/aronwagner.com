@@ -8,6 +8,7 @@ import {
   ROAD_SPEED,
   STOP_RADIUS,
   STOP_SECONDS,
+  MAX_WHEEL_ANGLE,
 } from './ride-session.js';
 import { readStoredNumber, writeStoredNumber } from '../shared/storage.js';
 import { createSynthAudio } from '../shared/audio.js';
@@ -16,8 +17,8 @@ import { createGameLoop } from '../shared/game-loop.js';
 import { createDrivingUI } from '../shared/driving-ui.js';
 import { requireElements, setText, isInteractiveTarget } from '../shared/dom.js';
 import { createCamera, cameraOffset } from '../shared/camera-rig.js';
-import { mapVehicleInput, MAX_WHEEL_ANGLE } from './vehicle-drive.js';
-import { createTouchDrive } from './touch-drive.js';
+import { mapVehicleInput } from '../shared/vehicle-drive.js';
+import { createTouchDrive } from '../shared/touch-drive.js';
 
 const ui = requireElements([
   'game-shell',

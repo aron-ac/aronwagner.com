@@ -1,11 +1,7 @@
 import * as THREE from '../vendor/three/three.module.js';
-import {
-  createCamera,
-  cameraOffset,
-  CAMERA_AZIMUTH,
-  CAMERA_ELEVATION,
-} from '../shared/camera-rig.js';
-import { createDirectionalDrive } from '../shared/directional-drive.js';
+import { createCamera, cameraOffset } from '../shared/camera-rig.js';
+import { mapVehicleInput } from '../shared/vehicle-drive.js';
+import { createTouchDrive } from '../shared/touch-drive.js';
 import { createBoatModel } from './boat-model.js';
 import { createBayWorld } from './world.js';
 import { createRace, NORMAL_SPEED } from './race.js';
@@ -102,28 +98,31 @@ const camera = createCamera();
 const race = createRace(world, raceEvent);
 const state = race.state;
 const controls = createGameInput({
-  exclusiveDirections: true,
   bindings: {
     up: ['KeyW', 'ArrowUp'],
     down: ['KeyS', 'ArrowDown'],
     left: ['KeyA', 'ArrowLeft'],
     right: ['KeyD', 'ArrowRight'],
     boost: ['Space'],
-    brake: ['KeyB'],
+    brake: ['KeyB', 'ControlLeft'],
   },
   isActive: () => state.mode === 'racing' || state.mode === 'countdown',
 });
 const keys = controls.keys;
-const directionalDrive = createDirectionalDrive({
-  azimuth: CAMERA_AZIMUTH,
-  elevation: CAMERA_ELEVATION,
+const touchDrive = createTouchDrive({
+  element: ui.viewport,
+  camera,
+  state,
+  isActive: () => state.mode === 'racing' || state.mode === 'countdown',
 });
+scene.add(touchDrive.group);
 const clearInput = () => {
   controls.clear();
-  directionalDrive.reset();
+  touchDrive.clear();
 };
 const directionInput = {};
-const frameInput = {};
+const touchInput = {};
+const drivingInput = {};
 const BEST_TIME_KEY = 'bay-racer-best-time';
 const storedBest = readStoredNumber(BEST_TIME_KEY, Infinity);
 let best = storedBest > 0 ? storedBest : Infinity;
@@ -253,6 +252,12 @@ ui.start.addEventListener('click', () => {
 });
 ui.restart.addEventListener('click', startRace);
 ui.pause.addEventListener('click', pauseRace);
+// Touch Pause must work while another finger is still steering or boosting.
+ui.pause.addEventListener('pointerdown', (event) => {
+  if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return;
+  event.preventDefault();
+  pauseRace();
+});
 ui.recover.addEventListener('click', recover);
 ui['menu-recover'].addEventListener('click', () => {
   if (state.mode !== 'paused' || ui['menu-recover'].disabled) return;
@@ -328,7 +333,10 @@ function updateWake(dt) {
   }
 }
 function update(dt) {
-  race.update(dt, directionalDrive.update(controls.snapshot(directionInput), state, frameInput));
+  const keyboard = controls.snapshot(directionInput);
+  mapVehicleInput(keyboard, touchDrive.snapshot(touchInput), state, drivingInput);
+  drivingInput.boost = keyboard.boost;
+  race.update(dt, drivingInput);
   const next = state.mode === 'finished' ? -1 : state.nextGate;
   if (next !== activeGate) {
     activeGate = next;
@@ -493,6 +501,7 @@ function animate(dt, now) {
     ui.toast.classList.remove('show');
     toastUntil = 0;
   }
+  touchDrive.update();
   renderer.render(scene, camera);
 }
 const loop = createGameLoop({
@@ -504,6 +513,7 @@ const loop = createGameLoop({
   dispose() {
     drivingUI.dispose();
     controls.dispose();
+    touchDrive.dispose();
     audio.dispose();
     renderer.dispose();
   },
@@ -528,6 +538,8 @@ if (new URLSearchParams(location.search).has('debug')) {
     update,
     keys,
     clearInput,
+    touchDrive,
+    drivingInput,
     updateUI,
     drawMap,
   };

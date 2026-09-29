@@ -45,47 +45,6 @@ button:disabled {
   background: #739a88;
 }
 
-/* Scene steering owns touch gestures during play, including missed taps on HUD
-   decorations. Hiding the controls restores native menu scrolling and zoom. */
-#game-shell.jeep-game:has(.jeep-touch-controls:not(.hidden)) {
-  touch-action: none;
-}
-#game-shell.jeep-game:has(.jeep-touch-controls:not(.hidden)),
-#game-shell.jeep-game:has(.jeep-touch-controls:not(.hidden)) * {
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-}
-.jeep-game.is-driving .dispatch,
-.jeep-game.is-driving .target,
-.jeep-game.is-driving .map-panel,
-.jeep-game.is-driving .coconut-hud {
-  pointer-events: none;
-}
-#touch-controls.jeep-touch-controls {
-  align-items: flex-end;
-  gap: 16px;
-}
-#touch-controls.jeep-touch-controls .driving-actions {
-  margin: 0;
-}
-.jeep-touch-hint {
-  margin: 0;
-  padding: 9px 12px;
-  max-width: calc(100% - 80px);
-  border-radius: 8px;
-  background: #102b36dc;
-  color: var(--cream);
-  font: 11px/1.5 monospace;
-  pointer-events: none;
-}
-@media (min-width: 901px) and (min-height: 601px) {
-  /* Larger touch layouts keep Pause and Unstuck along the bottom edge. */
-  #touch-controls.jeep-touch-controls {
-    bottom: 72px;
-  }
-}
-
 #viewport,
 #viewport canvas,
 .vignette {

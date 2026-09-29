@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { mapVehicleInput, MAX_WHEEL_ANGLE, WHEELBASE } from '../assets/surf-rides/vehicle-drive.js';
+import { mapVehicleInput } from '../assets/shared/vehicle-drive.js';
+import { MAX_WHEEL_ANGLE, WHEELBASE } from '../assets/surf-rides/ride-session.js';
 import { createRideSession, ROAD_SPEED, REVERSE_SPEED } from '../assets/surf-rides/ride-session.js';
 import { CAMERA_AZIMUTH, CAMERA_ELEVATION } from '../assets/shared/camera-rig.js';
 

@@ -1,5 +1,3 @@
-import { applyDirectionalHeading } from '../shared/directional-drive.js';
-
 export const TOTAL_LAPS = 3;
 export const NORMAL_SPEED = 19;
 export const BOOST_SPEED = 33;
@@ -8,6 +6,8 @@ export const BOAT_RADIUS = 1.1;
 const COOLDOWNS = ['collisionCooldown', 'recoverCooldown', 'missCooldown'];
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const damp = (from, to, rate, dt) => from + (to - from) * (1 - Math.exp(-rate * dt));
+const pedalPower = (value) =>
+  value === true ? 1 : Number.isFinite(value) ? clamp(value, 0, 1) : 0;
 
 // Simulation is independent of rendering and DOM; gates are forward crossing planes.
 export function createRace(world, onEvent = () => {}) {
@@ -25,7 +25,6 @@ export function createRace(world, onEvent = () => {}) {
     vx: 0,
     vz: 0,
     steer: 0,
-    directionalTurnRate: 0,
     elapsed: 0,
     penalties: 0,
     lap: 1,
@@ -67,7 +66,7 @@ export function createRace(world, onEvent = () => {}) {
     state.x = gate.x - gate.normal.x * 14;
     state.z = gate.z - gate.normal.z * 14;
     state.heading = Math.atan2(gate.normal.x, gate.normal.z);
-    state.speed = state.vx = state.vz = state.steer = state.directionalTurnRate = 0;
+    state.speed = state.vx = state.vz = state.steer = 0;
     state.elapsed += 5;
     state.penalties += 5;
     state.recoverCooldown = 3;
@@ -166,56 +165,57 @@ export function createRace(world, onEvent = () => {}) {
     if (state.mode !== 'racing') return;
     state.elapsed += dt;
     for (const key of COOLDOWNS) state[key] = Math.max(0, state[key] - dt);
-    const alignment = applyDirectionalHeading(state, input, dt);
-    const propulsion = alignment === null ? 1 : clamp(1 + alignment, 0, 1);
+    const gas = pedalPower(input.gas);
+    const reverse = pedalPower(input.reverse);
+    const throttle = gas - reverse;
     if (!input.boost || state.boost >= 18) state.boostLocked = false;
     state.boosting = !!(
       input.boost &&
-      input.gas &&
-      !input.reverse &&
+      gas > 0 &&
+      reverse === 0 &&
       !input.brake &&
-      (alignment === null || alignment > 0.95) &&
+      state.speed >= 0 &&
       state.boost > 0 &&
       !state.boostLocked
     );
     state.boost = clamp(state.boost + (state.boosting ? -34 : 10) * dt, 0, 100);
     if (state.boost <= 0) state.boostLocked = true;
-    const targetSpeed =
-      (input.brake
-        ? 0
-        : input.reverse
-          ? -REVERSE_SPEED
-          : input.gas
-            ? state.boosting
-              ? BOOST_SPEED
-              : NORMAL_SPEED
-            : 0) * propulsion;
-    const acceleration = Math.max(
-      input.brake ? 3 : input.reverse ? 1.65 : input.gas ? (state.boosting ? 1.8 : 0.9) : 0.28,
-      alignment === null ? 0 : 12 * Math.max(0, -alignment),
-    );
-    state.speed = damp(state.speed, targetSpeed, acceleration, dt);
-    if (alignment === null) {
-      state.steer = damp(
-        state.steer,
-        Number.isFinite(input.steering)
-          ? clamp(input.steering, -1, 1)
-          : (input.left ? 1 : 0) - (input.right ? 1 : 0),
-        6,
-        dt,
-      );
-      state.heading +=
-        state.steer *
-        (1.0 + Math.min(Math.abs(state.speed) / NORMAL_SPEED, 1) * 0.5) *
-        Math.min(Math.abs(state.speed) / 4, 1) *
-        Math.sign(state.speed) *
-        dt;
+    if (input.brake) state.speed = damp(state.speed, 0, 7, dt);
+    else if (throttle && state.speed * throttle < 0) {
+      // Shifting first brakes to a complete stop, then engages the other gear.
+      state.speed = Math.sign(state.speed) * Math.max(0, Math.abs(state.speed) - 25 * dt);
+    } else if (throttle) {
+      // Touch distance selects a sustainable speed, just as it does in the Jeep.
+      const topSpeed = throttle < 0 ? REVERSE_SPEED : state.boosting ? BOOST_SPEED : NORMAL_SPEED;
+      const targetSpeed = throttle * topSpeed;
+      const acceleration = throttle < 0 ? 8 : state.boosting ? 28 : 14;
+      state.speed += clamp(targetSpeed - state.speed, -acceleration * dt, acceleration * dt);
+    } else {
+      // A little water drift remains, but releasing the touch reliably coasts to a stop.
+      state.speed =
+        Math.sign(state.speed) * Math.max(0, damp(Math.abs(state.speed), 0, 0.8, dt) - 1.2 * dt);
     }
-    // Direction assistance needs the water velocity to follow the nose promptly,
-    // especially after a U-turn; otherwise the boat keeps sliding the old way.
-    const grip = alignment !== null ? 14 : input.brake ? 3.2 : 2.2;
-    state.vx = damp(state.vx, Math.sin(state.heading) * state.speed, grip, dt);
-    state.vz = damp(state.vz, Math.cos(state.heading) * state.speed, grip, dt);
+    state.speed = clamp(state.speed, -REVERSE_SPEED, BOOST_SPEED);
+    state.steer = damp(
+      state.steer,
+      Number.isFinite(input.steering)
+        ? clamp(input.steering, -1, 1)
+        : (input.left ? 1 : 0) - (input.right ? 1 : 0),
+      10,
+      dt,
+    );
+    // Steering needs water moving past the hull; reverse naturally mirrors it.
+    const turn =
+      state.steer *
+      (1 + Math.min(Math.abs(state.speed) / NORMAL_SPEED, 1) * 0.5) *
+      Math.min(Math.abs(state.speed) / 4, 1) *
+      Math.sign(state.speed) *
+      dt;
+    const movementHeading = state.heading + turn / 2;
+    state.heading += turn;
+    const grip = input.brake ? 7 : 4.2;
+    state.vx = damp(state.vx, Math.sin(movementHeading) * state.speed, grip, dt);
+    state.vz = damp(state.vz, Math.cos(movementHeading) * state.speed, grip, dt);
     const previousX = state.x,
       previousZ = state.z;
     state.x += state.vx * dt;

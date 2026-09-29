@@ -1,51 +1,57 @@
 /* Driving controls and compact HUD, loaded after each game's visual theme. */
-.driving-game {
-  --dpad-cell: 52px;
-  --dpad-gap: 8px;
-}
 .driving-controls.touch-controls {
   left: 16px;
   right: 16px;
   bottom: 16px;
   align-items: flex-end;
 }
-.driving-controls .driving-dpad {
-  display: grid;
-  grid-template: repeat(3, var(--dpad-cell)) / repeat(3, var(--dpad-cell));
-  gap: var(--dpad-gap);
+/* Scene steering owns touch gestures during play, including missed taps on HUD
+   decorations. Hiding the controls restores native menu scrolling and zoom. */
+#game-shell.driving-game:has(.scene-touch-controls:not(.hidden)) {
   touch-action: none;
-  user-select: none;
+}
+#game-shell.driving-game:has(.scene-touch-controls:not(.hidden)),
+#game-shell.driving-game:has(.scene-touch-controls:not(.hidden)) * {
   -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
-.driving-controls .driving-dpad button {
-  width: var(--dpad-cell);
-  min-width: var(--dpad-cell);
-  height: var(--dpad-cell);
-  padding: 0;
-  border-radius: 12px;
-  font: bold 28px/1 monospace;
-  background: #153642e8;
+.driving-game.is-driving .dispatch,
+.driving-game.is-driving .course-panel,
+.driving-game.is-driving .target,
+.driving-game.is-driving .map-panel,
+.driving-game.is-driving .coconut-hud {
+  pointer-events: none;
+}
+#touch-controls.scene-touch-controls {
+  align-items: flex-end;
+  gap: 16px;
+}
+#touch-controls.scene-touch-controls .driving-actions {
+  margin: 0;
+  flex-direction: column;
+  gap: 12px;
+}
+.touch-drive-hint {
+  margin: 0;
+  padding: 9px 12px;
+  max-width: calc(100% - 80px);
+  border-radius: 8px;
+  background: #102b36dc;
   color: var(--cream);
+  font: 11px/1.5 monospace;
+  pointer-events: none;
 }
-.driving-dpad [data-control='up'] {
-  grid-area: 1 / 2;
+@media (min-width: 901px) and (min-height: 601px) {
+  /* Larger touch layouts keep Pause and Unstuck along the bottom edge. */
+  #touch-controls.scene-touch-controls {
+    bottom: 72px;
+  }
+  #game-shell:where(:has(.scene-touch-controls:not(.hidden) [data-control='boost'])) .map-panel {
+    bottom: 236px;
+  }
 }
-.driving-dpad [data-control='left'] {
-  grid-area: 2 / 1;
-}
-.driving-dpad [data-control='right'] {
-  grid-area: 2 / 3;
-}
-.driving-dpad [data-control='down'] {
-  grid-area: 3 / 2;
-}
-.driving-controls .driving-dpad button.pressed {
-  background: var(--mint);
-  color: var(--dark);
-}
-.driving-controls .driving-actions {
-  margin-bottom: calc(var(--dpad-cell) + var(--dpad-gap));
-}
+
 .driving-controls .driving-auxiliary {
   width: 64px;
   min-width: 64px;
@@ -340,15 +346,7 @@
     margin: 14px 0;
   }
 }
-@media (max-width: 380px) {
-  .driving-game {
-    --dpad-cell: 48px;
-  }
-}
 @media (max-height: 600px) and (orientation: landscape) {
-  .driving-game {
-    --dpad-cell: 44px;
-  }
   .driving-game .dispatch,
   .driving-game .course-panel,
   .driving-game .target {

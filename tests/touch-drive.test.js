@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import * as THREE from '../assets/vendor/three/three.module.js';
-import { createTouchDrive } from '../assets/surf-rides/touch-drive.js';
+import { createTouchDrive } from '../assets/shared/touch-drive.js';
 
 class Viewport extends EventTarget {
   constructor() {

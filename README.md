@@ -159,14 +159,15 @@ current page. Download links retain their download behavior.
 | CiCi's Treat Trail | Collect 75 treats, dodge eight squirrels, use checkpoints, and reach the picnic doghouse in an original Canvas side-scroller.                           | [Controls and mechanics](assets/cici-treat-trail/README.md), [level design](assets/cici-treat-trail/LEVEL.md) |
 
 Each game supports keyboard/touch controls, pause, optional audio, and locally saved best results.
-Surf Riders uses continuous touch steering around the Jeep: finger distance controls throttle,
-pointing behind selects reverse, and a separate Brake button helps with stops. Its keyboard controls
-use Up/Down for forward/reverse and Left/Right for wheel steering, including simultaneous presses.
-Bay Racer uses four separated direction buttons and a separate Boost button. Its latest held arrow
-turns the nose and drives toward that part of the screen; gaps are neutral. Bay Racer's direction mapping lives in
-`assets/shared/directional-drive.js`. Both compact layouts keep essential stats and the destination visible,
-show the map by default with a toggle to hide it, and put recovery in the pause menu. Shared driving layout and menu state
-live in `assets/shared/driving.css` and `assets/shared/driving-ui.js`; CiCi keeps her platformer UI.
+Surf Riders and Bay Racer use continuous touch steering around the vehicle: finger distance controls
+throttle, pointing behind selects reverse, and lifting lets it coast. Both have a separate Brake
+button; Bay Racer also has Boost. Keyboard controls use Up/Down for forward/reverse and Left/Right
+for steering, including simultaneous presses. Scene touch handling and pedal mapping live in
+`assets/shared/touch-drive.js` and `assets/shared/vehicle-drive.js`; each simulation retains its own
+handling and speed limits. Both compact layouts keep essential stats and the destination visible,
+show the map by default with a toggle to hide it, and put recovery in the pause menu. Shared driving
+layout and menu state live in `assets/shared/driving.css` and `assets/shared/driving-ui.js`; CiCi
+keeps her platformer UI.
 The old `/cr-surf-rides.html` path redirects to `/surf-riders.html`; Asteroids is not shipped.
 
 ## Artwork and private references

@@ -1,5 +1,3 @@
-export const MAX_WHEEL_ANGLE = 0.5;
-export const WHEELBASE = 3.04;
 const FORWARD_ARC = (Math.PI * 3) / 4;
 const FULL_STEERING_ANGLE = Math.PI / 4;
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -7,7 +5,7 @@ const angleDifference = (to, from) => Math.atan2(Math.sin(to - from), Math.cos(t
 
 // Keyboard arrows operate pedals and wheels. A touch instead points toward a
 // world bearing, with distance controlling the pedal pressure. Both paths feed
-// the same vehicle physics; neither directly rotates or repositions the Jeep.
+// the same vehicle physics; neither directly rotates or repositions the vehicle.
 export function mapVehicleInput(keyboard, touch, state, target = {}) {
   let throttle = Number(Boolean(keyboard.up)) - Number(Boolean(keyboard.down));
   let steering = Number(Boolean(keyboard.left)) - Number(Boolean(keyboard.right));

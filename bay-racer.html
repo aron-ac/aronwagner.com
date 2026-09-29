@@ -54,7 +54,11 @@
       ><button id="sound" type="button" aria-pressed="false">SOUND OFF</button>
     </header>
     <main id="game-shell" class="driving-game">
-      <div role="group" id="viewport" aria-label="3D boat racing game"></div>
+      <div
+        role="group"
+        id="viewport"
+        aria-label="3D boat racing game. On touch screens, hold around the boat to steer and control speed."
+      ></div>
       <div class="vignette" aria-hidden="true"></div>
       <section class="hud" aria-label="Race statistics">
         <div class="game-brand">
@@ -101,8 +105,8 @@
       </div>
       <div class="bottom-bar">
         <span class="keyboard-help"
-          ><kbd>WASD</kbd> / <kbd>ARROWS</kbd> DRIVE <b>·</b> <kbd>SPACE</kbd> BOOST <b>·</b>
-          <kbd>P</kbd> PAUSE</span
+          ><kbd>↑↓</kbd> GAS / REVERSE <b>·</b> <kbd>←→</kbd> STEER <b>·</b> <kbd>SPACE</kbd> BOOST
+          <b>·</b> <kbd>B</kbd> BRAKE <b>·</b> <kbd>P</kbd> PAUSE</span
         >
         <div>
           <button
@@ -127,42 +131,16 @@
       <div
         role="group"
         id="touch-controls"
-        class="touch-controls driving-controls hidden"
+        class="touch-controls driving-controls scene-touch-controls hidden"
         aria-label="Touch boat controls"
       >
-        <div
-          class="driving-dpad"
-          data-control-pad="driving"
-          data-dpad
-          role="group"
-          aria-label="Direction buttons: hold one arrow to turn and drive toward that part of the screen"
-        >
-          <button type="button" data-control="up" aria-label="Drive toward the top of the screen">
-            ↑
-          </button>
-          <button
-            type="button"
-            data-control="left"
-            aria-label="Drive toward the left of the screen"
-          >
-            ←
-          </button>
-          <button
-            type="button"
-            data-control="right"
-            aria-label="Drive toward the right of the screen"
-          >
-            →
-          </button>
-          <button
-            type="button"
-            data-control="down"
-            aria-label="Drive toward the bottom of the screen"
-          >
-            ↓
-          </button>
-        </div>
+        <p class="touch-drive-hint">
+          Hold around the boat to drive.<br />Closer to slow · lift to coast
+        </p>
         <div class="driving-actions">
+          <button type="button" data-control="brake" class="driving-auxiliary" aria-label="Brake">
+            BRAKE
+          </button>
           <button
             type="button"
             data-control="boost"
@@ -188,8 +166,8 @@
             <div>
               <span>02</span>
               <p>
-                <strong>Find the clean line.</strong>Center passes refill your boost. Hold Space to
-                use it.
+                <strong>Find the clean line.</strong>Center passes refill your boost. Save it for
+                the straightaways.
               </p>
             </div>
             <div>
@@ -208,10 +186,11 @@
           </button>
           <p id="menu-note" class="menu-note">
             <span class="keyboard-instructions"
-              >Hold one arrow to turn and drive<br />WASD also works · Space to boost</span
+              >↑ / ↓ gas / reverse · ← / → steer<br />WASD also works · Space boost · B brake</span
             >
             <span class="touch-instructions"
-              >Hold one arrow to turn and drive that way. Boost on the right.</span
+              >Hold around the boat to steer. Farther to accelerate, behind to reverse. Brake and
+              Boost on the right.</span
             >
           </p>
         </div>

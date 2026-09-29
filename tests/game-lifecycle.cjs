@@ -16,7 +16,7 @@ const games = [
     page: 'bay-racer.html',
     debug: 'bayDebug',
     active: ['countdown', 'racing'],
-    touch: 'up',
+    touch: 'brake',
   },
   {
     page: 'cici-treat-trail.html',

@@ -22,9 +22,9 @@ The driving camera uses a 25-degree perspective lens with a 45-degree diagonal b
 
 ## Shared presentation
 
-The shared `../shared/arcade.css` defines the arcade shell and common controls. `../shared/driving.css` owns compact driving HUD layouts and Bay Racer's direction pad. Each game stylesheet retains its palette and desktop scene presentation. HUD labels stay at least 10px; compact minimaps omit cramped decorative text while retaining their accessible names and visual markers.
+The shared `../shared/arcade.css` defines the arcade shell and common controls. `../shared/driving.css` owns both driving games' compact HUD layouts, scene-touch guards, steering hints and touch button placement. Each game stylesheet retains its palette and desktop scene presentation. HUD labels stay at least 10px; compact minimaps omit cramped decorative text while retaining their accessible names and visual markers.
 
-`../shared/input.js` tracks simultaneous keyboard pedals, wheel steering and the touch Brake button. `touch-drive.js` projects scene touches onto the ground, captures each pointer and draws the steering guide. `vehicle-drive.js` converts keyboard or analog touch commands into pedals and wheel steering; `ride-session.js` turns the Jeep using its speed, wheelbase and eased front-wheel angle. This Jeep-specific implementation is inspired by the touch and keyboard behavior in [Bruno Simon's portfolio source](https://github.com/brunosimon/folio-2025/tree/41046b57eeed8d156d9c3fd7fa259900baef7816/sources/Game), without importing its code or physics engine. Bay Racer retains its screen-direction controls.
+`../shared/input.js` tracks simultaneous keyboard pedals, wheel steering and the touch Brake button. `../shared/touch-drive.js` projects scene touches onto the ground, captures each pointer and draws the steering guide. `../shared/vehicle-drive.js` converts keyboard or analog touch commands into pedals and steering; `ride-session.js` turns the Jeep using its speed, wheelbase and eased front-wheel angle. Bay Racer shares the input modules and retains its own water physics and boost. The controls are inspired by the touch and keyboard behavior in [Bruno Simon's portfolio source](https://github.com/brunosimon/folio-2025/tree/41046b57eeed8d156d9c3fd7fa259900baef7816/sources/Game), without importing its code or physics engine.
 
 `../shared/driving-ui.js` manages map visibility and the pause-menu recovery button for both driving games. CSS selects the compact layout; the controllers retain each game's recovery rules and penalties.
 
@@ -33,9 +33,9 @@ The shared `../shared/arcade.css` defines the arcade shell and common controls. 
 ## Files
 
 - `game.js`: scene/camera, input bindings, presentation of simulation events, menus, HUD and minimap.
-- `vehicle-drive.js`: pure keyboard/touch pedal mapping and vehicle steering constants.
-- `touch-drive.js`: touch/pen pointer capture, camera-aware ground projection, analog steering guide and lifecycle cleanup.
-- `ride-session.js`: renderer-independent shift state, driving/collisions, request lifecycle, recovery, fares/tips and coconut collection. `createRideSession(world, onEvent, { random })` accepts plain map data and injectable randomness, so gameplay can be tested without a browser. Frame updates take a duration and an input snapshot.
+- `../shared/vehicle-drive.js`: pure keyboard/touch pedal and steering mapping shared with Bay Racer.
+- `../shared/touch-drive.js`: shared touch/pen pointer capture, camera-aware ground projection, analog steering guide and lifecycle cleanup.
+- `ride-session.js`: renderer-independent shift state, Jeep steering constants, driving/collisions, request lifecycle, recovery, fares/tips and coconut collection. `createRideSession(world, onEvent, { random })` accepts plain map data and injectable randomness, so gameplay can be tested without a browser. Frame updates take a duration and an input snapshot.
 - `../shared/`: keyboard/multi-pointer input, opt-in synthesized audio, safe numeric score storage, required DOM lookups and game loading/error reporting shared with the other games.
 - `../shared/camera-rig.js`: shared perspective camera lens/angle for gameplay and the native homepage preview.
 - `tools/render-surf-preview.cjs` (at the repository root): reproducibly renders the preview from the game’s native geometry using Puppeteer.
@@ -53,7 +53,7 @@ The game needs WebGL 2 in a current desktop/mobile browser. It displays a readab
 
 `tests/surf-session.test.js` exercises the pure simulation: actual acceleration/braking into a pickup, fare/tip lifecycle, one-shot coconuts and clock invariants, collision cooldown, pause/end guards, both request timeouts, recovery exhaustion and deterministic replay. Run it with `node --test tests/surf-session.test.js`.
 
-`tests/vehicle-drive.test.js` covers proportional pedals, steering arcs, braking before reverse and simulation timing. `tests/surf-touch-drive.test.js` covers camera projection, deadzone, pointer ownership and cleanup.
+`tests/vehicle-drive.test.js` covers proportional pedals, steering arcs, braking before reverse and simulation timing. `tests/touch-drive.test.js` covers shared camera projection, deadzone, pointer ownership and cleanup.
 
 `tests/surf-rides-smoke.cjs` exercises the real browser game through its explicit `?debug=1` inspection hook: coconut placement, scoring, full-speed collection, one-shot pickup, pause/end protection, best-score persistence and reset; full request/pickup/drop-off lifecycle, comfort/tips/streaks, both timeout cases, pause, recovery, shift end/restart, simultaneous keyboard acceleration/steering, analog scene touch controls, responsive layouts and failed asset/JavaScript checks.
 
