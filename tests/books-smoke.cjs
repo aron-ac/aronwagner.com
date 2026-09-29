@@ -9,6 +9,45 @@ const site = process.env.SITE_URL || 'http://localhost:8000/';
 const dialogSelector = '#books-dialog';
 const closeSelector = `${dialogSelector} [data-dialog-close]`;
 
+async function coverLayout(page) {
+  return page.$eval('.book-cover', (image) => {
+    const bounds = (element) => {
+      const { x, y, width, height } = element.getBoundingClientRect();
+      return { x, y, width, height };
+    };
+    return {
+      image: bounds(image),
+      frame: bounds(image.parentElement),
+      dialog: bounds(image.closest('dialog')),
+      fit: getComputedStyle(image).objectFit,
+    };
+  });
+}
+
+function assertCoverFits(layout, label) {
+  const { image, frame } = layout;
+  assert.ok(image.width > 0 && image.height > 0, `${label}: cover has a visible frame`);
+  assert.ok(
+    image.x >= frame.x - 1 &&
+      image.y >= frame.y - 1 &&
+      image.x + image.width <= frame.x + frame.width + 1 &&
+      image.y + image.height <= frame.y + frame.height + 1,
+    `${label}: cover stays within its frame`,
+  );
+  assert.equal(layout.fit, 'contain', `${label}: the complete cover fits without cropping`);
+}
+
+function assertStableCover(before, after, label) {
+  for (const element of ['image', 'frame', 'dialog']) {
+    for (const dimension of ['width', 'height']) {
+      assert.ok(
+        Math.abs(before[element][dimension] - after[element][dimension]) <= 1,
+        `${label}: ${element} ${dimension} does not change`,
+      );
+    }
+  }
+}
+
 test('books smoke', { timeout: 300_000 }, async () => {
   const catalog = JSON.parse(
     await readFile(path.join(__dirname, '../assets/books/catalog.json'), 'utf8'),
@@ -96,6 +135,7 @@ test('books smoke', { timeout: 300_000 }, async () => {
         assert.ok(link.rel.includes('noopener') && link.rel.includes('noreferrer'));
         assert.match(link.label, /opens in a new tab/);
       }
+      assertCoverFits(await coverLayout(page), expected.title);
     }
 
     async function assertLayout(label) {
@@ -158,6 +198,73 @@ test('books smoke', { timeout: 300_000 }, async () => {
         true,
         `${label}: Amazon link is reachable by scrolling`,
       );
+    }
+
+    // Hold the first cover response until the visible modal has painted. This
+    // catches intrinsic image sizing changes that cached desktop checks miss.
+    for (const viewport of [
+      { width: 402, height: 874, isMobile: true, hasTouch: true },
+      { width: 874, height: 402, isMobile: true, hasTouch: true },
+    ]) {
+      const coldPage = await browser.newPage();
+      try {
+        await coldPage.setViewport(viewport);
+        await coldPage.setCacheEnabled(false);
+        await coldPage.setRequestInterception(true);
+        const firstCover = Promise.withResolvers();
+        let holdCover = true;
+        coldPage.on('request', (request) => {
+          if (holdCover && new URL(request.url()).pathname.endsWith(`/${catalog[0].cover}`)) {
+            holdCover = false;
+            firstCover.resolve(request);
+          } else void request.continue();
+        });
+        await coldPage.goto(site, { waitUntil: 'networkidle0' });
+        await coldPage.evaluate(() => document.fonts.ready.then(() => undefined));
+        await coldPage.tap('.books-toggle');
+        await coldPage.waitForFunction(() => !document.querySelector('.book-carousel').hidden);
+        const request = await firstCover.promise;
+        const label = `${viewport.width}×${viewport.height} first cover`;
+        const pending = await coverLayout(coldPage);
+        assertCoverFits(pending, `${label} while loading`);
+        assert.equal(
+          await coldPage.$eval('.book-cover', (image) => image.complete),
+          false,
+          `${label}: the image response is still pending`,
+        );
+        await request.continue();
+        await coldPage.waitForFunction(() => {
+          const image = document.querySelector('.book-cover');
+          return image.complete && image.naturalWidth > 0;
+        });
+        const loaded = await coverLayout(coldPage);
+        assertCoverFits(loaded, `${label} after loading`);
+        assertStableCover(pending, loaded, `${label} loading`);
+        for (let index = 1; index <= 3; index++) {
+          await coldPage.tap('.book-next');
+          await coldPage.waitForFunction(() => {
+            const image = document.querySelector('.book-cover');
+            return image.complete && image.naturalWidth > 0;
+          });
+          assertCoverFits(await coverLayout(coldPage), `${label} next ${index}`);
+        }
+        for (let index = 0; index < 3; index++) await coldPage.tap('.book-prev');
+        await coldPage.waitForFunction(() => {
+          const image = document.querySelector('.book-cover');
+          return image.complete && image.naturalWidth > 0;
+        });
+        assert.equal(
+          await coldPage.$eval('.book-title', (element) => element.textContent),
+          catalog[0].title,
+        );
+        assertStableCover(loaded, await coverLayout(coldPage), `${label} after browsing`);
+        await coldPage.tap(closeSelector);
+        await coldPage.tap('.books-toggle');
+        await coldPage.waitForFunction(() => !document.querySelector('.book-carousel').hidden);
+        assertStableCover(loaded, await coverLayout(coldPage), `${label} after reopening`);
+      } finally {
+        await coldPage.close();
+      }
     }
 
     await page.setViewport({ width: 1440, height: 900 });
@@ -379,7 +486,7 @@ test('books smoke', { timeout: 300_000 }, async () => {
     assert.deepEqual(failureErrors, [], 'Recoverable network failures do not throw page errors');
     await failurePage.close();
     console.log(
-      'Favorite books: 11 exact covers/links, carousel keys/wrap, modal focus/dismissal, touch swipes, 10 responsive theme layouts, and network recovery passed.',
+      'Favorite books: stable cold/slow first-cover sizing, 11 exact covers/links, carousel keys/wrap, modal focus/dismissal, touch swipes, 10 responsive theme layouts, and network recovery passed.',
     );
   } finally {
     await closeBrowser(browser);

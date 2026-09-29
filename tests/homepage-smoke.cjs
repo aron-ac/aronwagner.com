@@ -62,19 +62,19 @@ async function assertMobileGestures(page) {
       'Long presses do not select mobile homepage content',
     );
     await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
-    // Wait for the reset to reach the compositor before dispatching another
-    // gesture. Its completion acknowledgement can precede the main-thread scroll
-    // update on software-rendered CI, so observe the resulting position as well.
     await settlePage(page);
-    await client.send('Input.synthesizeScrollGesture', {
-      x: point.x,
-      y: point.y + 100,
-      yDistance: -160,
-      speed: 400,
-      preventFling: true,
-      gestureSourceType: 'touch',
-    });
-    await page.waitForFunction(() => scrollY > 100);
+    // Drive a real touch sequence. Chromium's synthesized scroll command can
+    // complete without scrolling on headless Linux, even with touch enabled.
+    const drag = await page.touchscreen.touchStart(point.x, point.y + 140);
+    try {
+      for (let step = 1; step <= 6; step++) {
+        await drag.move(point.x, point.y + 140 - step * 30);
+        await page.evaluate(() => new Promise(requestAnimationFrame));
+      }
+      await page.waitForFunction(() => scrollY > 100);
+    } finally {
+      await drag.end();
+    }
     assert.ok(
       await page.evaluate(() => scrollY > 100),
       'A vertical touch drag still scrolls the homepage',
@@ -553,9 +553,35 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
         );
         await settlePage(page);
       }
-      await page.screenshot({ path: artifactPath(`homepage-${width}.png`), fullPage: true });
       if (width === 390) {
-        await tapRegion('.monitor');
+        await page.$eval('.scene', (scene) =>
+          scene.scrollIntoView({ block: 'start', behavior: 'instant' }),
+        );
+        await settlePage(page);
+        const monitor = await page.$eval('.scene', (scene) => {
+          const bounds = scene.getBoundingClientRect();
+          const x = bounds.left + (860 / 1536) * bounds.width;
+          const y = bounds.top + (390 / 1024) * bounds.height;
+          return {
+            x,
+            y,
+            scroll: scrollY,
+            hash: location.hash,
+            interactive: document.elementFromPoint(x, y)?.closest('a, button')?.className || null,
+            display: getComputedStyle(document.querySelector('.monitor')).display,
+          };
+        });
+        assert.equal(monitor.display, 'none', 'The large monitor has no mobile hit region');
+        assert.equal(monitor.interactive, null, 'The large monitor is decorative on mobile');
+        await page.touchscreen.tap(monitor.x, monitor.y);
+        await settlePage(page);
+        assert.deepEqual(
+          await page.evaluate(() => ({ scroll: scrollY, hash: location.hash })),
+          { scroll: monitor.scroll, hash: monitor.hash },
+          'Tapping the large monitor does not scroll or navigate on mobile',
+        );
+      } else {
+        await page.click('.monitor');
         await page.waitForFunction(() => {
           const projects = document.querySelector('#projects');
           const top = projects.getBoundingClientRect().top;
@@ -567,9 +593,12 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
         assert.equal(
           new URL(page.url()).hash,
           '#projects',
-          'The main monitor still opens projects without a pin',
+          'The large monitor still opens projects on devices with hover',
         );
       }
+      // Full-page capture resets Chromium's touch emulation. Capture only after
+      // interaction checks; the next iteration configures its own input device.
+      await page.screenshot({ path: artifactPath(`homepage-${width}.png`), fullPage: true });
     }
     for (const viewport of [
       { width: 390, height: 844 },

@@ -109,8 +109,9 @@ All four monitors use the Tampa panorama; the lower three display adjoining crop
 Bitmotive monitor treatment is historical. The official logo remains on the business card.
 
 On devices without hover, small pulsing pins mark interactive scene objects except Mark, CiCi,
-the candle, and the large monitor. Those regions remain tappable without pins. Each pin is part
-of its existing button or link, with a 44px circular touch target. On compact scenes, crowded pins
+the candle, and the large monitor. Mark, CiCi, and the candle remain tappable without pins;
+the large monitor is decorative on touch devices and links to projects only on devices with hover.
+Each pin is part of its existing button or link, with a 44px circular touch target. On compact scenes, crowded pins
 spread apart with short connecting lines to their objects so neighboring targets do not overlap.
 The dot gently grows and shrinks while a contrasting ring expands and fades every two seconds.
 Pins stay still when reduced motion is enabled; desktop hover labels and keyboard focus behavior

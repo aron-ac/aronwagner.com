@@ -232,6 +232,17 @@ test('responsive home', { timeout: 300_000 }, async () => {
         `${label}: no horizontal overflow`,
       );
       for (const selector of ['.theme-toggle', ...sceneControls]) {
+        if (selector === '.monitor' && hasTouch) {
+          assert.equal(
+            await page.$eval(selector, (element) => {
+              element.focus({ preventScroll: true });
+              return element.getClientRects().length === 0 && document.activeElement !== element;
+            }),
+            true,
+            `${label}: the large monitor is absent from touch and keyboard navigation`,
+          );
+          continue;
+        }
         await page.$eval(selector, (element) => element.scrollIntoView({ block: 'center' }));
         await assertVisible(page, selector, label, true);
       }
@@ -256,8 +267,8 @@ test('responsive home', { timeout: 300_000 }, async () => {
         );
         assert.equal(
           reachable,
-          true,
-          `${label}: ${selector} owns its illustrated object at (${x}, ${y})`,
+          !(hasTouch && selector === '.monitor'),
+          `${label}: ${selector} interaction matches the input device at (${x}, ${y})`,
         );
       }
       if (width <= 650) {

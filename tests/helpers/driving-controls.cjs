@@ -1,4 +1,5 @@
 const assert = require('node:assert/strict');
+const { settleCamera } = require('./browser.cjs');
 
 async function assertDrivingControls(page, label) {
   const controls = await page.$$eval('[data-control]', (buttons) =>
@@ -88,6 +89,9 @@ async function resetDriving(page, { debugName, start, countdownFrames = 0 }, fac
     },
     { debugName, start, countdownFrames, heading: screenDirections[facing].heading },
   );
+  // A synchronous restart changes the vehicle before the render loop relocates
+  // its camera. Project movement only once the camera has reached the new spawn.
+  await settleCamera(page, debugName);
 }
 
 async function measureDriving(page, debugName, frames = 60) {
