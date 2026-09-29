@@ -1,3 +1,5 @@
+import { applyDirectionalHeading } from '../shared/directional-drive.js';
+
 export const TOTAL_LAPS = 3;
 export const NORMAL_SPEED = 19;
 export const BOOST_SPEED = 26;
@@ -162,43 +164,53 @@ export function createRace(world, onEvent = () => {}) {
     if (state.mode !== 'racing') return;
     state.elapsed += dt;
     for (const key of COOLDOWNS) state[key] = Math.max(0, state[key] - dt);
+    const alignment = applyDirectionalHeading(state, input, dt);
     if (!input.boost || state.boost >= 18) state.boostLocked = false;
     state.boosting = !!(
       input.boost &&
       input.gas &&
       !input.reverse &&
       !input.brake &&
+      (alignment === null || alignment > 0.95) &&
       state.boost > 0 &&
       !state.boostLocked
     );
     state.boost = clamp(state.boost + (state.boosting ? -34 : 10) * dt, 0, 100);
     if (state.boost <= 0) state.boostLocked = true;
-    const targetSpeed = input.brake
-      ? 0
-      : input.reverse
-        ? -5
-        : input.gas
-          ? state.boosting
-            ? BOOST_SPEED
-            : NORMAL_SPEED
-          : 0;
-    const acceleration = input.brake ? 3 : input.reverse ? 1.65 : input.gas ? 0.9 : 0.28;
-    state.speed = damp(state.speed, targetSpeed, acceleration, dt);
-    state.steer = damp(
-      state.steer,
-      Number.isFinite(input.steering)
-        ? clamp(input.steering, -1, 1)
-        : (input.left ? 1 : 0) - (input.right ? 1 : 0),
-      6,
-      dt,
+    const targetSpeed =
+      (input.brake
+        ? 0
+        : input.reverse
+          ? -5
+          : input.gas
+            ? state.boosting
+              ? BOOST_SPEED
+              : NORMAL_SPEED
+            : 0) * (alignment ?? 1);
+    const acceleration = Math.max(
+      input.brake ? 3 : input.reverse ? 1.65 : input.gas ? 0.9 : 0.28,
+      alignment === null ? 0 : 12 * (1 - alignment),
     );
-    state.heading +=
-      state.steer *
-      (1.0 + Math.min(Math.abs(state.speed) / NORMAL_SPEED, 1) * 0.5) *
-      Math.min(Math.abs(state.speed) / 4, 1) *
-      Math.sign(state.speed) *
-      dt;
-    const grip = input.brake ? 3.2 : 2.2;
+    state.speed = damp(state.speed, targetSpeed, acceleration, dt);
+    if (alignment === null) {
+      state.steer = damp(
+        state.steer,
+        Number.isFinite(input.steering)
+          ? clamp(input.steering, -1, 1)
+          : (input.left ? 1 : 0) - (input.right ? 1 : 0),
+        6,
+        dt,
+      );
+      state.heading +=
+        state.steer *
+        (1.0 + Math.min(Math.abs(state.speed) / NORMAL_SPEED, 1) * 0.5) *
+        Math.min(Math.abs(state.speed) / 4, 1) *
+        Math.sign(state.speed) *
+        dt;
+    }
+    // Direction assistance needs the water velocity to follow the nose promptly,
+    // especially after a U-turn; otherwise the boat keeps sliding the old way.
+    const grip = alignment !== null ? 10 : input.brake ? 3.2 : 2.2;
     state.vx = damp(state.vx, Math.sin(state.heading) * state.speed, grip, dt);
     state.vz = damp(state.vz, Math.cos(state.heading) * state.speed, grip, dt);
     const previousX = state.x,

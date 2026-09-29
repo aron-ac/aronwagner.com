@@ -1,3 +1,5 @@
+import { applyDirectionalHeading } from '../shared/directional-drive.js';
+
 export const SHIFT_SECONDS = 180;
 export const COCONUT_POINTS = 25;
 export const STOP_RADIUS = 4.3;
@@ -231,24 +233,28 @@ export function createRideSession(world, onEvent = () => {}, { random = Math.ran
     const road = nearestRoad(world.roads, state.x, state.z);
     state.onRoad = Boolean(road && road.distance < road.width / 2 + 1);
     const topSpeed = state.onRoad ? 19 : 10;
+    const alignment = applyDirectionalHeading(state, input, dt);
+    if (alignment !== null) state.speed = damp(state.speed, 0, 12 * (1 - alignment), dt);
     if (input.brake) state.speed = damp(state.speed, 0, 7, dt);
-    else if (input.gas) state.speed += state.speed < 0 ? 27 * dt : 14 * dt;
+    else if (input.gas) state.speed += (state.speed < 0 ? 27 : 14) * (alignment ?? 1) * dt;
     else if (input.reverse) state.speed -= state.speed > 0 ? 27 * dt : 10 * dt;
     else {
       const friction = state.onRoad ? 3.6 : 5.5;
       state.speed = Math.sign(state.speed) * Math.max(0, Math.abs(state.speed) - friction * dt);
     }
     state.speed = clamp(state.speed, -7, topSpeed);
-    state.steer = damp(
-      state.steer,
-      Number.isFinite(input.steering)
-        ? clamp(input.steering, -1, 1)
-        : (input.left ? 1 : 0) - (input.right ? 1 : 0),
-      10,
-      dt,
-    );
-    state.heading +=
-      state.steer * 1.95 * clamp(Math.abs(state.speed) / 5, 0, 1) * Math.sign(state.speed) * dt;
+    if (alignment === null) {
+      state.steer = damp(
+        state.steer,
+        Number.isFinite(input.steering)
+          ? clamp(input.steering, -1, 1)
+          : (input.left ? 1 : 0) - (input.right ? 1 : 0),
+        10,
+        dt,
+      );
+      state.heading +=
+        state.steer * 1.95 * clamp(Math.abs(state.speed) / 5, 0, 1) * Math.sign(state.speed) * dt;
+    }
     state.x += Math.sin(state.heading) * state.speed * dt;
     state.z += Math.cos(state.heading) * state.speed * dt;
     collide();

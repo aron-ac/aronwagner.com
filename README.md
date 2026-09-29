@@ -159,11 +159,12 @@ current page. Download links retain their download behavior.
 | CiCi's Treat Trail | Collect 75 treats, dodge eight squirrels, use checkpoints, and reach the picnic doghouse in an original Canvas side-scroller.                           | [Controls and mechanics](assets/cici-treat-trail/README.md), [level design](assets/cici-treat-trail/LEVEL.md) |
 
 Each game supports keyboard/touch controls, pause, optional audio, and locally saved best results.
-The driving games use a single left-side D-pad with one-thumb diagonals and a separate right-side
-Brake or Boost button. Arrows and WASD select a direction on the screen; the vehicle steers
-automatically and backs up when that direction is behind it. Shared direction mapping lives in
+The driving games use a single left-side D-pad with one-thumb corner presses and a separate right-side
+Brake or Boost button. A single arrow or WASD direction turns the nose and drives toward that
+part of the screen; the vehicle turns around when necessary. Holding Up with Right or Left
+circles clockwise or counter-clockwise. Shared direction mapping lives in
 `assets/shared/directional-drive.js`. Their compact layouts keep essential stats and the destination visible,
-open the map on demand, and put recovery in the pause menu. Shared driving layout and menu state
+show the map by default with a toggle to hide it, and put recovery in the pause menu. Shared driving layout and menu state
 live in `assets/shared/driving.css` and `assets/shared/driving-ui.js`; CiCi keeps her platformer UI.
 The old `/cr-surf-rides.html` path redirects to `/surf-riders.html`; Asteroids is not shipped.
 

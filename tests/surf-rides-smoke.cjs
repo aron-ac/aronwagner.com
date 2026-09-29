@@ -21,6 +21,13 @@ const gameURL = new URL(
 );
 gameURL.searchParams.set('debug', '1');
 const url = gameURL.href;
+// The intersection by the coast leaves room for assisted U-turns and circles.
+// Real map obstacles remain active; the helper verifies this patch's clearance.
+const drivingOptions = {
+  debugName: 'surfDebug',
+  start: 'startGame',
+  position: { x: -38, z: 40 },
+};
 test('surf rides smoke', { timeout: 300_000 }, async () => {
   const browser = await launchBrowser();
   try {
@@ -228,7 +235,7 @@ test('surf rides smoke', { timeout: 300_000 }, async () => {
       );
       return results;
     });
-    await exerciseDrivingKeyboard(page, { debugName: 'surfDebug', start: 'startGame' });
+    await exerciseDrivingKeyboard(page, drivingOptions);
     await page.keyboard.press('KeyP');
     assert.equal(await page.evaluate(() => surfDebug.state.mode), 'paused');
     await page.keyboard.press('Escape');
@@ -362,7 +369,7 @@ test('surf rides smoke', { timeout: 300_000 }, async () => {
       await assertCompactDrivingUI(page, `Surf Riders ${viewport.width}×${viewport.height}`);
       if (viewport.width === 390)
         await exerciseCompactDrivingUI(page, { debugName: 'surfDebug', activeMode: 'playing' });
-      await exerciseDrivingControls(page, { debugName: 'surfDebug', start: 'startGame' });
+      await exerciseDrivingControls(page, drivingOptions);
       await page.screenshot({ path: artifactPath(`surf-riders-${viewport.width}.png`) });
     }
     await loadGame(page, new URL('cr-surf-rides.html?debug=1#start', url).href, 'surfDebug');
@@ -375,7 +382,7 @@ test('surf rides smoke', { timeout: 300_000 }, async () => {
     assert.equal(redirected.hash, '#start', 'The redirect retains the fragment');
     assert.deepEqual(errors, [], 'No page errors or failed asset requests');
     console.log(
-      `PASS: ${mechanical.length} mechanics, screen-relative keyboard movement, pause keys, one-thumb D-pad diagonals and sliding, independent brake, compact map/recovery, portrait and landscape layouts.\n${mechanical.join('\n')}`,
+      `PASS: ${mechanical.length} mechanics, nose-first screen-relative travel, keyboard and one-/two-thumb circling chords, D-pad sliding, pause keys, independent brake, default-visible map/recovery, portrait and landscape layouts.\n${mechanical.join('\n')}`,
     );
   } finally {
     await closeBrowser(browser);

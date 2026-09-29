@@ -1,19 +1,24 @@
-const GEAR_THRESHOLD = 0.15;
-const STEERING_GAIN = 2.5;
+const TURN_RATE = 6;
+const TURN_RESPONSE = 10;
+const CIRCLE_RATE = 2.4;
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+const angleDifference = (to, from) => {
+  const difference = Math.atan2(Math.sin(to - from), Math.cos(to - from));
+  // An exact U-turn has two equally short routes. Always choose the same one.
+  return Math.abs(Math.abs(difference) - Math.PI) < 1e-8 ? Math.PI : difference;
+};
 
-// Screen directions become ordinary throttle/steering commands, keeping each
-// game's acceleration, reverse speed, collisions and braking in its simulation.
+// Single arrows aim the nose toward a screen direction. Holding a vertical and
+// horizontal arrow instead makes a continuous forward circle in that turn direction.
 export function createDirectionalDrive({ azimuth, elevation }) {
   const verticalScale = Math.sin(elevation);
   if (!Number.isFinite(azimuth) || !Number.isFinite(verticalScale) || verticalScale <= 0.000001)
     throw new RangeError('Directional driving requires a finite, elevated camera angle.');
   const sin = Math.sin(azimuth);
   const cos = Math.cos(azimuth);
-  let gear = 1;
 
   function reset() {
-    gear = 1;
+    // The mapper is stateless; retain the lifecycle API used by both controllers.
   }
 
   function update(input, state, target = {}) {
@@ -24,36 +29,45 @@ export function createDirectionalDrive({ azimuth, elevation }) {
     target.gas = false;
     target.reverse = false;
     target.steering = 0;
-    // A reused input object must never leak screen-left/right into wheel steering.
+    target.targetHeading = null;
+    target.turnRate = 0;
+    // Reused input objects must not leak the screen axes into legacy wheel steering.
     for (const action of ['up', 'down', 'left', 'right']) delete target[action];
-    if ((!horizontal && !vertical) || !Number.isFinite(state.heading)) {
-      reset();
-      return target;
-    }
+    if ((!horizontal && !vertical) || !Number.isFinite(state.heading)) return target;
 
-    // Undo the ground plane's vertical foreshortening before rotating its axes.
-    // This also makes a diagonal press produce a diagonal direction on screen.
-    const down = vertical / verticalScale;
-    const desiredHeading = Math.atan2(
-      horizontal * cos + down * sin,
-      -horizontal * sin + down * cos,
-    );
-    const alignment = Math.cos(desiredHeading - state.heading);
-    if (alignment > GEAR_THRESHOLD) gear = 1;
-    else if (alignment < -GEAR_THRESHOLD) gear = -1;
-    const bodyHeading = desiredHeading + (gear === -1 ? Math.PI : 0);
-    const error = Math.atan2(
-      Math.sin(bodyHeading - state.heading),
-      Math.cos(bodyHeading - state.heading),
-    );
-    // During a reversal the vehicle still steers according to its current motion.
-    // Near rest, use the requested gear so either side arrow can start a turn.
-    const movement = Math.abs(state.speed) > 0.1 ? Math.sign(state.speed) : gear;
-    target.gas = gear === 1;
-    target.reverse = gear === -1;
-    target.steering = clamp(error * STEERING_GAIN * movement, -1, 1);
+    target.gas = true;
+    if (horizontal && vertical) {
+      // Positive world yaw projects counterclockwise through the fixed camera.
+      target.turnRate = -horizontal * CIRCLE_RATE;
+    } else {
+      const down = vertical / verticalScale;
+      target.targetHeading = Math.atan2(
+        horizontal * cos + down * sin,
+        -horizontal * sin + down * cos,
+      );
+    }
     return target;
   }
 
   return { update, reset };
+}
+
+// Apply assistance inside each simulation step, so aiming works at rest and at
+// every frame rate. The returned alignment scales propulsion/braking; null leaves
+// existing low-level gas, reverse and wheel-steering controls unchanged.
+export function applyDirectionalHeading(state, input, dt) {
+  if (!input.gas || !Number.isFinite(state.heading)) return null;
+  if (Number.isFinite(input.turnRate) && input.turnRate !== 0) {
+    const rate = clamp(input.turnRate, -CIRCLE_RATE, CIRCLE_RATE);
+    state.heading += rate * dt;
+    state.steer = rate / CIRCLE_RATE;
+    return 1;
+  }
+  if (!Number.isFinite(input.targetHeading)) return null;
+
+  const error = angleDifference(input.targetHeading, state.heading);
+  const turn = clamp(error * (1 - Math.exp(-TURN_RESPONSE * dt)), -TURN_RATE * dt, TURN_RATE * dt);
+  state.heading += turn;
+  state.steer = turn / (TURN_RATE * dt);
+  return Math.max(0, Math.cos(error - turn));
 }

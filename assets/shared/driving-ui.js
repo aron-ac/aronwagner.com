@@ -1,4 +1,4 @@
-// Compact layouts show the map on demand. CSS owns the layout breakpoint;
+// Every game starts and resumes with its map visible. CSS owns the layout breakpoint;
 // controllers supply the gameplay state and keep recovery rules in each game.
 export function createDrivingUI(ui) {
   const shell = ui['game-shell'];
@@ -25,7 +25,7 @@ export function createDrivingUI(ui) {
       mapPanel.classList.toggle('menu-map', !playing);
       mapToggle.classList.toggle('hidden', !playing || mapPanel.classList.contains('hidden'));
       ui['menu-recover'].classList.toggle('hidden', !paused);
-      setMapOpen(false);
+      setMapOpen(playing && !mapPanel.classList.contains('hidden'));
     },
     dispose() {
       listeners.abort();

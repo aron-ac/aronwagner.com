@@ -79,25 +79,48 @@ const screenDirections = {
   right: { x: 1, y: 0, heading: (3 * Math.PI) / 4, key: 'ArrowRight' },
 };
 
-async function resetDriving(page, { debugName, start, countdownFrames = 0 }, facing = 'up') {
+async function resetDriving(
+  page,
+  { debugName, start, countdownFrames = 0, position },
+  facing = 'up',
+) {
   await page.evaluate(
-    ({ debugName, start, countdownFrames, heading }) => {
+    ({ debugName, start, countdownFrames, heading, position }) => {
       const game = window[debugName];
       game[start]();
       for (let i = 0; i < countdownFrames; i++) game.update(1 / 60);
+      if (position) {
+        const { x, z } = position;
+        const bounds = game.world.bounds;
+        const clearance = Math.min(
+          x - bounds.minX,
+          bounds.maxX - x,
+          z - bounds.minZ,
+          bounds.maxZ - z,
+          ...game.world.obstacles.map(
+            (obstacle) => Math.hypot(x - obstacle.x, z - obstacle.z) - obstacle.radius,
+          ),
+        );
+        if (clearance < 16) throw new Error('Driving test needs a clear area of the real map.');
+        Object.assign(game.state, { x, z });
+      }
       game.state.heading = heading;
     },
-    { debugName, start, countdownFrames, heading: screenDirections[facing].heading },
+    { debugName, start, countdownFrames, position, heading: screenDirections[facing].heading },
   );
   // A synchronous restart changes the vehicle before the render loop relocates
   // its camera. Project movement only once the camera has reached the new spawn.
   await settleCamera(page, debugName);
 }
 
-async function measureDriving(page, debugName, frames = 60) {
+async function measureDriving(page, debugName, frames = 30, turnFrames = 60) {
   return page.evaluate(
-    ({ debugName, frames }) => {
+    ({ debugName, frames, turnFrames }) => {
       const game = window[debugName];
+      const bumps = game.state.bumps;
+      // A direction change turns the nose before settling into its new course.
+      // Measure that settled course, not the arc traveled while turning around.
+      for (let i = 0; i < turnFrames; i++) game.update(1 / 60);
       // Freeze projection for both endpoints. Camera following must not create
       // or conceal movement in a direction test.
       const camera = game.camera.clone();
@@ -105,17 +128,52 @@ async function measureDriving(page, debugName, frames = 60) {
       const viewport = document.getElementById('viewport');
       const point = camera.position.clone().set(game.state.x, 0, game.state.z);
       const before = point.clone().project(camera);
-      const bumps = game.state.bumps;
-      for (let i = 0; i < frames; i++) game.update(1 / 60);
-      const after = point.set(game.state.x, 0, game.state.z).project(camera);
+      let rotation = 0;
+      let minimumSpeed = Infinity;
+      for (let i = 0; i < frames; i++) {
+        const heading = game.state.heading;
+        game.update(1 / 60);
+        rotation += Math.atan2(
+          Math.sin(game.state.heading - heading),
+          Math.cos(game.state.heading - heading),
+        );
+        minimumSpeed = Math.min(minimumSpeed, game.state.speed);
+      }
+      const after = point.clone().set(game.state.x, 0, game.state.z).project(camera);
+      const nose = point
+        .clone()
+        .set(
+          game.state.x + Math.sin(game.state.heading) * 3,
+          0,
+          game.state.z + Math.cos(game.state.heading) * 3,
+        )
+        .project(camera);
+      const velocity = point
+        .clone()
+        .set(
+          game.state.x + (game.state.vx ?? Math.sin(game.state.heading) * game.state.speed),
+          0,
+          game.state.z + (game.state.vz ?? Math.cos(game.state.heading) * game.state.speed),
+        )
+        .project(camera);
       return {
         x: ((after.x - before.x) * viewport.clientWidth) / 2,
         y: ((after.y - before.y) * viewport.clientHeight) / 2,
         speed: game.state.speed,
+        minimumSpeed,
+        rotation,
+        nose: {
+          x: (nose.x - after.x) * viewport.clientWidth,
+          y: (nose.y - after.y) * viewport.clientHeight,
+        },
+        velocity: {
+          x: (velocity.x - after.x) * viewport.clientWidth,
+          y: (velocity.y - after.y) * viewport.clientHeight,
+        },
         bumps: game.state.bumps - bumps,
       };
     },
-    { debugName, frames },
+    { debugName, frames, turnFrames },
   );
 }
 
@@ -129,14 +187,40 @@ function assertScreenTravel(travel, directions, label) {
   );
   const along = (travel.x * desired.x + travel.y * desired.y) / Math.hypot(desired.x, desired.y);
   assert.ok(
-    along > 0.75 && along / Math.hypot(travel.x, travel.y) > 0.2,
+    along > 0.75 && along / Math.hypot(travel.x, travel.y) > 0.95,
     `${label}: real movement follows the requested screen direction (${JSON.stringify(travel)})`,
+  );
+  for (const property of ['nose', 'velocity']) {
+    const vector = travel[property];
+    assert.ok(
+      (vector.x * desired.x + vector.y * desired.y) /
+        (Math.hypot(vector.x, vector.y) * Math.hypot(desired.x, desired.y)) >
+        0.95,
+      `${label}: ${property} aligns with the requested direction (${JSON.stringify(travel)})`,
+    );
+  }
+  assert.ok(
+    travel.minimumSpeed > 0.5,
+    `${label}: the vehicle travels nose-first rather than selecting reverse`,
   );
   assert.equal(travel.bumps, 0, `${label}: direction check does not rely on a collision`);
 }
 
+function assertCircling(travel, horizontal, label) {
+  const clockwise = horizontal === 'right';
+  assert.ok(
+    travel.rotation * (clockwise ? -1 : 1) > 1.3,
+    `${label}: the held chord keeps turning ${clockwise ? 'clockwise' : 'counter-clockwise'} (${JSON.stringify(travel)})`,
+  );
+  assert.ok(
+    Math.hypot(travel.x, travel.y) > 0.75 && travel.speed > 0.5 && travel.minimumSpeed >= 0,
+    `${label}: circling drives the vehicle forward along a real arc`,
+  );
+  assert.equal(travel.bumps, 0, `${label}: the turn does not rely on a collision`);
+}
+
 async function exerciseDrivingKeyboard(page, options) {
-  for (const facing of ['up', 'down']) {
+  for (const facing of Object.keys(screenDirections)) {
     for (const action of Object.keys(screenDirections)) {
       await resetDriving(page, options, facing);
       const key = screenDirections[action].key;
@@ -144,11 +228,6 @@ async function exerciseDrivingKeyboard(page, options) {
       const travel = await measureDriving(page, options.debugName);
       await page.keyboard.up(key);
       assertScreenTravel(travel, [action], `${facing}-facing vehicle, ${key}`);
-      if (action === 'up' || action === 'down')
-        assert.ok(
-          travel.speed * (action === facing ? 1 : -1) > 0.5,
-          `${key}: matching the nose drives forward, opposite the nose reverses`,
-        );
     }
   }
   const aliases = { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD' };
@@ -158,6 +237,18 @@ async function exerciseDrivingKeyboard(page, options) {
     const travel = await measureDriving(page, options.debugName);
     await page.keyboard.up(aliases[action]);
     assertScreenTravel(travel, [action], `${aliases[action]} matches its arrow key`);
+  }
+  for (const horizontal of ['left', 'right']) {
+    await resetDriving(page, options);
+    await page.keyboard.down('ArrowUp');
+    await page.keyboard.down(screenDirections[horizontal].key);
+    assertCircling(
+      await measureDriving(page, options.debugName, 45, 0),
+      horizontal,
+      `Keyboard Up + ${horizontal}`,
+    );
+    await page.keyboard.up(screenDirections[horizontal].key);
+    await page.keyboard.up('ArrowUp');
   }
 }
 
@@ -212,13 +303,6 @@ async function exerciseDrivingControls(page, options) {
       await assertPressed([action], `${action}: touching a cardinal holds only that direction`);
       const travel = await measureDriving(page, debugName);
       assertScreenTravel(travel, [action], `${facing}-facing vehicle, ${action} touch`);
-      if (facing === action)
-        assert.ok(travel.speed > 0.5, `${action}: following the vehicle's nose drives forward`);
-      else if (
-        screenDirections[facing].x + screenDirections[action].x === 0 &&
-        screenDirections[facing].y + screenDirections[action].y === 0
-      )
-        assert.ok(travel.speed < -0.5, `${action}: opposite the vehicle's nose reverses`);
       await touch.end();
       await assertPressed([], `${action}: lifting the thumb releases input`);
     }
@@ -229,30 +313,34 @@ async function exerciseDrivingControls(page, options) {
       const corner = await padPoint(vertical, horizontal);
       const touch = await page.touchscreen.touchStart(corner.x, corner.y);
       await assertPressed([vertical, horizontal], 'One finger in a corner holds both directions');
-      const travel = await measureDriving(page, debugName);
-      assertScreenTravel(travel, [vertical, horizontal], `${vertical} + ${horizontal}`);
-      assert.ok(
-        travel.x * screenDirections[horizontal].x > 0.5 &&
-          travel.y * screenDirections[vertical].y > 0.5,
-        'A diagonal moves along both screen axes',
+      assertCircling(
+        await measureDriving(page, debugName, 45, 0),
+        horizontal,
+        `One-finger ${vertical} + ${horizontal}`,
       );
+      if (vertical === 'up')
+        assertCircling(
+          await measureDriving(page, debugName, 45, 0),
+          horizontal,
+          `Holding one-finger ${vertical} + ${horizontal} continues the circle`,
+        );
       await touch.end();
       await assertPressed([], 'Lifting the thumb releases both axes');
     }
   }
-  // The same captured finger can select diagonals, return to neutral, or leave.
+  // The same captured finger can select a circling chord, return to neutral, or leave.
   await reset();
   const drivingTouch = await press('up');
   const upperLeft = await padPoint('up', 'left');
   await drivingTouch.move(upperLeft.x, upperLeft.y);
-  await assertPressed(['up', 'left'], 'Sliding into a corner combines screen directions');
+  await assertPressed(['up', 'left'], 'Sliding into a corner selects a circling chord');
   const lowerRight = await padPoint('down', 'right');
   await drivingTouch.move(lowerRight.x, lowerRight.y);
-  await assertPressed(['down', 'right'], 'Sliding across the pad selects the opposite diagonal');
-  assertScreenTravel(
-    await measureDriving(page, debugName, 90),
-    ['down', 'right'],
-    'Sliding to the opposite corner changes real movement',
+  await assertPressed(['down', 'right'], 'Sliding across the pad changes the circling direction');
+  assertCircling(
+    await measureDriving(page, debugName, 45, 0),
+    'right',
+    'Sliding to the opposite corner changes real turning',
   );
   const neutral = await padPoint();
   await drivingTouch.move(neutral.x, neutral.y);
@@ -274,9 +362,29 @@ async function exerciseDrivingControls(page, options) {
   await assertPressed([], 'Ending a sliding gesture leaves no controls held');
 
   await reset();
+  const rightTouch = await press('right');
+  const secondUpTouch = await press('up');
+  await assertPressed(['up', 'right'], 'Two fingers can hold the clockwise circling chord');
+  assertCircling(await measureDriving(page, debugName, 45, 0), 'right', 'Two-finger Up + Right');
+  assertCircling(
+    await measureDriving(page, debugName, 45, 0),
+    'right',
+    'Holding two-finger Up + Right continues the circle',
+  );
+  await rightTouch.end();
+  await secondUpTouch.end();
+  await assertPressed([], 'Releasing both circling fingers clears the chord');
+
+  await reset();
   const leftTouch = await press('left');
   const upTouch = await press('up');
   await assertPressed(['up', 'left'], 'Separate fingers on the D-pad remain independent');
+  assertCircling(await measureDriving(page, debugName, 45, 0), 'left', 'Two-finger Up + Left');
+  assertCircling(
+    await measureDriving(page, debugName, 45, 0),
+    'left',
+    'Holding two-finger Up + Left continues the circle',
+  );
   await leftTouch.end();
   await assertPressed(['up'], 'Releasing left keeps the other finger driving up');
   const beforeAuxiliary = await page.evaluate((debugName) => {
@@ -312,9 +420,8 @@ async function assertCompactDrivingUI(page, label) {
     return {
       compact: matchMedia('(max-width: 900px), (max-height: 600px) and (orientation: landscape)')
         .matches,
-      extraPanels: ['.game-brand', '#speedometer', 'footer', '#recover', '#map-panel'].filter(
-        visible,
-      ),
+      extraPanels: ['.game-brand', '#speedometer', 'footer', '#recover'].filter(visible),
+      mapVisible: visible('#map-panel'),
       buttons: ['#pause', '#map-toggle'].map((selector) => {
         const button = document.querySelector(selector);
         const r = button.getBoundingClientRect();
@@ -332,6 +439,7 @@ async function assertCompactDrivingUI(page, label) {
         '#dispatch',
         '#course-panel',
         '#target',
+        '#map-panel',
         '[data-dpad]',
         '.driving-actions',
       ]
@@ -344,11 +452,8 @@ async function assertCompactDrivingUI(page, label) {
     };
   });
   if (!layout.compact) return;
-  assert.deepEqual(
-    layout.extraPanels,
-    [],
-    `${label}: compact play hides secondary chrome and the closed map`,
-  );
+  assert.deepEqual(layout.extraPanels, [], `${label}: compact play hides secondary chrome`);
+  assert.equal(layout.mapVisible, true, `${label}: the map is visible by default`);
   assert.deepEqual(
     layout.obscuredCenter,
     [],
@@ -364,9 +469,7 @@ async function assertCompactDrivingUI(page, label) {
 
 async function exerciseCompactDrivingUI(page, { debugName, activeMode }) {
   const mapVisible = () => page.$eval('#map-panel', (map) => map.getClientRects().length > 0);
-  assert.equal(await mapVisible(), false, 'The compact map starts closed');
-  await page.click('#map-toggle');
-  assert.equal(await mapVisible(), true, 'Map opens on demand during play');
+  assert.equal(await mapVisible(), true, 'The compact map is shown by default');
   assert.equal(
     await page.$eval('#map-toggle', (button) => button.getAttribute('aria-expanded')),
     'true',
@@ -374,7 +477,9 @@ async function exerciseCompactDrivingUI(page, { debugName, activeMode }) {
   await page.click('#map-toggle');
   assert.equal(await mapVisible(), false, 'Map can be dismissed without pausing');
   await page.click('#map-toggle');
+  assert.equal(await mapVisible(), true, 'Map can be shown again during play');
   await page.click('#pause');
+  assert.equal(await mapVisible(), false, 'The map hides behind the pause menu');
   const before = await page.evaluate((debugName) => {
     const state = window[debugName].state;
     return { mode: state.mode, remaining: state.remaining, penalties: state.penalties };
@@ -411,7 +516,7 @@ async function exerciseCompactDrivingUI(page, { debugName, activeMode }) {
       'Jeep recovery deducts the stated five-second penalty',
     );
   assert.equal(after.speed, 0, 'Recovery leaves the vehicle stopped');
-  assert.equal(await mapVisible(), false, 'Resuming after recovery closes the map');
+  assert.equal(await mapVisible(), true, 'Resuming after recovery shows the map');
 }
 
 module.exports = {

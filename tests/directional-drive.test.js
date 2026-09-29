@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createDirectionalDrive } from '../assets/shared/directional-drive.js';
+import {
+  applyDirectionalHeading,
+  createDirectionalDrive,
+} from '../assets/shared/directional-drive.js';
 import { CAMERA_AZIMUTH, CAMERA_ELEVATION } from '../assets/shared/camera-rig.js';
 import { createRideSession } from '../assets/surf-rides/ride-session.js';
 import { createRace } from '../assets/bay-racer/race.js';
@@ -11,14 +14,11 @@ const angleDifference = (a, b) => Math.atan2(Math.sin(a - b), Math.cos(a - b));
 const near = (actual, expected, tolerance = 1e-10) =>
   assert.ok(Math.abs(actual - expected) < tolerance, `${actual} should be near ${expected}`);
 
-function screenDirection(heading, speed = 1) {
-  const x = Math.sin(heading) * speed;
-  const z = Math.cos(heading) * speed;
-  const horizontal = x * Math.cos(camera.azimuth) - z * Math.sin(camera.azimuth);
-  const vertical =
-    (x * Math.sin(camera.azimuth) + z * Math.cos(camera.azimuth)) * Math.sin(camera.elevation);
-  const length = Math.hypot(horizontal, vertical);
-  return { x: horizontal / length, y: vertical / length };
+function project(x, z) {
+  return {
+    x: x * Math.cos(camera.azimuth) - z * Math.sin(camera.azimuth),
+    y: (x * Math.sin(camera.azimuth) + z * Math.cos(camera.azimuth)) * Math.sin(camera.elevation),
+  };
 }
 
 const directions = [
@@ -26,101 +26,122 @@ const directions = [
   { input: { down: true }, x: 0, y: 1 },
   { input: { left: true }, x: -1, y: 0 },
   { input: { right: true }, x: 1, y: 0 },
-  { input: { up: true, left: true }, x: -1, y: -1 },
-  { input: { up: true, right: true }, x: 1, y: -1 },
-  { input: { down: true, left: true }, x: -1, y: 1 },
-  { input: { down: true, right: true }, x: 1, y: 1 },
 ];
+const headingFor = (direction) => makeDrive().update(direction.input, { heading: 0 }).targetHeading;
 
-test('screen-down drives forward when facing down and screen-up reverses without turning', () => {
-  const state = { heading: camera.azimuth, speed: 0 };
-  const drive = makeDrive();
-  const forward = drive.update({ down: true }, state);
-  assert.equal(forward.gas, true);
-  assert.equal(forward.reverse, false);
-  near(forward.steering, 0);
-  const reverse = drive.update({ up: true }, state);
-  assert.equal(reverse.gas, false);
-  assert.equal(reverse.reverse, true);
-  near(reverse.steering, 0);
-});
+function assertDirection(vector, direction, tolerance = 0.02) {
+  assert.ok(Math.hypot(vector.x, vector.y) > 0.1, 'The vehicle must actually be moving');
+  const actual = Math.atan2(vector.y, vector.x);
+  const expected = Math.atan2(direction.y, direction.x);
+  assert.ok(
+    Math.abs(angleDifference(actual, expected)) < tolerance,
+    `Projected angle ${actual} should approach ${expected}`,
+  );
+}
 
-test('all eight screen directions preserve their projection in forward and reverse', () => {
+test('cardinal arrows always request nose-first travel in their screen direction', () => {
   for (const direction of directions) {
-    const expectedHeading = Math.atan2(
-      direction.x * Math.cos(camera.azimuth) +
-        (direction.y / Math.sin(camera.elevation)) * Math.sin(camera.azimuth),
-      -direction.x * Math.sin(camera.azimuth) +
-        (direction.y / Math.sin(camera.elevation)) * Math.cos(camera.azimuth),
-    );
-    for (const gear of [1, -1]) {
-      const heading = expectedHeading + (gear === -1 ? Math.PI : 0);
+    for (const heading of [
+      0,
+      Math.PI / 2,
+      Math.PI,
+      -Math.PI / 2,
+      headingFor(direction) + Math.PI,
+    ]) {
       const output = makeDrive().update(direction.input, { heading, speed: 0 });
-      assert.equal(output.gas, gear === 1);
-      assert.equal(output.reverse, gear === -1);
-      near(output.steering, 0);
-      const projected = screenDirection(heading, gear);
-      near(projected.x, direction.x / Math.hypot(direction.x, direction.y));
-      near(projected.y, direction.y / Math.hypot(direction.x, direction.y));
+      assert.equal(output.gas, true);
+      assert.equal(output.reverse, false);
+      assert.equal(output.turnRate, 0);
+      assertDirection(
+        project(Math.sin(output.targetHeading), Math.cos(output.targetHeading)),
+        direction,
+      );
     }
   }
 });
 
-test('side arrows apply throttle from rest and steering settles across the angle boundary', () => {
-  for (const input of [{ left: true }, { right: true }]) {
-    const output = makeDrive().update(input, { heading: camera.azimuth, speed: 0 });
-    assert.equal(output.gas, true);
-    assert.equal(Math.abs(output.steering), 1);
+test('holding vertical + right circles clockwise and vertical + left circles counterclockwise', () => {
+  for (const vertical of ['up', 'down']) {
+    for (const [horizontal, sign] of [
+      ['right', -1],
+      ['left', 1],
+    ]) {
+      const output = makeDrive().update({ [vertical]: true, [horizontal]: true }, { heading: 0 });
+      assert.equal(output.gas, true);
+      assert.equal(output.reverse, false);
+      assert.equal(output.targetHeading, null);
+      assert.equal(Math.sign(output.turnRate), sign);
+      near(Math.abs(output.turnRate), 2.4);
+    }
   }
-  const drive = createDirectionalDrive({ azimuth: 0, elevation: Math.PI / 2 });
-  const output = drive.update({ up: true }, { heading: -Math.PI + 0.02, speed: 2 });
-  assert.equal(output.gas, true);
-  near(output.steering, -0.05);
 });
 
-test('reversal chooses gear from heading but steers according to current motion', () => {
-  const heading = camera.azimuth - 0.1;
-  const forwardMotion = makeDrive().update({ up: true }, { heading, speed: 4 });
-  const reverseMotion = makeDrive().update({ up: true }, { heading, speed: -4 });
-  const stopped = makeDrive().update({ up: true }, { heading, speed: 0 });
-  for (const output of [forwardMotion, reverseMotion, stopped]) assert.equal(output.reverse, true);
-  near(forwardMotion.steering, 0.25);
-  near(reverseMotion.steering, -0.25);
-  near(stopped.steering, -0.25);
-});
-
-test('gear remains stable near perpendicular and neutral or reset restores a forward preference', () => {
+test('neutral inputs coast, preserve brake/boost and erase stale aiming or circle commands', () => {
   const drive = makeDrive();
-  const facing = (offset) => ({ heading: camera.azimuth + offset, speed: 0 });
-  assert.equal(drive.update({ down: true }, facing(Math.PI)).reverse, true);
-  for (const offset of [Math.PI / 2 - 0.04, Math.PI / 2 + 0.04, Math.PI / 2 - 0.1])
-    assert.equal(drive.update({ down: true }, facing(offset)).reverse, true);
-  assert.equal(drive.update({ down: true }, facing(Math.PI / 2 - 0.3)).gas, true);
-  drive.update({ down: true }, facing(Math.PI));
-  drive.update({}, facing(0));
-  assert.equal(drive.update({ down: true }, facing(Math.PI / 2)).gas, true);
-  drive.update({ down: true }, facing(Math.PI));
-  drive.reset();
-  assert.equal(drive.update({ down: true }, facing(Math.PI / 2)).gas, true);
-});
-
-test('neutral inputs coast, preserve brake/boost and remove stale directional steering fields', () => {
-  const drive = makeDrive();
-  const target = { up: true, down: true, left: true, right: true, brake: true, boost: true };
+  const target = drive.update({ up: true, right: true }, { heading: 0 });
+  Object.assign(target, {
+    up: true,
+    down: true,
+    left: true,
+    right: true,
+    brake: true,
+    boost: true,
+  });
   assert.equal(drive.update(target, { heading: 0, speed: 8 }, target), target);
-  assert.deepEqual(target, { gas: false, reverse: false, steering: 0, brake: true, boost: true });
-  const horizontal = drive.update(
-    { up: true, down: true, right: true },
-    { heading: camera.azimuth + Math.PI / 2, speed: 0 },
+  assert.deepEqual(target, {
+    gas: false,
+    reverse: false,
+    steering: 0,
+    brake: true,
+    boost: true,
+    targetHeading: null,
+    turnRate: 0,
+  });
+  drive.reset();
+  const singleAxis = drive.update({ up: true, down: true, right: true }, { heading: 0 }, target);
+  assert.equal(singleAxis.turnRate, 0);
+  assertDirection(
+    project(Math.sin(singleAxis.targetHeading), Math.cos(singleAxis.targetHeading)),
+    directions[3],
   );
-  assert.equal(horizontal.gas, true);
-  near(horizontal.steering, 0);
   for (const heading of [undefined, NaN, Infinity]) {
-    const output = drive.update({ up: true }, { heading, speed: 0 });
+    const output = drive.update({ up: true }, { heading, speed: 0 }, target);
     assert.equal(output.gas, false);
-    assert.equal(output.reverse, false);
-    assert.equal(output.steering, 0);
+    assert.equal(output.targetHeading, null);
+    assert.equal(output.turnRate, 0);
   }
+});
+
+test('assisted aiming follows the shortest arc without overshoot across the angle boundary', () => {
+  for (const frameRate of [20, 60, 120]) {
+    for (const [heading, targetHeading] of [
+      [-Math.PI + 0.1, Math.PI - 0.1],
+      [Math.PI - 0.1, -Math.PI + 0.1],
+    ]) {
+      const state = { heading, steer: 0 };
+      let error = angleDifference(targetHeading, state.heading);
+      const turnSign = Math.sign(error);
+      for (let frame = 0; frame < frameRate; frame++) {
+        applyDirectionalHeading(state, { gas: true, targetHeading }, 1 / frameRate);
+        const nextError = angleDifference(targetHeading, state.heading);
+        assert.ok(Math.abs(nextError) <= Math.abs(error) + 1e-12);
+        assert.equal(Math.sign(nextError), turnSign);
+        error = nextError;
+      }
+      near(error, 0, 0.001);
+    }
+  }
+});
+
+test('exact U-turns choose a deterministic route and legacy inputs remain unassisted', () => {
+  for (const heading of [-Math.PI, 0, Math.PI, Math.PI * 9]) {
+    const state = { heading, steer: 0 };
+    applyDirectionalHeading(state, { gas: true, targetHeading: heading + Math.PI }, 1 / 60);
+    assert.ok(state.heading > heading);
+  }
+  const state = { heading: 2, steer: -1 };
+  assert.equal(applyDirectionalHeading(state, { gas: true, left: true }, 1 / 60), null);
+  assert.deepEqual(state, { heading: 2, steer: -1 });
 });
 
 function openWorld() {
@@ -145,51 +166,166 @@ for (const [name, createSimulation] of [
   ['Jeep', createRideSession],
   ['boat', createRace],
 ]) {
-  test(`${name} converges to every screen direction from several headings in forward and reverse`, () => {
-    for (const direction of directions) {
-      for (const heading of [0, Math.PI / 2, Math.PI, -Math.PI / 2]) {
-        const simulation = createSimulation(openWorld());
-        simulation.start();
-        Object.assign(simulation.state, { mode: name === 'Jeep' ? 'playing' : 'racing', heading });
-        const drive = makeDrive();
-        const output = {};
-        for (let frame = 0; frame < 480; frame++)
-          simulation.update(1 / 60, drive.update(direction.input, simulation.state, output));
-        const projected = screenDirection(
-          simulation.state.heading,
-          Math.sign(simulation.state.speed),
-        );
-        const expected = Math.atan2(direction.y, direction.x);
-        const actual = Math.atan2(projected.y, projected.x);
-        assert.ok(
-          Math.abs(angleDifference(actual, expected)) < 0.04,
-          `${name}: ${JSON.stringify(direction.input)} from ${heading} converged to ${actual}, expected ${expected}`,
-        );
-        assert.ok(Math.abs(simulation.state.speed) > 4);
-      }
-    }
-  });
-
-  test(`${name} changes direction while moving without oscillating between forward and reverse`, () => {
+  const start = (heading, speed = 0) => {
     const simulation = createSimulation(openWorld());
     simulation.start();
     Object.assign(simulation.state, {
       mode: name === 'Jeep' ? 'playing' : 'racing',
-      heading: camera.azimuth - 0.2,
-      speed: 12,
+      x: 0,
+      z: 0,
+      heading,
+      speed,
+      vx: Math.sin(heading) * speed,
+      vz: Math.cos(heading) * speed,
     });
+    return simulation;
+  };
+  const velocity = (state) =>
+    name === 'boat'
+      ? project(state.vx, state.vz)
+      : project(Math.sin(state.heading) * state.speed, Math.cos(state.heading) * state.speed);
+
+  test(`${name} turns nose-first toward every cardinal direction within one second from rest or cruise`, () => {
+    for (const frameRate of [20, 60, 120]) {
+      for (const direction of directions) {
+        for (const heading of [
+          0,
+          Math.PI / 2,
+          Math.PI,
+          -Math.PI / 2,
+          headingFor(direction) + Math.PI,
+        ]) {
+          for (const speed of [0, 19]) {
+            const simulation = start(heading, speed);
+            const drive = makeDrive();
+            const output = {};
+            for (let frame = 0; frame < frameRate; frame++) {
+              simulation.update(
+                1 / frameRate,
+                drive.update(direction.input, simulation.state, output),
+              );
+              assert.equal(output.reverse, false);
+              assert.ok(simulation.state.speed >= 0);
+            }
+            assertDirection(
+              project(Math.sin(simulation.state.heading), Math.cos(simulation.state.heading)),
+              direction,
+            );
+            assertDirection(velocity(simulation.state), direction);
+            assert.ok(simulation.state.speed > 3);
+          }
+        }
+      }
+    }
+  });
+
+  test(`${name} starts moving the requested way within half a second during a full-speed U-turn`, () => {
+    for (const frameRate of [20, 60, 120]) {
+      for (const direction of directions) {
+        const heading = headingFor(direction) + Math.PI;
+        const simulation = start(heading, 19);
+        const drive = makeDrive();
+        let wrongWayDistance = 0;
+        for (let frame = 0; frame < frameRate / 2; frame++) {
+          simulation.update(1 / frameRate, drive.update(direction.input, simulation.state));
+          const position = project(simulation.state.x, simulation.state.z);
+          wrongWayDistance = Math.max(
+            wrongWayDistance,
+            -position.x * direction.x - position.y * direction.y,
+          );
+        }
+        const movement = velocity(simulation.state);
+        assert.ok(
+          movement.x * direction.x + movement.y * direction.y > 1,
+          'Actual velocity must point toward the held arrow',
+        );
+        assert.ok(wrongWayDistance < 3, `A U-turn drifted ${wrongWayDistance} units the wrong way`);
+      }
+    }
+  });
+
+  test(`${name} held arrow combinations complete continuous circles in the requested direction`, () => {
+    for (const frameRate of [20, 60]) {
+      for (const vertical of ['up', 'down']) {
+        for (const [horizontal, sign] of [
+          ['right', -1],
+          ['left', 1],
+        ]) {
+          const simulation = start(0);
+          const drive = makeDrive();
+          const input = { [vertical]: true, [horizontal]: true };
+          let previous = simulation.state.heading;
+          let travel = 0;
+          for (let frame = 0; frame < frameRate * 3; frame++) {
+            const x = simulation.state.x,
+              z = simulation.state.z;
+            simulation.update(1 / frameRate, drive.update(input, simulation.state));
+            assert.ok((simulation.state.heading - previous) * sign > 0);
+            travel += Math.hypot(simulation.state.x - x, simulation.state.z - z);
+            previous = simulation.state.heading;
+          }
+          assert.ok(
+            simulation.state.heading * sign > Math.PI * 2,
+            'A held chord must continue beyond a full revolution',
+          );
+          assert.ok(travel > 20, 'The vehicle must drive a circle rather than only spin in place');
+          near(simulation.state.heading, sign * 7.2, 1e-8);
+        }
+      }
+    }
+  });
+
+  test(`${name} responds to repeated cardinal changes after leaving a circle`, () => {
+    const simulation = start(0, 12);
     const drive = makeDrive();
     const output = {};
-    for (const direction of [directions[0], directions[3], directions[1]]) {
-      const requestedGear = drive.update(direction.input, simulation.state).gas;
-      for (let frame = 0; frame < 480; frame++) {
-        drive.update(direction.input, simulation.state, output);
-        assert.equal(output.gas, requestedGear);
-        simulation.update(1 / 60, output);
-      }
-      const actual = screenDirection(simulation.state.heading, simulation.state.speed);
-      near(actual.x, direction.x, 0.02);
-      near(actual.y, direction.y, 0.02);
+    for (let frame = 0; frame < 90; frame++)
+      simulation.update(1 / 60, drive.update({ up: true, right: true }, simulation.state, output));
+    for (const direction of [
+      directions[0],
+      directions[3],
+      directions[1],
+      directions[2],
+      directions[0],
+    ]) {
+      for (let frame = 0; frame < 60; frame++)
+        simulation.update(1 / 60, drive.update(direction.input, simulation.state, output));
+      assert.equal(output.turnRate, 0);
+      assert.equal(output.reverse, false);
+      assertDirection(velocity(simulation.state), direction);
+    }
+  });
+
+  test(`${name} brake takes precedence over assisted acceleration and neutral permits coasting`, () => {
+    const simulation = start(headingFor(directions[0]), 12);
+    const drive = makeDrive();
+    simulation.update(1 / 60, drive.update({}, simulation.state));
+    assert.ok(simulation.state.speed > 0 && simulation.state.speed < 12);
+    for (let frame = 0; frame < 120; frame++)
+      simulation.update(
+        1 / 60,
+        drive.update({ up: true, brake: true, boost: true }, simulation.state),
+      );
+    assert.ok(simulation.state.speed < 0.04);
+    if (name === 'boat') {
+      assert.equal(simulation.state.boosting, false);
+      assert.equal(simulation.state.boost, 100);
     }
   });
 }
+
+test('boat boost waits for the nose to face the requested direction', () => {
+  const simulation = createRace(openWorld());
+  simulation.start();
+  Object.assign(simulation.state, { mode: 'racing', heading: headingFor(directions[0]) + Math.PI });
+  const drive = makeDrive();
+  for (let frame = 0; frame < 12; frame++) {
+    simulation.update(1 / 60, drive.update({ up: true, boost: true }, simulation.state));
+    assert.equal(simulation.state.boosting, false);
+    assert.equal(simulation.state.boost, 100);
+  }
+  for (let frame = 0; frame < 48; frame++)
+    simulation.update(1 / 60, drive.update({ up: true, boost: true }, simulation.state));
+  assert.equal(simulation.state.boosting, true);
+  assert.ok(simulation.state.boost < 100);
+});

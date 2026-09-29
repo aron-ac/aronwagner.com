@@ -6,13 +6,13 @@ A small 3D boat time trial for Mark's arcade. Serve the repository over HTTP and
 
 Complete three laps through eight buoy gates in order. The next gate is gold, and the minimap and direction arrow show where to go. White/checkered buoys mark the lap line. Each gate must be crossed forwards between its buoys; passing a later gate or reversing over a gate does not advance the race.
 
-- **Arrow keys / WASD:** choose a direction on the screen. The vehicle automatically steers and drives toward it; Left and Right work from a standstill too.
-- A direction ahead of the vehicle drives forward; a direction behind it brakes into reverse. Diagonals follow the screen perspective, and opposite arrows cancel each other.
+- **Arrow keys / WASD:** hold one direction to turn the vehicle’s nose toward that part of the screen and drive forward. The vehicle can turn from rest and slows for sharp turns; pressing behind it makes a U-turn.
+- **Up + Right:** keep circling clockwise. **Up + Left:** keep circling counter-clockwise. A lower corner of the D-pad circles in the same left/right sense. Opposite arrows cancel each other; releasing the pad lets the vehicle coast.
 - **Space:** boost while accelerating. Normal top speed is 19 units/s, boosted speed 26; these are arcade tuning values, not specifications of the real boat.
 - **P / Escape:** pause/resume. Losing focus or hiding the tab pauses the race, including its countdown.
 - **R / Reset:** return to an approach to the next gate for a five-second penalty. It does not advance the course.
-- Touch devices have one left-thumb D-pad with the same screen-relative directions and diagonals, plus a separate Boost button on the right. Slide between arrows to change direction. The center is neutral; lifting or leaving the pad releases that finger. Boost can be held with a second finger.
-- On compact screens, **Map** opens the course map when needed. **Pause → Reset** returns the boat to the next gate and resumes the race with the usual five-second penalty. Reset is unavailable during the countdown or recovery cooldown. Entering a menu closes the map.
+- Touch devices have one left-thumb D-pad with the same screen-relative directions and circling combinations, plus a separate Boost button on the right. Slide between arrows to change direction. The center is neutral; lifting or leaving the pad releases that finger. Boost can be held with a second finger.
+- On compact screens, the course map is visible by default; **Map** hides or shows it. **Pause → Reset** returns the boat to the next gate and resumes the race with the usual five-second penalty. Reset is unavailable during the countdown or recovery cooldown. Entering a menu hides the map; starting or resuming play shows it again.
 
 A center pass awards 20 boost; other successful passes award eight. Boost also recharges when unused. Running into land at speed adds two seconds, with a short collision cooldown to prevent repeated penalties while stuck. The final time includes all penalties. Results show the race time, best lap, penalties and personal best. Gold is under 100 seconds, silver under 125, and bronze celebrates every other finish. The fastest completed race is saved locally under `bay-racer-best-time`. Three-second countdowns, a pause screen, restart, optional synthesized sound, drifting foam trails and mobile controls round out the demo.
 
@@ -22,7 +22,7 @@ The bay is an invented compact course with palm islands, a marina, a lighthouse,
 
 The shared `../shared/arcade.css` defines the arcade shell and common controls. `../shared/driving.css` owns both driving games' direction pads and compact HUD layouts. Each game stylesheet retains its palette and desktop scene presentation. HUD labels stay at least 10px; compact minimaps omit cramped decorative text while retaining their accessible names and visual markers.
 
-`../shared/directional-drive.js` converts screen directions into forward/reverse and proportional steering using the shared camera angle. Both keyboard and touch use it, while each simulation retains vehicle acceleration, traction and collisions.
+`../shared/directional-drive.js` maps single screen directions to a heading and held corner combinations to a continuous turn. Its shared heading assistance turns the nose before accelerating, including from rest, without automatic reversing. Both keyboard and touch use it; each simulation retains vehicle acceleration, traction and collisions.
 
 `../shared/driving-ui.js` manages map visibility and the pause-menu recovery button for both driving games. CSS selects the compact layout; the controllers retain each game's recovery rules and penalties.
 
