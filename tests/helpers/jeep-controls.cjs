@@ -345,6 +345,9 @@ async function exerciseJeepTouch(page) {
     });
     await page.waitForFunction(() => surfDebug.touchDrive.snapshot().active);
     await client.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] });
+    // Native events arrive asynchronously; slow CI runners can deliver the cancel
+    // after the next frame, so wait for it as the touch start above does.
+    await page.waitForFunction(() => !surfDebug.touchDrive.snapshot().active);
     const cancelledTouch = await stepJeep(page, 1);
     assert.ok(
       !cancelledTouch.touch.active && cancelledTouch.input.gas === 0,
