@@ -2,7 +2,7 @@ import { applyDirectionalHeading } from '../shared/directional-drive.js';
 
 export const TOTAL_LAPS = 3;
 export const NORMAL_SPEED = 19;
-export const BOOST_SPEED = 26;
+export const BOOST_SPEED = 33;
 export const REVERSE_SPEED = 5;
 export const BOAT_RADIUS = 1.1;
 const COOLDOWNS = ['collisionCooldown', 'recoverCooldown', 'missCooldown'];
@@ -191,7 +191,7 @@ export function createRace(world, onEvent = () => {}) {
               : NORMAL_SPEED
             : 0) * propulsion;
     const acceleration = Math.max(
-      input.brake ? 3 : input.reverse ? 1.65 : input.gas ? 0.9 : 0.28,
+      input.brake ? 3 : input.reverse ? 1.65 : input.gas ? (state.boosting ? 1.8 : 0.9) : 0.28,
       alignment === null ? 0 : 12 * Math.max(0, -alignment),
     );
     state.speed = damp(state.speed, targetSpeed, acceleration, dt);

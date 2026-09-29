@@ -8,7 +8,7 @@ Complete three laps through eight buoy gates in order. The next gate is gold, an
 
 - **Arrow keys / WASD:** hold one direction to turn the vehicle’s nose toward that part of the screen and drive forward. Steering eases between directions and keeps momentum through ordinary corners. The vehicle can turn from rest; pressing behind it slows the vehicle into a U-turn.
 - Only one direction is active at a time. If two arrows are held, the most recently pressed direction wins; releasing it returns to the other held direction. Releasing all arrows lets the vehicle coast.
-- **Space:** boost while accelerating. Normal top speed is 19 units/s, boosted speed 26; these are arcade tuning values, not specifications of the real boat.
+- **Space:** boost while accelerating. Normal top speed is 19 units/s, boosted speed 33, with faster acceleration while boosting; these are arcade tuning values, not specifications of the real boat.
 - **P / Escape:** pause/resume. Losing focus or hiding the tab pauses the race, including its countdown.
 - **R / Reset:** return to an approach to the next gate for a five-second penalty. It does not advance the course.
 - Touch devices have four separated left-thumb arrow buttons with the same screen-relative directions, plus a separate Boost button on the right. Slide between arrows to change direction. The gaps, corners, and center are neutral; lifting or leaving the pad releases that finger and eases the steering back. Boost can be held with a second finger.

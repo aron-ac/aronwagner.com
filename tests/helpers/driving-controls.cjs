@@ -392,14 +392,30 @@ async function exerciseDrivingControls(page, options) {
   const beforeAuxiliary = await page.evaluate((debugName) => {
     const game = window[debugName];
     for (let i = 0; i < 45; i++) game.update(1 / 60);
-    return { speed: game.state.speed, boost: game.state.boost };
+    const before = { speed: game.state.speed, boost: game.state.boost };
+    if (debugName === 'bayDebug') {
+      // Compare the real touch input against normal driving from the same state
+      // for the same half-second, without adding time to the boosted attempt.
+      const saved = structuredClone(game.state);
+      for (let i = 0; i < 30; i++) game.update(1 / 60);
+      before.normalSpeed = game.state.speed;
+      before.normalVelocity = Math.hypot(game.state.vx, game.state.vz);
+      before.normalBumps = game.state.bumps - saved.bumps;
+      Object.assign(game.state, saved);
+    }
+    return before;
   }, debugName);
   const auxiliaryTouch = await press(auxiliary);
   await assertPressed(page, ['up', auxiliary], 'The right thumb can use its action while driving');
   const afterAuxiliary = await page.evaluate((debugName) => {
     const game = window[debugName];
     for (let i = 0; i < 30; i++) game.update(1 / 60);
-    return { speed: game.state.speed, boost: game.state.boost, boosting: game.state.boosting };
+    return {
+      speed: game.state.speed,
+      velocity: Math.hypot(game.state.vx ?? 0, game.state.vz ?? 0),
+      boost: game.state.boost,
+      boosting: game.state.boosting,
+    };
   }, debugName);
   assert.ok(
     auxiliary === 'boost'
@@ -407,8 +423,30 @@ async function exerciseDrivingControls(page, options) {
       : afterAuxiliary.speed < beforeAuxiliary.speed / 2,
     `${auxiliary}: the independent action changes actual vehicle behavior`,
   );
+  if (auxiliary === 'boost') {
+    assert.equal(beforeAuxiliary.normalBumps, 0, 'The normal-speed reference is collision-free');
+    assert.ok(
+      afterAuxiliary.speed > beforeAuxiliary.normalSpeed * 1.25 &&
+        afterAuxiliary.velocity > beforeAuxiliary.normalVelocity * 1.2,
+      'Holding Boost with an arrow produces a substantial increase in actual speed',
+    );
+  }
   await auxiliaryTouch.end();
   await assertPressed(page, ['up'], 'Releasing the right action preserves the left thumb’s input');
+  if (auxiliary === 'boost') {
+    const released = await page.evaluate((debugName) => {
+      const game = window[debugName];
+      for (let i = 0; i < 30; i++) game.update(1 / 60);
+      return { speed: game.state.speed, boost: game.state.boost, boosting: game.state.boosting };
+    }, debugName);
+    assert.ok(
+      !released.boosting &&
+        released.boost > afterAuxiliary.boost &&
+        released.speed < afterAuxiliary.speed &&
+        released.speed > 0,
+      'Releasing Boost recharges the meter and eases toward normal speed while still driving',
+    );
+  }
   await upTouch.end();
   await assertPressed(page, [], 'All fingers released leaves no stuck controls');
 }

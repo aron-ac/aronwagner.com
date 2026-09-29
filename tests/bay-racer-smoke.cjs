@@ -185,12 +185,34 @@ test('bay racer smoke', { timeout: 300_000 }, async () => {
       step(1.2);
       d.clearInput();
       check(
-        s.boost < 100 && s.speed > normalSpeed,
-        'Boost consumes its charge and accelerates harder than normal throttle',
+        s.boost < 100 && s.speed > normalSpeed * 1.5,
+        'Boost consumes charge and substantially outpaces normal throttle over the same time',
       );
       const drained = s.boost;
       step(0.4);
       check(s.boost > drained, 'Boost recharges when released');
+      ready();
+      s.heading = (-3 * Math.PI) / 4;
+      s.boost = 1;
+      d.keys.add('KeyW');
+      d.keys.add('Space');
+      step(0.1);
+      check(
+        s.boostLocked && !s.boosting && s.boost >= 0,
+        'An empty boost meter stops boosting even while the button remains held',
+      );
+      const depleted = s.boost;
+      step(0.8);
+      check(
+        s.boost > depleted && s.boostLocked && !s.boosting,
+        'A depleted held boost recharges without flickering on each frame',
+      );
+      step(1.1);
+      check(
+        s.boosting && !s.boostLocked && s.boost > 0,
+        'Holding Boost resumes acceleration after enough charge has recovered',
+      );
+      d.clearInput();
       ready();
       s.elapsed = 90;
       for (let index = 1; index < d.world.gates.length; index++) cross(index);
