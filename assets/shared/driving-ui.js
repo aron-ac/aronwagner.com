@@ -1,23 +1,20 @@
+import { bindTouchAction } from './touch-action.js';
+
 // Every game starts and resumes with its map visible. CSS owns the layout breakpoint;
 // controllers supply the gameplay state and keep recovery rules in each game.
 export function createDrivingUI(ui) {
   const shell = ui['game-shell'];
   const mapToggle = ui['map-toggle'];
   const mapPanel = ui['map-panel'];
-  const listeners = new AbortController();
 
   function setMapOpen(open) {
     shell.classList.toggle('map-open', open);
     mapToggle.setAttribute('aria-expanded', String(open));
   }
-  mapToggle.addEventListener(
-    'click',
-    () => {
-      if (!shell.classList.contains('is-driving') || mapPanel.classList.contains('hidden')) return;
-      setMapOpen(!shell.classList.contains('map-open'));
-    },
-    { signal: listeners.signal },
-  );
+  const disposeMapAction = bindTouchAction(mapToggle, () => {
+    if (!shell.classList.contains('is-driving') || mapPanel.classList.contains('hidden')) return;
+    setMapOpen(!shell.classList.contains('map-open'));
+  });
 
   return {
     setPlaying(playing, paused = false) {
@@ -28,7 +25,7 @@ export function createDrivingUI(ui) {
       setMapOpen(playing && !mapPanel.classList.contains('hidden'));
     },
     dispose() {
-      listeners.abort();
+      disposeMapAction();
     },
   };
 }

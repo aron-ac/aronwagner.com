@@ -1,5 +1,6 @@
 const assert = require('node:assert/strict');
 const { settleCamera } = require('./browser.cjs');
+const { exerciseMapWhileSteering } = require('./driving-controls.cjs');
 
 async function resetBoat(page) {
   await page.evaluate(() => {
@@ -262,6 +263,7 @@ async function exerciseBoatTouch(page) {
 
   await resetBoat(page);
   finger = await pressGround(page);
+  await exerciseMapWhileSteering(page, 'bayDebug');
   await stepBoat(page, 45);
   const brake = await pressAction(page, 'brake');
   const stopped = await stepBoat(page, 90);
@@ -302,9 +304,13 @@ async function exerciseBoatTouch(page) {
     'A second finger on Boost substantially increases actual boat speed while steering',
   );
   await boost.end();
+  // Sample after the release is processed. Real render frames can keep draining
+  // boost between the earlier snapshot and native touch release on slow GPUs.
+  const afterRelease = await stepBoat(page, 1);
+  assert.equal(afterRelease.input.boost, false, 'Lifting Boost clears its input command');
   const released = await stepBoat(page, 15);
   assert.ok(
-    released.touch.active && !released.boosting && released.boost > boosted.boost,
+    released.touch.active && !released.boosting && released.boost > afterRelease.boost,
     'Releasing Boost preserves steering and recharges the meter',
   );
   await finger.end();

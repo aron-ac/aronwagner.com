@@ -72,9 +72,19 @@ export function createGameInput({
   function clear() {
     keys.clear();
     keyOrder.clear();
+    // Pause can reveal a menu under a held finger. Cancel its actions without
+    // releasing capture; that finger must lift before it can control anything.
+    for (const pointer of pointers.values()) {
+      pointer.canceled = true;
+      pointer.buttons = [];
+      pointer.actions = [];
+    }
+    updateButtons();
+  }
+  function releaseAll() {
+    clear();
     const held = [...pointers];
     pointers.clear();
-    updateButtons();
     for (const [id, { captureElement }] of held) {
       if (captureElement.hasPointerCapture(id)) captureElement.releasePointerCapture(id);
     }
@@ -109,11 +119,12 @@ export function createGameInput({
     },
     options,
   );
-  window.addEventListener('blur', clear, options);
+  window.addEventListener('blur', releaseAll, options);
+  window.addEventListener('pagehide', releaseAll, options);
   document.addEventListener(
     'visibilitychange',
     () => {
-      if (document.hidden) clear();
+      if (document.hidden) releaseAll();
     },
     options,
   );
@@ -162,6 +173,7 @@ export function createGameInput({
           captureElement: surface,
           buttons: [],
           actions: [],
+          canceled: false,
           order: 0,
           pad: surface.closest('[data-control-pad]'),
         };
@@ -178,6 +190,7 @@ export function createGameInput({
         const pointer = pointers.get(event.pointerId);
         if (!pointer?.pad || pointer.captureElement !== surface) return;
         event.preventDefault();
+        if (pointer.canceled) return;
         if (directionalPads.includes(pointer.pad)) {
           updateDirectionalPad(pointer, event);
           updateButtons();
@@ -212,7 +225,7 @@ export function createGameInput({
     snapshot,
     clear,
     dispose() {
-      clear();
+      releaseAll();
       listeners.abort();
     },
   };

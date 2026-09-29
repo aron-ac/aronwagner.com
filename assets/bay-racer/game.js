@@ -7,6 +7,7 @@ import { createBayWorld } from './world.js';
 import { createRace, NORMAL_SPEED } from './race.js';
 import { createSynthAudio } from '../shared/audio.js';
 import { createGameInput } from '../shared/input.js';
+import { bindTouchAction } from '../shared/touch-action.js';
 import { createGameLoop } from '../shared/game-loop.js';
 import { createDrivingUI } from '../shared/driving-ui.js';
 import { requireElements, setText, isInteractiveTarget } from '../shared/dom.js';
@@ -251,13 +252,7 @@ ui.start.addEventListener('click', () => {
   else startRace();
 });
 ui.restart.addEventListener('click', startRace);
-ui.pause.addEventListener('click', pauseRace);
-// Touch Pause must work while another finger is still steering or boosting.
-ui.pause.addEventListener('pointerdown', (event) => {
-  if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return;
-  event.preventDefault();
-  pauseRace();
-});
+const disposePauseAction = bindTouchAction(ui.pause, pauseRace);
 ui.recover.addEventListener('click', recover);
 ui['menu-recover'].addEventListener('click', () => {
   if (state.mode !== 'paused' || ui['menu-recover'].disabled) return;
@@ -511,6 +506,7 @@ const loop = createGameLoop({
   clearInput,
   resize,
   dispose() {
+    disposePauseAction();
     drivingUI.dispose();
     controls.dispose();
     touchDrive.dispose();

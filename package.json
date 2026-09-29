@@ -30,5 +30,10 @@
     "prettier": "3.9.9",
     "puppeteer": "25.12.0",
     "wrangler": "4.142.0"
+  },
+  "overrides": {
+    "miniflare@5.20260926.0-alpha": {
+      "undici": "7.29.1"
+    }
   }
 }

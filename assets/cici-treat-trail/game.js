@@ -3,6 +3,7 @@ import { createAdventure, MAX_HEARTS } from './adventure.js';
 import * as art from './art.js';
 import { createSynthAudio } from '../shared/audio.js';
 import { createGameInput } from '../shared/input.js';
+import { bindTouchAction } from '../shared/touch-action.js';
 import { createGameLoop } from '../shared/game-loop.js';
 import { requireElements, setText, setAttribute, isInteractiveTarget } from '../shared/dom.js';
 import { readStoredNumber, writeStoredNumber } from '../shared/storage.js';
@@ -189,7 +190,7 @@ ui.start.addEventListener('click', () => {
   else startGame();
 });
 ui.restart.addEventListener('click', startGame);
-ui.pause.addEventListener('click', pauseGame);
+const disposePauseAction = bindTouchAction(ui.pause, pauseGame);
 document.addEventListener('keydown', (event) => {
   if (event.repeat) return;
   if (event.code === 'KeyP' || event.code === 'Escape') {
@@ -324,6 +325,7 @@ const loop = createGameLoop({
   clearInput,
   resize,
   dispose() {
+    disposePauseAction();
     controls.dispose();
     audio.dispose();
   },

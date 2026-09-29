@@ -108,6 +108,62 @@ async function exerciseMobileGestures(page) {
   await page.click('#start');
 }
 
+async function exerciseMobilePause(page) {
+  await page.evaluate(() => ciciDebug.startGame());
+  const right = await (await page.$('[data-control="right"]')).boundingBox();
+  const finger = await page.touchscreen.touchStart(
+    right.x + right.width / 2,
+    right.y + right.height / 2,
+  );
+  assert.ok(
+    await page.evaluate(() => {
+      for (let i = 0; i < 12; i++) ciciDebug.update(1 / 120);
+      return ciciDebug.state.player.vx > 0;
+    }),
+    'The first finger is moving CiCi before the second finger pauses',
+  );
+  await page.tap('#pause');
+  assert.equal(
+    await page.evaluate(() => ciciDebug.state.mode),
+    'paused',
+    'A second finger pauses CiCi while a movement arrow remains held',
+  );
+  await finger.end();
+  assert.equal(
+    await page.evaluate(() => ciciDebug.state.mode),
+    'paused',
+    'Lifting the old movement finger cannot activate the newly exposed menu',
+  );
+  assert.equal(
+    await page.$$eval('[data-control].pressed', (buttons) => buttons.length),
+    0,
+    'Pausing clears all pressed movement controls',
+  );
+  await page.tap('#start');
+  assert.ok(
+    await page.evaluate(() => {
+      for (let i = 0; i < 120; i++) ciciDebug.update(1 / 120);
+      return ciciDebug.state.mode === 'playing' && Math.abs(ciciDebug.state.player.vx) < 0.1;
+    }),
+    'Resuming cannot reactivate the old movement finger',
+  );
+  await page.focus('#pause');
+  await page.keyboard.press('Enter');
+  assert.equal(
+    await page.evaluate(() => ciciDebug.state.mode),
+    'paused',
+    'Keyboard activation of the Pause button is preserved',
+  );
+  await page.click('#start');
+  await page.click('#pause');
+  assert.equal(
+    await page.evaluate(() => ciciDebug.state.mode),
+    'paused',
+    'Mouse activation of the Pause button is preserved',
+  );
+  await page.click('#start');
+}
+
 test('cici treat trail smoke', { timeout: 300_000 }, async () => {
   const browser = await launchBrowser();
   try {
@@ -486,6 +542,7 @@ test('cici treat trail smoke', { timeout: 300_000 }, async () => {
         'All three touch controls fit the viewport',
       );
       await exerciseMobileGestures(page);
+      await exerciseMobilePause(page);
       const right = await (await page.$('[data-control="right"]')).boundingBox();
       const jump = await (await page.$('[data-control="jump"]')).boundingBox();
       const startX = await page.evaluate(() => ciciDebug.state.player.x);

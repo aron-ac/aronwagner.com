@@ -210,6 +210,10 @@ needed, then:
 npm run deploy
 ```
 
+The current Miniflare version has a scoped `undici` override to patch
+[GHSA-3wwx-pv8p-q78v](https://github.com/advisories/GHSA-3wwx-pv8p-q78v). Remove the override when
+updating Wrangler to a version whose Miniflare dependency includes the fix.
+
 Wrangler runs `npm run build:site` first. That script selects runtime files, assembles the theme
 fragments, and prepares ignored `dist/`; source notes, historical art, tests, development tools,
 and documentation are excluded. Build output reports the current file count and size;

@@ -62,10 +62,19 @@ async function exerciseCompactDrivingUI(page, { debugName, activeMode }) {
     await page.$eval('#map-toggle', (button) => button.getAttribute('aria-expanded')),
     'true',
   );
+  await page.tap('#map-toggle');
+  assert.equal(await mapVisible(), false, 'One touch dismisses the map exactly once');
+  await page.tap('#map-toggle');
+  assert.equal(await mapVisible(), true, 'A second touch restores the map exactly once');
   await page.click('#map-toggle');
   assert.equal(await mapVisible(), false, 'Map can be dismissed without pausing');
   await page.click('#map-toggle');
   assert.equal(await mapVisible(), true, 'Map can be shown again during play');
+  await page.focus('#map-toggle');
+  await page.keyboard.press('Enter');
+  assert.equal(await mapVisible(), false, 'Enter activates the focused Map button');
+  await page.keyboard.press('Space');
+  assert.equal(await mapVisible(), true, 'Space activates the focused Map button');
   await page.click('#pause');
   assert.equal(await mapVisible(), false, 'The map hides behind the pause menu');
   const before = await page.evaluate((debugName) => {
@@ -107,7 +116,34 @@ async function exerciseCompactDrivingUI(page, { debugName, activeMode }) {
   assert.equal(await mapVisible(), true, 'Resuming after recovery shows the map');
 }
 
+// The caller holds a real scene finger throughout this sequence. Chromium does
+// not synthesize a click for the second finger, so an isolated tap misses this bug.
+async function exerciseMapWhileSteering(page, debugName) {
+  for (const open of [false, true]) {
+    await page.tap('#map-toggle');
+    const state = await page.evaluate((debugName) => {
+      const game = window[debugName];
+      return {
+        mapVisible: document.querySelector('#map-panel').getClientRects().length > 0,
+        expanded: document.querySelector('#map-toggle').getAttribute('aria-expanded'),
+        touch: game.touchDrive.snapshot(),
+      };
+    }, debugName);
+    assert.equal(
+      state.mapVisible,
+      open,
+      `A second-finger tap ${open ? 'opens' : 'closes'} the map exactly once`,
+    );
+    assert.equal(state.expanded, String(open), 'The map accessibility state matches visibility');
+    assert.ok(
+      state.touch.active && state.touch.progress > 0,
+      'Toggling the map preserves the held steering command',
+    );
+  }
+}
+
 module.exports = {
   assertCompactDrivingUI,
   exerciseCompactDrivingUI,
+  exerciseMapWhileSteering,
 };

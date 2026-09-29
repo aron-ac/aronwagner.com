@@ -323,8 +323,8 @@ test('D-pad cleanup releases captures, selected actions and pressed arrows', (t)
     dpad: true,
   });
   for (const cleanup of [
-    () => input.clear(),
     () => dispatch(window, 'blur'),
+    () => dispatch(window, 'pagehide'),
     () => {
       document.hidden = true;
       dispatch(document, 'visibilitychange');
@@ -429,11 +429,29 @@ test('platformer running and jumping remain simultaneous without exclusive direc
   assert.equal(input.isDown('jump'), false);
 });
 
-test('clear, blur, visibility and disposal release original captures and slid actions', (t) => {
+test('clearing input cancels held controls but retains capture until they lift', (t) => {
+  const { input, buttons, window, pointer, move, setActive } = createFixture(t);
+  dispatch(window, 'keydown', { code: 'ArrowUp' });
+  pointer('left', 'pointerdown');
+  move('left', 'right');
+  setActive(false);
+  input.clear();
+  assert.equal(Object.values(input.snapshot()).some(Boolean), false);
+  assert.equal(buttons.right.classList.contains('pressed'), false);
+  assert.equal(buttons.left.hasPointerCapture(1), true, 'release stays on the original control');
+  setActive(true);
+  move('left', 'left');
+  assert.equal(input.isDown('left'), false, 'a stale finger cannot reactivate after resume');
+  pointer('left', 'pointerup');
+  pointer('left', 'pointerdown');
+  assert.equal(input.isDown('left'), true, 'a fresh touch works normally');
+});
+
+test('blur, visibility, pagehide and disposal release original captures and slid actions', (t) => {
   const { input, buttons, document, window, pointer, move, setActive } = createFixture(t);
   for (const cleanup of [
-    () => input.clear(),
     () => dispatch(window, 'blur'),
+    () => dispatch(window, 'pagehide'),
     () => {
       document.hidden = true;
       dispatch(document, 'visibilitychange');
