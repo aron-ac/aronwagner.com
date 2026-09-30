@@ -301,22 +301,50 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
       socialLinks,
       'Submenu contains only the two requested social links',
     );
-    // Games return in v2; until then the homepage neither lists nor links them.
-    assert.equal(
-      await page.$$eval(
-        '.project-card, a[href$="riders.html"], a[href$="racer.html"], a[href$="trail.html"]',
-        (els) => els.length,
+    // Maggie's Toy Run is live; Surf Riders and Bay Racer return in v2.
+    assert.deepEqual(
+      await page.$$eval('.project-card', (els) =>
+        els.map((el) => [el.getAttribute('href'), el.querySelector('h3').textContent.trim()]),
       ),
+      [['maggies-toy-run.html', 'Maggie’s Toy Run']],
+      'The arcade lists Maggie’s Toy Run',
+    );
+    assert.equal(
+      await page.$$eval('a[href$="riders.html"], a[href$="racer.html"]', (els) => els.length),
       0,
-      'Games stay hidden until v2',
+      'Surf Riders and Bay Racer stay hidden until v2',
+    );
+    assert.equal(
+      await page.$eval('.scene .emac', (link) => link.getAttribute('href')),
+      '#projects',
+      'The eMac opens the arcade',
     );
     assert.deepEqual(
       await page.$$eval('.intro p a', (links) =>
         links.map((link) => [link.textContent.trim(), link.getAttribute('href')]),
       ),
-      [['American Cloud', identity.companyUrl]],
-      'The introduction links to American Cloud',
+      [
+        ['American Cloud', identity.companyUrl],
+        ['Maggie’s Toy Run', 'maggies-toy-run.html'],
+      ],
+      'The introduction links to American Cloud and the game',
     );
+    const homeUrl = page.url();
+    const gameTarget = browser.waitForTarget(
+      (target) =>
+        target.type() === 'page' &&
+        new URL(target.url()).pathname.endsWith('/maggies-toy-run.html'),
+    );
+    await page.click('.project-card[href="maggies-toy-run.html"]');
+    const gamePage = await (await gameTarget).page();
+    assert.equal(page.url(), homeUrl, 'Opening the game keeps the homepage in its original tab');
+    assert.equal(
+      await gamePage.evaluate(() => window.opener === null),
+      true,
+      'The game has no access to its opener',
+    );
+    await gamePage.close();
+    await page.bringToFront();
     assert.deepEqual(
       await page.$eval('footer .hosted-by', (link) => ({
         text: link.textContent.replace(/\s+/g, ' ').trim(),
@@ -576,7 +604,7 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
             }),
           })),
         );
-        assert.equal(pins.length, 8, 'Eight scene objects have touch pins');
+        assert.equal(pins.length, 9, 'Nine scene objects have touch pins');
         assert.equal(
           await page.$$eval('.portrait .hotspot-pin, .dog .hotspot-pin', (pins) => pins.length),
           0,
@@ -680,7 +708,7 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
     }
     assert.deepEqual(errors, [], 'No JavaScript errors or failed homepage assets');
     console.log(
-      'PASS: Eastern schedule (winter/summer), manual override expiry, new-tab navigation, hidden games, social screen and submenu links, American Cloud business card and email link, seven-photo Polaroid shuffle, Rebecca’s wedding photo and keyboard controls, Maggie’s fetch and pets, pulsing touch pins and touchscreen activation, scene-scoped gesture protection, selectable and zoomable page/dialog text, all three game cards, and responsive layouts.',
+      'PASS: Eastern schedule (winter/summer), manual override expiry, new-tab navigation, the arcade and Maggie’s Toy Run launch, social screen and submenu links, American Cloud business card and email link, seven-photo Polaroid shuffle, Rebecca’s wedding photo and keyboard controls, Maggie’s fetch and pets, pulsing touch pins and touchscreen activation, scene-scoped gesture protection, selectable and zoomable page/dialog text, and responsive layouts.',
     );
   } finally {
     await closeBrowser(browser);
