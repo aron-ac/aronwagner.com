@@ -37,15 +37,15 @@ jobs:
           deploy/smoke.sh http://127.0.0.1:8080 http://localhost:8081
 
   # Browser suites against the production build served by the VM's Caddyfile,
-  # split across parallel shards. Software-rendered WebGL makes the game suites
-  # slow on hosted runners; `npm run test:browser` covers the unbuilt source locally.
+  # split across parallel shards to keep hosted-runner time short;
+  # `npm run test:browser` covers the unbuilt source locally.
   browser:
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5]
+        shard: [1, 2, 3]
     env:
       # Install one exact browser pinned by our locked Puppeteer version below.
       PUPPETEER_SKIP_DOWNLOAD: 'true'
@@ -63,10 +63,10 @@ jobs:
       - run: npm run build:site
       - name: Install Caddy
         run: .github/install-caddy.sh
-      - name: Browser suites (shard ${{ matrix.shard }} of 5)
+      - name: Browser suites (shard ${{ matrix.shard }} of 3)
         run: |
           deploy/serve-local.sh
-          node tools/test-browser.js --url http://127.0.0.1:8080/ --shard ${{ matrix.shard }}/5
+          node tools/test-browser.js --url http://127.0.0.1:8080/ --shard ${{ matrix.shard }}/3
       - name: Upload browser screenshots
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

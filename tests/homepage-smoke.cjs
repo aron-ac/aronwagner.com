@@ -301,7 +301,7 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
       socialLinks,
       'Submenu contains only the two requested social links',
     );
-    // Maggie's Toy Run is live; Surf Riders and Bay Racer return in v2.
+    // The arcade has exactly the two current games.
     assert.deepEqual(
       await page.$$eval('.project-card', (els) =>
         els.map((el) => [el.getAttribute('href'), el.querySelector('h3').textContent.trim()]),
@@ -311,11 +311,6 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
         ['aisle-dash.html', 'Aisle Dash'],
       ],
       'The arcade lists both games',
-    );
-    assert.equal(
-      await page.$$eval('a[href$="riders.html"], a[href$="racer.html"]', (els) => els.length),
-      0,
-      'Surf Riders and Bay Racer stay hidden until v2',
     );
     assert.equal(
       await page.$eval('.scene .emac', (link) => link.getAttribute('href')),

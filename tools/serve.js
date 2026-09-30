@@ -4,6 +4,7 @@ import { readFile, stat } from 'node:fs/promises';
 import { extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
+import { LEGACY_REDIRECTS } from './lib/site-build.js';
 
 const projectRoot = fileURLToPath(new URL('../', import.meta.url));
 const mimeTypes = {
@@ -41,7 +42,7 @@ export function createSiteServer({ root: directory = projectRoot } = {}) {
   const redirects = parseRedirects(
     readRules('_redirects') ||
       (root === resolve(projectRoot)
-        ? '/cr-surf-rides.html /surf-riders.html 301\n/desk.html / 301\n'
+        ? LEGACY_REDIRECTS.map((rule) => `${rule.join(' ')}\n`).join('')
         : ''),
   );
   // Missing pages get the site's 404 page when the served root has one, as in production.

@@ -54,11 +54,6 @@ the same way as the office art. See [its README](assets/aisle-dash/README.md).
 
 [![Aisle Dash](assets/social/aisle-dash-og.jpg)](https://aronwagner.com/aisle-dash.html)
 
-Two more games, Surf Riders and Bay Racer, are still in the repository and are being reworked.
-Their pages build and have tests but aren't linked or indexed yet; their cards are commented out in
-`index.html`. To bring one back, uncomment its card, remove the `noindex` meta tag from its page and
-add it to `sitemap.xml`.
-
 ## Local development
 
 Use Node.js 24 or newer:
@@ -83,9 +78,8 @@ inlines the homepage's critical theme files, as the production build does.
   in `script.js`, then update `PHOTO_COUNT` in the homepage tests.
 - `tests/helpers/identity.cjs` holds the owner details the tests expect: name, title, email and
   social links.
-- `assets/shared/`, `assets/surf-rides/`, `assets/bay-racer/`, `assets/maggies-toy-run/` and
-  `assets/aisle-dash/` are the
-  games, which share a pinned copy of Three.js in `assets/vendor/three/`.
+- `assets/maggies-toy-run/` and `assets/aisle-dash/` are the games; `assets/shared/` holds their
+  common arcade shell, input, game loop, audio and storage.
 
 ## Checks
 
@@ -174,7 +168,7 @@ paths to their production URLs. `robots.txt`, `sitemap.xml` and the pages keep f
 Production assets use content-derived URLs under `/immutable/` with a one-year immutable cache
 policy. The build rewrites references consistently, so routine asset changes do not require
 hand-edited query version tokens. Small application scripts/styles share a version derived from
-their graph and referenced assets; large images, fonts, and the vendored library retain
+their graph and referenced assets; large images and fonts retain
 independent versions across unrelated code changes. Stable asset aliases use temporary redirects
 to their current immutable versions.
 
@@ -220,9 +214,9 @@ root-disk snapshot in American Cloud is a quick restore point. To rebuild from s
 ## Credits
 
 This site began as a fork of [Mark Hammonds's](https://markhammonds.com/) personal website, and its
-structure, build, tests and games are his work. Thank you, Mark. Maggie's Toy Run is his CiCi's Treat Trail, redrawn for Maggie and Aron's backyard. Aisle Dash is new, built on his shared arcade code. The office illustration, content, photos and hosting
+structure, build and tests are his work. Thank you, Mark. Maggie's Toy Run is his CiCi's Treat Trail, redrawn for Maggie and Aron's backyard. Aisle Dash is new, built on his shared arcade code. The office illustration, content, photos and hosting
 are Aron's.
 
 Fonts are self-hosted from [Merriweather](https://github.com/EbenSorkin/Merriweather4) and
 [Caveat](https://github.com/googlefonts/caveat) under the SIL Open Font License (see
-`assets/fonts/`). Surf Riders and Bay Racer use [Three.js](https://threejs.org/) (MIT, `assets/vendor/three/`).
+`assets/fonts/`).
