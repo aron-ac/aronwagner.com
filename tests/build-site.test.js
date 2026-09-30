@@ -21,7 +21,6 @@ test('release build resolves immutable assets, secures scripts, and excludes pro
     await access(join(output, destination));
   }
   assert.ok(manifest['assets/shared/arcade.css']);
-  assert.ok(manifest['assets/vendor/three/three.core.js']);
   for (const theme of ['day', 'night']) {
     for (const size of ['', '-small'])
       assert.ok(manifest[`assets/office/office-${theme}${size}.webp`]);
@@ -72,7 +71,8 @@ test('release build resolves immutable assets, secures scripts, and excludes pro
   assert.match(homepage, /getComputedStyle\(root\)/);
   assert.match(homepage, /name="theme-color" content="#[\da-f]+"/i);
   const redirects = await readFile(join(output, '_redirects'), 'utf8');
-  assert.match(redirects, /^\/cr-surf-rides.html \/surf-riders.html 301$/m);
+  assert.match(redirects, /^\/cr-surf-rides.html \/ 301$/m);
+  assert.match(redirects, /^\/cici-treat-trail.html \/maggies-toy-run.html 301$/m);
   assert.match(redirects, /^\/desk.html \/ 301$/m);
   // The VM's Caddy rules must carry exactly the same redirects and headers.
   const caddy = await readFile(join(output, 'site.caddy'), 'utf8');

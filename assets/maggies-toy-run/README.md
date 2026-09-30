@@ -27,9 +27,9 @@ Reach Aron and Rebecca to win; collecting every ball is optional. Finishing awar
 
 ## Shared runtime
 
-The shared `../shared/arcade.css` defines the arcade shell and common controls. Each game stylesheet retains its palette, scene overlays and responsive positions. HUD labels stay at least 10px; compact minimaps omit cramped decorative text while retaining their accessible names and visual markers.
+The shared `../shared/arcade.css` defines the arcade shell and common controls. Each game stylesheet retains its palette, scene overlays and responsive positions. HUD labels stay at least 10px.
 
-`../shared/game-loop.js` owns frame timing, viewport observation, focus/visibility pauses and page-cache restoration. The controller supplies its render callback, resize guard and cleanup; gameplay remains in the simulation module. Missing optional minimap contexts no longer prevent either driving game from launching.
+`../shared/game-loop.js` owns frame timing, viewport observation, focus/visibility pauses and page-cache restoration. The controller supplies its render callback, resize guard and cleanup; gameplay remains in the simulation module.
 
 `../shared/` supplies keyboard/touch input, opt-in synthesized audio, validated local score storage, guarded HUD writes and module-load error handling. Game-specific shortcuts and menus remain in `game.js`; movement and scoring stay independent of the browser in the simulation module.
 

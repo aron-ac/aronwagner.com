@@ -7,30 +7,16 @@ const { launchBrowser, closeBrowser, loadGame } = require('./helpers/browser.cjs
 const baseURL = process.env.SITE_URL || 'http://localhost:8000/';
 const games = [
   {
-    page: 'surf-riders.html',
-    debug: 'surfDebug',
-    active: ['playing'],
-    touch: 'brake',
-  },
-  {
-    page: 'bay-racer.html',
-    debug: 'bayDebug',
-    active: ['countdown', 'racing'],
-    touch: 'brake',
-  },
-  {
     page: 'maggies-toy-run.html',
     debug: 'maggieDebug',
     active: ['playing'],
     touch: 'right',
-    canvas2d: true,
   },
   {
     page: 'aisle-dash.html',
     debug: 'aisleDebug',
     active: ['playing'],
     touch: 'right',
-    canvas2d: true,
   },
 ];
 
@@ -136,35 +122,20 @@ async function checkGame(browser, game) {
           .map((button) => button.outerHTML),
       ),
       [],
-      `${game.page}: every driving control is an explicitly typed, named button`,
+      `${game.page}: every touch control is an explicitly typed, named button`,
     );
     assert.equal(
       await page.$eval('#touch-controls', (element) => element.getAttribute('role')),
       'group',
     );
-    if (!game.canvas2d) {
-      assert.equal(
-        await page.$eval('#viewport', (element) => element.getAttribute('role')),
-        'group',
-      );
-      assert.equal(await page.$eval('#minimap', (element) => element.getAttribute('role')), 'img');
-    }
     await page.evaluate(({ debug }) => {
-      const game = window[debug];
-      if (game.renderer) {
-        const render = game.renderer.render.bind(game.renderer);
-        game.renderer.render = (...args) => {
-          window.__gameFrames.renders++;
-          return render(...args);
-        };
-      } else {
-        const context = game.canvas.getContext('2d');
-        const clear = context.clearRect.bind(context);
-        context.clearRect = (...args) => {
-          window.__gameFrames.renders++;
-          return clear(...args);
-        };
-      }
+      // Each frame starts by clearing the canvas, so clears count renders.
+      const context = window[debug].canvas.getContext('2d');
+      const clear = context.clearRect.bind(context);
+      context.clearRect = (...args) => {
+        window.__gameFrames.renders++;
+        return clear(...args);
+      };
     }, game);
     await page.focus('#start');
     await page.keyboard.press('Enter');
@@ -332,65 +303,6 @@ async function checkGame(browser, game) {
       `${game.page}: starting enters active gameplay`,
     );
     assert.deepEqual(errors, [], `${game.page}: normal reload recovers without browser errors`);
-    if (!game.canvas2d) {
-      const initialFrames = await page.evaluate(() => {
-        document.getElementById('viewport').style.display = 'none';
-        return window.__gameFrames.callbacks;
-      });
-      await page.waitForFunction(
-        (count) => window.__gameFrames.callbacks > count + 2,
-        { polling: 50 },
-        initialFrames,
-      );
-      assert.ok(
-        await page.evaluate((name) => {
-          const { camera, renderer } = window[name];
-          return (
-            Number.isFinite(camera.aspect) &&
-            camera.aspect > 0 &&
-            camera.projectionMatrix.elements.every(Number.isFinite) &&
-            renderer.domElement.width > 0 &&
-            renderer.domElement.height > 0
-          );
-        }, game.debug),
-        `${game.page}: a zero-size viewport preserves a finite camera and usable render buffer`,
-      );
-      await page.evaluate(() => {
-        document.getElementById('viewport').style.display = '';
-      });
-      await page.waitForFunction(
-        (name) => {
-          const viewport = document.getElementById('viewport');
-          return (
-            Math.abs(window[name].camera.aspect - viewport.clientWidth / viewport.clientHeight) <
-            0.0001
-          );
-        },
-        {},
-        game.debug,
-      );
-
-      await page.evaluateOnNewDocument(() => {
-        const getContext = HTMLCanvasElement.prototype.getContext;
-        HTMLCanvasElement.prototype.getContext = function (type, ...args) {
-          if (this.id === 'minimap' && type === '2d') return null;
-          return getContext.call(this, type, ...args);
-        };
-      });
-      await loadGame(page, url.href, game.debug, { reload: true });
-      assert.equal(
-        await page.$eval('#map-panel', (panel) => getComputedStyle(panel).display),
-        'none',
-        `${game.page}: unavailable optional minimap is hidden`,
-      );
-      await page.click('#start');
-      await page.waitForFunction((name) => window[name].state.elapsed > 0, {}, game.debug);
-      assert.deepEqual(
-        errors,
-        [],
-        `${game.page}: missing minimap does not stop gameplay or report runtime errors`,
-      );
-    }
     console.log(
       `PASS: ${game.page} lifecycle, render loop, input cleanup, keyboard navigation, loader recovery, accessible controls and optional render targets.`,
     );

@@ -4,16 +4,17 @@ import { dirname, extname, join, posix, resolve } from 'node:path';
 import { inlineHomepage } from './inline-homepage.js';
 
 export const SITE_ORIGIN = 'https://aronwagner.com';
+// Retired pages, including Mark's old games, send visitors somewhere useful.
+export const LEGACY_REDIRECTS = [
+  ['/desk.html', '/', 301],
+  ['/cr-surf-rides.html', '/', 301],
+  ['/surf-riders.html', '/', 301],
+  ['/bay-racer.html', '/', 301],
+  ['/cici-treat-trail.html', '/maggies-toy-run.html', 301],
+];
 // Crawlers fetch these at fixed root URLs, so they are never fingerprinted.
 const rootFiles = ['robots.txt', 'sitemap.xml'];
-export const pages = [
-  'index.html',
-  '404.html',
-  'surf-riders.html',
-  'bay-racer.html',
-  'maggies-toy-run.html',
-  'aisle-dash.html',
-];
+export const pages = ['index.html', '404.html', 'maggies-toy-run.html', 'aisle-dash.html'];
 const textExtensions = new Set(['.js', '.css', '.json']);
 const digest = (value) => createHash('sha256').update(value).digest('hex').slice(0, 16);
 
@@ -30,9 +31,6 @@ async function runtimeFiles(root) {
     'assets/favicon-48.png',
     'assets/apple-touch-icon.png',
     'assets/brand/american-cloud-icon.svg',
-    'assets/vendor/three/three.module.js',
-    'assets/vendor/three/three.core.js',
-    'assets/vendor/three/LICENSE',
   ]);
   async function include(directory, extensions) {
     for (const entry of await readdir(join(root, directory), { withFileTypes: true })) {
@@ -45,7 +43,7 @@ async function runtimeFiles(root) {
   await include('assets/polaroids', ['.jpg']);
   await include('assets/social', ['.jpg']);
   await include('assets/office', ['.webp']);
-  for (const directory of ['shared', 'surf-rides', 'bay-racer', 'maggies-toy-run', 'aisle-dash']) {
+  for (const directory of ['shared', 'maggies-toy-run', 'aisle-dash']) {
     await include(`assets/${directory}`, ['.js', '.css', '.webp', '.glb']);
   }
   return [...files].sort();
@@ -184,8 +182,7 @@ export async function buildSite({ root, output }) {
     { path: '/immutable/*', headers: [['Cache-Control', 'public, max-age=31536000, immutable']] },
   ];
   const redirectRules = [
-    ['/cr-surf-rides.html', '/surf-riders.html', 301],
-    ['/desk.html', '/', 301],
+    ...LEGACY_REDIRECTS,
     // Mutable aliases support previously shared social images and already-open
     // pages. New HTML always points directly at immutable assets.
     ...Object.entries(manifest).map(([source, destination]) => [`/${source}`, destination, 302]),

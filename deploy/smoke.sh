@@ -29,7 +29,8 @@ check 'homepage loads' / '^HTTP/[0-9.]+ 200'
 check 'content security policy' / "^content-security-policy: default-src 'self'"
 check 'framing denied' / '^x-frame-options: DENY'
 check 'desk redirect' /desk.html '^location: /$'
-check 'old game redirect keeps query' '/cr-surf-rides.html?debug=1' '^location: /surf-riders.html\?debug=1$'
+check 'old game redirect keeps query' '/cici-treat-trail.html?debug=1' '^location: /maggies-toy-run.html\?debug=1$'
+check 'retired game redirect' /surf-riders.html '^location: /$'
 check 'stable asset alias' /favicon.ico '^location: /immutable/[0-9a-f]+/favicon.ico$'
 immutable=$(curl ${curl_opts[@]+"${curl_opts[@]}"} -sS -o /dev/null -D - --max-time 20 "$base/favicon.ico" | tr -d '\r' |
   sed -n 's/^[Ll]ocation: //p')
@@ -51,8 +52,8 @@ for hidden in /site.caddy /_headers /_redirects; do
 done
 if [[ -n $www ]]; then
   base=${www%/}
-  check 'www redirect' '/surf-riders.html?x=1' \
-    '^location: https://aronwagner.com/surf-riders.html\?x=1$'
+  check 'www redirect' '/maggies-toy-run.html?x=1' \
+    '^location: https://aronwagner.com/maggies-toy-run.html\?x=1$'
 fi
 
 if ((failures)); then

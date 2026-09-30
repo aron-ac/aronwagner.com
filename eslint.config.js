@@ -25,8 +25,6 @@ export default [
     languageOptions: {
       globals: {
         ...globals.node,
-        surfDebug: 'readonly',
-        bayDebug: 'readonly',
         maggieDebug: 'readonly',
         aisleDebug: 'readonly',
         setTestClock: 'readonly',

@@ -47,12 +47,17 @@ function shard(files, spec) {
     throw new Error(`Expected --shard k/n with 1 <= k <= n: ${spec}`);
   }
   const seconds = {
-    'responsive-bay.cjs': 117,
-    'bay-racer-smoke.cjs': 100,
-    'responsive-surf.cjs': 82,
-    'surf-rides-smoke.cjs': 79,
     'responsive-home.cjs': 43,
     'homepage-smoke.cjs': 33,
+    'game-lifecycle.cjs': 30,
+    'responsive-maggie.cjs': 25,
+    'maggies-toy-run-smoke.cjs': 20,
+    'responsive-aisle-dash.cjs': 18,
+    'homepage-theme-load.cjs': 18,
+    'cards-smoke.cjs': 18,
+    'external-links-smoke.cjs': 14,
+    'aisle-dash-smoke.cjs': 10,
+    'browser-emulation-smoke.cjs': 5,
   };
   const weight = (file) => seconds[file.slice(tests.length + 1)] ?? 30;
   // Longest first, each onto the currently lightest shard.

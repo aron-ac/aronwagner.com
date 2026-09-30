@@ -18,7 +18,7 @@ test('local production server applies build headers and redirects without exposi
   );
   await writeFile(
     join(directory, '_redirects'),
-    '/ /index.html 200\n/desk.html / 301\n/cr-surf-rides.html /surf-riders.html 301\n',
+    '/ /index.html 200\n/desk.html / 301\n/cr-surf-rides.html / 301\n',
   );
   const server = createSiteServer({ root: directory });
   t.after(async () => {
@@ -41,7 +41,7 @@ test('local production server applies build headers and redirects without exposi
   assert.equal(await asset.text(), '');
   for (const [route, target] of [
     ['desk.html', '/'],
-    ['cr-surf-rides.html', '/surf-riders.html'],
+    ['cr-surf-rides.html', '/'],
   ]) {
     const response = await fetch(`${base}/${route}?debug=1`, { redirect: 'manual' });
     assert.equal(response.status, 301);
@@ -140,7 +140,8 @@ test('source server redirects retired pages while preserving query strings', asy
   const base = `http://127.0.0.1:${server.address().port}`;
   for (const [path, destination] of [
     ['desk.html', '/'],
-    ['cr-surf-rides.html', '/surf-riders.html'],
+    ['surf-riders.html', '/'],
+    ['cici-treat-trail.html', '/maggies-toy-run.html'],
   ]) {
     const response = await fetch(`${base}/${path}?debug=1&return=a%2Fb`, { redirect: 'manual' });
     assert.equal(response.status, 301);

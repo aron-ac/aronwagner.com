@@ -232,13 +232,10 @@ footer {
   -webkit-user-select: none;
 }
 
-/* Compact minimaps retain their visual markers and accessible names. The main
-   target panel provides the destination, leaving space for readable HUD text. */
+/* Compact screens keep the HUD readable by dropping decorative text. */
 @media (max-width: 650px), (max-height: 520px) and (orientation: landscape) {
   footer > :nth-child(n + 2),
-  .game-brand .eyebrow,
-  .map-panel .map-title,
-  .map-panel .map-legend {
+  .game-brand .eyebrow {
     display: none;
   }
 }
