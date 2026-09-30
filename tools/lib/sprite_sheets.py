@@ -40,6 +40,54 @@ def components(mask):
     return found
 
 
+def split_oversized(pixels, cell_w, cell_h, search=30):
+    """Split a shape that spans more than one grid cell (figures drawn touching).
+
+    It is cut where it is thinnest near each cell edge it crosses, so the cut
+    follows the real gap between the figures. Returns a list of pixel lists.
+    """
+    xs = [p[0] for p in pixels]
+    ys = [p[1] for p in pixels]
+    for axis, lo, hi, size in ((0, min(xs), max(xs), cell_w), (1, min(ys), max(ys), cell_h)):
+        if hi - lo < size * 1.4:
+            continue
+        counts = {}
+        for point in pixels:
+            counts[point[axis]] = counts.get(point[axis], 0) + 1
+        edge = round((lo + hi) / 2 / size) * size
+        cut = min(range(int(edge - search), int(edge + search) + 1), key=lambda v: counts.get(v, 0))
+        first = [p for p in pixels if p[axis] < cut]
+        second = [p for p in pixels if p[axis] >= cut]
+        if first and second:
+            # Bits of one figure left on the other side of the cut stand alone,
+            # so they go to their own nearest cell.
+            return [
+                part
+                for half in (first, second)
+                for piece in connected(half)
+                for part in split_oversized(piece, cell_w, cell_h, search)
+            ]
+    return [pixels]
+
+
+def connected(pixels):
+    """Split a pixel list into its 4-connected pieces."""
+    left = set(pixels)
+    pieces = []
+    while left:
+        stack = [left.pop()]
+        piece = []
+        while stack:
+            px, py = stack.pop()
+            piece.append((px, py))
+            for neighbor in ((px + 1, py), (px - 1, py), (px, py + 1), (px, py - 1)):
+                if neighbor in left:
+                    left.remove(neighbor)
+                    stack.append(neighbor)
+        pieces.append(piece)
+    return pieces
+
+
 def cut_grid(sheet, cols, rows, min_pixels=12):
     """Cut a sheet into cols x rows figures, row by row.
 
@@ -51,7 +99,9 @@ def cut_grid(sheet, cols, rows, min_pixels=12):
     small = sheet.getchannel('A').resize((sheet.width // 2, sheet.height // 2), Image.BOX)
     small = small.point(lambda v: 255 if v > 20 else 0)
     cells = {}
-    for pixels, box in components(small):
+    cell_w, cell_h = small.width / cols, small.height / rows
+    shapes = [part for pixels, _ in components(small) for part in split_oversized(pixels, cell_w, cell_h)]
+    for pixels in shapes:
         if len(pixels) < min_pixels:
             continue
         cx = sum(p[0] for p in pixels) / len(pixels) * 2

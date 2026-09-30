@@ -38,6 +38,7 @@ check 'immutable caching' "$immutable" '^cache-control: public, max-age=31536000
 check 'arcade game' /maggies-toy-run.html '^HTTP/[0-9.]+ 200'
 check 'second arcade game' /aisle-dash.html '^HTTP/[0-9.]+ 200'
 check 'third arcade game' /tee-time.html '^HTTP/[0-9.]+ 200'
+check 'fourth arcade game' /five-nines.html '^HTTP/[0-9.]+ 200'
 check 'robots.txt' /robots.txt '^HTTP/[0-9.]+ 200'
 check 'sitemap' /sitemap.xml '^content-type: (application|text)/xml'
 # The 404 page must keep its status and actually be the site's page.

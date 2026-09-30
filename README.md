@@ -2,7 +2,7 @@
 
 The personal website of Aron Wagner, CEO of [American Cloud](https://americancloud.com/). It is an
 illustrated, clickable version of his home office, with Rebecca, Jack and Maggie the Goldendoodle,
-plus a small arcade of three games, and it's self-hosted on an American Cloud virtual machine.
+plus a small arcade of four games, and it's self-hosted on an American Cloud virtual machine.
 
 **[Visit the site →](https://aronwagner.com/)**
 
@@ -63,6 +63,16 @@ the ball and drops it somewhere else. The golf bag in the office links to it too
 
 [![Tee Time](assets/social/tee-time-og.jpg)](https://aronwagner.com/tee-time.html)
 
+**[Five Nines](https://aronwagner.com/five-nines.html)** is the American Cloud night shift, side-on:
+Aron is somehow the only one on, and nine racks of real American Cloud products (VMs, Kubernetes,
+Object Storage, DNS, WordPress and more) keep breaking between 9 PM and 6 AM. Run to trouble and
+hold Space to plug cables back in, swap full drives, cool hot racks before they catch fire, scale up
+the load balancers and put out fires, while customer tickets pile up at the help desk ("is it down",
+"is it down now"). Uptime is shown in nines; five is the dream. See
+[its README](assets/five-nines/README.md).
+
+[![Five Nines](assets/social/five-nines-og.jpg)](https://aronwagner.com/five-nines.html)
+
 ## Local development
 
 Use Node.js 24 or newer:
@@ -87,7 +97,7 @@ inlines the homepage's critical theme files, as the production build does.
   in `script.js`, then update `PHOTO_COUNT` in the homepage tests.
 - `tests/helpers/identity.cjs` holds the owner details the tests expect: name, title, email and
   social links.
-- `assets/maggies-toy-run/`, `assets/aisle-dash/` and `assets/tee-time/` are the games; `assets/shared/` holds their
+- `assets/maggies-toy-run/`, `assets/aisle-dash/`, `assets/tee-time/` and `assets/five-nines/` are the games; `assets/shared/` holds their
   common arcade shell, input, game loop, audio and storage.
 
 ## Checks
@@ -223,7 +233,7 @@ root-disk snapshot in American Cloud is a quick restore point. To rebuild from s
 ## Credits
 
 This site began as a fork of [Mark Hammonds's](https://markhammonds.com/) personal website, and its
-structure, build and tests are his work. Thank you, Mark. Maggie's Toy Run is his CiCi's Treat Trail, redrawn for Maggie and Aron's backyard. Aisle Dash is new, built on his shared arcade code. The office illustration, content, photos and hosting
+structure, build and tests are his work. Thank you, Mark. Maggie's Toy Run is his CiCi's Treat Trail, redrawn for Maggie and Aron's backyard. Aisle Dash, Tee Time and Five Nines are new, built on his shared arcade code. The office illustration, content, photos and hosting
 are Aron's.
 
 Fonts are self-hosted from [Merriweather](https://github.com/EbenSorkin/Merriweather4) and

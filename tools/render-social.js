@@ -98,6 +98,14 @@ try {
       title: 'Tee Time',
       description: 'Nine holes from the office to the bay. Watch out for Maggie.',
     },
+    {
+      file: 'five-nines',
+      image: 'five-nines',
+      title: 'Five Nines',
+      description: 'Work the American Cloud night shift. Put out fires. Answer the tickets.',
+      // The data center's ceiling is dark, so the label goes light.
+      playColor: '#eef3fb',
+    },
   ]) {
     await page.evaluate(
       ({ game, arcade, domain }) => {
@@ -120,7 +128,7 @@ try {
         .social-shade{position:absolute;inset:0;background:linear-gradient(180deg,#102b3630,transparent 30%,#102b3600 42%,#102b36eb 100%)}
         .game-social-card::after{border-color:#fff4}
         .game-social-card .social-brand{top:46px;color:#fffef4;text-shadow:0 1px 5px #102b3650}
-        .social-play{position:absolute;top:63px;right:62px;font:700 12px/1 Arial,sans-serif;letter-spacing:2px;color:#102b36}
+        .social-play{position:absolute;top:63px;right:62px;font:700 12px/1 Arial,sans-serif;letter-spacing:2px;color:${game.playColor || '#102b36'}}
         .social-game-copy{position:absolute;left:62px;bottom:62px;color:#fffef4}
         .social-game-copy h1{font:400 78px/1.05 'Caveat Brush',cursive;letter-spacing:-1px;margin:0 0 12px}
         .social-game-copy p{font:20px/1.5 Arial,sans-serif;color:#e6efdf;margin:0}

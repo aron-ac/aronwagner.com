@@ -28,6 +28,7 @@ export default [
         maggieDebug: 'readonly',
         aisleDebug: 'readonly',
         teeDebug: 'readonly',
+        ninesDebug: 'readonly',
         setTestClock: 'readonly',
         themeLoadProbe: 'readonly',
       },

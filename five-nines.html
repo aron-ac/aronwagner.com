@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="theme-color" content="#0d1422" />
+    <meta
+      name="description"
+      content="Work the night shift at American Cloud. Plug cables, swap drives, put out fires and answer tickets until 6 AM. Five nines is the dream."
+    />
+    <title>Five Nines · Aron Wagner</title>
+    <link rel="canonical" href="https://aronwagner.com/five-nines.html" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Aron Wagner" />
+    <meta property="og:title" content="Five Nines · Aron Wagner" />
+    <meta
+      property="og:description"
+      content="Work the night shift at American Cloud. Plug cables, swap drives, put out fires and answer tickets until 6 AM. Five nines is the dream."
+    />
+    <meta property="og:url" content="https://aronwagner.com/five-nines.html" />
+    <meta property="og:image" content="https://aronwagner.com/assets/social/five-nines-og.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta
+      property="og:image:alt"
+      content="Five Nines: Aron sprays a burning server rack while customer tickets pile up."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Five Nines · Aron Wagner" />
+    <meta
+      name="twitter:description"
+      content="Work the night shift at American Cloud. Plug cables, swap drives, put out fires and answer tickets until 6 AM. Five nines is the dream."
+    />
+    <meta name="twitter:image" content="https://aronwagner.com/assets/social/five-nines-og.jpg" />
+    <meta
+      name="twitter:image:alt"
+      content="Five Nines: Aron sprays a burning server rack while customer tickets pile up."
+    />
+    <meta name="twitter:creator" content="@aronwagner" />
+    <link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48" />
+    <link rel="icon" href="assets/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="icon" href="assets/favicon-48.png" type="image/png" sizes="48x48" />
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" sizes="any" />
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" sizes="180x180" />
+    <link rel="stylesheet" href="assets/shared/arcade.css" />
+    <link rel="stylesheet" href="assets/five-nines/style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a href="index.html" target="_blank" rel="noopener noreferrer">← BACK TO THE OFFICE</a
+      ><span class="terminal">./five-nines <span aria-hidden="true">▌</span></span
+      ><button id="sound" type="button" aria-pressed="false">SOUND OFF</button>
+    </header>
+    <main id="game-shell">
+      <div id="viewport">
+        <canvas
+          role="img"
+          id="canvas"
+          tabindex="0"
+          aria-label="A side-on row of server racks. Left and right arrows or A and D to run; hold Space or E to fix a rack or answer a ticket."
+          >Keep the servers up. This game needs Canvas and JavaScript.</canvas
+        >
+      </div>
+      <section class="hud" aria-label="Shift statistics">
+        <div class="game-brand">
+          <span class="eyebrow">THE AMERICAN CLOUD NIGHT SHIFT</span>
+          <h1>FIVE NINES <span aria-hidden="true">🔥</span></h1>
+        </div>
+        <div class="stats">
+          <div class="uptime"><span>UPTIME</span><strong id="uptime">100.000%</strong></div>
+          <div class="happy">
+            <span>CUSTOMERS</span
+            ><strong id="happiness" role="img" aria-label="Customers are 80% happy">80%</strong
+            ><i class="meter" aria-hidden="true"><b id="happy-fill"></b></i>
+          </div>
+          <div><span>TICKETS</span><strong id="tickets">0</strong></div>
+          <div class="clock">
+            <span>SHIFT</span><strong id="clock">9:00 PM</strong
+            ><i class="meter" aria-hidden="true"><b id="shift-fill"></b></i>
+          </div>
+        </div>
+      </section>
+      <div id="toast" role="status" aria-live="polite"></div>
+      <div class="bottom-bar">
+        <span class="keyboard-help"
+          ><kbd>← →</kbd> / <kbd>A D</kbd> RUN <b>·</b> HOLD <kbd>SPACE</kbd> FIX / ANSWER <b>·</b>
+          <kbd>P</kbd> PAUSE</span
+        ><button id="pause" class="hidden" type="button">Ⅱ PAUSE</button>
+      </div>
+      <div
+        role="group"
+        id="touch-controls"
+        class="touch-controls hidden"
+        aria-label="Touch controls"
+      >
+        <div>
+          <button type="button" data-control="left" aria-label="Run left">◀</button
+          ><button type="button" data-control="right" aria-label="Run right">▶</button>
+        </div>
+        <button
+          type="button"
+          id="action"
+          data-control="action"
+          class="action"
+          aria-label="Hold to fix a rack or answer a ticket"
+        >
+          FIX
+        </button>
+      </div>
+      <section id="overlay" class="overlay" aria-label="Game menu">
+        <div class="menu-card">
+          <span id="menu-eyebrow" class="eyebrow">NINE RACKS. ONE CEO. 9 PM TO 6 AM.</span>
+          <h2 id="menu-title">Keep it<br />all up.</h2>
+          <p id="menu-description">
+            Somehow you’re the only one on the night shift at American Cloud. Keep every product
+            online until 6 AM, and keep the customers happy while you’re at it.
+          </p>
+          <div id="intro-details" class="intro-details">
+            <div>
+              <span>01</span>
+              <p>
+                <strong>Racks break. Run.</strong>Stand by one and hold Space: plug cables back in,
+                swap full drives, cool hot racks before they catch fire.
+              </p>
+            </div>
+            <div>
+              <span>02</span>
+              <p>
+                <strong>Customers want answers.</strong>Tickets pile up at the help desk. Answer
+                them, or fix what they’re asking about and they close themselves.
+              </p>
+            </div>
+            <div>
+              <span>03</span>
+              <p>
+                <strong>Five nines is the dream.</strong>Every second a rack is down costs uptime.
+                The coffee cart makes you faster for a bit.
+              </p>
+            </div>
+          </div>
+          <div id="results" class="results hidden"></div>
+          <button id="start" class="primary" type="button">
+            CLOCK IN <span aria-hidden="true">↗</span></button
+          ><button id="restart" class="secondary hidden" type="button">START THE SHIFT OVER</button>
+          <p id="menu-note" class="menu-note">
+            ← → / A D to run · hold Space / E to fix<br />Touch controls on mobile<br />Best shift:
+            <span id="best">0</span>
+          </p>
+        </div>
+      </section>
+      <div id="load-state" class="load-state" role="status">Badging in…</div>
+    </main>
+    <footer>
+      <span
+        >A tiny arcade adventure by
+        <a href="index.html" target="_blank" rel="noopener noreferrer">Aron Wagner</a></span
+      ><span
+        >Inspired by the day job at
+        <a
+          href="https://americancloud.com/?utm_source=aronwagner.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          >American Cloud</a
+        ></span
+      >
+    </footer>
+    <noscript><p class="no-script">This game needs JavaScript.</p></noscript>
+    <script
+      defer
+      src="assets/shared/game-loader.js"
+      data-entry="assets/five-nines/game.js"
+    ></script>
+  </body>
+</html>

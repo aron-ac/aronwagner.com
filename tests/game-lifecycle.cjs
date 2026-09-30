@@ -24,6 +24,12 @@ const games = [
     active: ['playing'],
     touch: 'right',
   },
+  {
+    page: 'five-nines.html',
+    debug: 'ninesDebug',
+    active: ['playing'],
+    touch: 'right',
+  },
 ];
 
 async function assertKeyboardNavigation(browser, page, game, selector, mode) {
