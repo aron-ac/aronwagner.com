@@ -128,10 +128,11 @@ open keep loading their assets after a release.
 
 `deploy/Caddyfile` is the server configuration and `deploy/provision.sh` prepares a fresh VM. It
 installs Caddy, creates the `deploy` user (which may only reload Caddy), disables SSH passwords,
-configures the firewall, and installs the Caddyfile. Re-run it to refresh Cloudflare's IP ranges:
+configures the firewall, and installs the Caddyfile and a weekly Cloudflare IP refresh. It is safe to
+re-run, for example after changing the Caddyfile:
 
 ```sh
-scp deploy/Caddyfile cloud@<vm-ip>:/tmp/Caddyfile
+scp deploy/Caddyfile deploy/refresh-cloudflare-ips.sh cloud@<vm-ip>:/tmp/
 ssh cloud@<vm-ip> sudo bash -s -- "'$(cat ~/.ssh/aronwagner_deploy_ed25519.pub)'" < deploy/provision.sh
 ```
 
@@ -144,8 +145,8 @@ self-signed stand-in, which Full (strict) rejects.
 `npm run build:site` selects runtime files, assembles the theme fragments, and prepares ignored
 `dist/`; source notes, historical art, tests, development tools, and documentation are excluded.
 Build output reports the current file count and size; `dist/asset-manifest.json` maps source asset
-paths to their production URLs. Keep the workstation allowlist in `tools/lib/site-build.js`
-synchronized with artwork changes.
+paths to their production URLs. `robots.txt`, `sitemap.xml` and the pages keep fixed root URLs.
+`404.html` is served for missing pages, by Caddy and by the local server alike.
 
 Production assets use content-derived URLs under `/immutable/` with a one-year immutable cache
 policy. The build rewrites references consistently, so routine asset changes do not require
@@ -166,6 +167,32 @@ two agree. CI also serves the build through `deploy/Caddyfile` itself (`deploy/s
 does the same locally when Caddy is installed) and runs `deploy/smoke.sh` and every browser suite
 against it. Test the packaged site when changing loading behavior, headers, asset references, or
 redirects.
+
+### Operations
+
+- **Monitoring:** `.github/workflows/monitor.yml` runs `deploy/smoke.sh` against the live site
+  every 15 minutes (retrying once) and can be run by hand from the Actions tab. GitHub emails a
+  failed run to whoever last changed its schedule, and pauses scheduled workflows after 60 days
+  without repository activity.
+- **Cloudflare IP ranges:** the `refresh-cloudflare-ips.timer` on the VM runs
+  `deploy/refresh-cloudflare-ips.sh` weekly. It updates the HTTPS allowlist by difference, so the
+  firewall is never reset, and Caddy's trusted proxies. If Cloudflare's lists can't be fetched, it
+  changes nothing. Run `sudo refresh-cloudflare-ips` to refresh immediately.
+- **Updates:** Ubuntu's unattended upgrades apply security updates. Caddy comes from its official
+  apt repository and updates with the system.
+
+### Rebuilding the server
+
+The VM holds nothing that isn't in this repository, except the Cloudflare Origin Certificate. A
+root-disk snapshot in American Cloud is a quick restore point. To rebuild from scratch:
+
+1. Create an Ubuntu VM with inbound TCP 22 and 443, and your SSH key for the `cloud` user.
+2. Run `deploy/provision.sh` as above.
+3. Install the origin certificate (reuse it, or create a new one under SSL/TLS → Origin Server in
+   Cloudflare).
+4. Point the proxied `aronwagner.com` A record at the new IP, and update the `DEPLOY_HOST` and
+   `DEPLOY_KNOWN_HOSTS` secrets of the GitHub `production` environment.
+5. Re-run the latest deploy from the Actions tab, or deploy by hand as above.
 
 ## Credits
 

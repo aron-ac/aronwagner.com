@@ -20,6 +20,8 @@ const mimeTypes = {
   '.woff2': 'font/woff2',
   '.glb': 'model/gltf-binary',
   '.ico': 'image/x-icon',
+  '.txt': 'text/plain; charset=utf-8',
+  '.xml': 'application/xml; charset=utf-8',
 };
 
 // Local development/test server, deliberately bound to loopback by default.
@@ -42,6 +44,16 @@ export function createSiteServer({ root: directory = projectRoot } = {}) {
         ? '/cr-surf-rides.html /surf-riders.html 301\n/desk.html / 301\n'
         : ''),
   );
+  // Missing pages get the site's 404 page when the served root has one, as in production.
+  async function notFound(response) {
+    try {
+      const page = await readFile(resolve(root, '404.html'));
+      response.writeHead(404, { 'content-type': mimeTypes['.html'] }).end(page);
+    } catch {
+      response.writeHead(404).end('Not found');
+    }
+  }
+
   return createServer(async (request, response) => {
     if (!['GET', 'HEAD'].includes(request.method)) {
       response.writeHead(405, { Allow: 'GET, HEAD' }).end();
@@ -52,7 +64,7 @@ export function createSiteServer({ root: directory = projectRoot } = {}) {
       const originalPath = decodeURIComponent(url.pathname);
       let pathname = originalPath;
       if (['/_headers', '/_redirects'].includes(pathname)) {
-        response.writeHead(404).end('Not found');
+        await notFound(response);
         return;
       }
       const redirect = redirects.find((rule) => matchesPath(rule.source, pathname));
@@ -82,7 +94,7 @@ export function createSiteServer({ root: directory = projectRoot } = {}) {
         info = await stat(filename);
       }
       if (!info.isFile()) {
-        response.writeHead(404).end('Not found');
+        await notFound(response);
         return;
       }
       let html;
@@ -121,7 +133,7 @@ export function createSiteServer({ root: directory = projectRoot } = {}) {
     } catch (error) {
       if (error instanceof URIError || error.code === 'ERR_INVALID_URL')
         response.writeHead(400).end('Bad request');
-      else if (['ENOENT', 'ENOTDIR'].includes(error.code)) response.writeHead(404).end('Not found');
+      else if (['ENOENT', 'ENOTDIR'].includes(error.code)) await notFound(response);
       else if (['EACCES', 'EPERM'].includes(error.code)) response.writeHead(403).end('Forbidden');
       else {
         console.error(`Failed to serve ${request.url}:`, error);

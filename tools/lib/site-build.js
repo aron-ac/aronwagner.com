@@ -4,7 +4,15 @@ import { dirname, extname, join, posix, resolve } from 'node:path';
 import { inlineHomepage } from './inline-homepage.js';
 
 export const SITE_ORIGIN = 'https://aronwagner.com';
-export const pages = ['index.html', 'surf-riders.html', 'bay-racer.html', 'cici-treat-trail.html'];
+// Crawlers fetch these at fixed root URLs, so they are never fingerprinted.
+const rootFiles = ['robots.txt', 'sitemap.xml'];
+export const pages = [
+  'index.html',
+  '404.html',
+  'surf-riders.html',
+  'bay-racer.html',
+  'cici-treat-trail.html',
+];
 const textExtensions = new Set(['.js', '.css', '.json']);
 const digest = (value) => createHash('sha256').update(value).digest('hex').slice(0, 16);
 
@@ -14,6 +22,8 @@ async function runtimeFiles(root) {
     'script.js',
     'styles.css',
     'favicon.ico',
+    'robots.txt',
+    'sitemap.xml',
     'assets/favicon.svg',
     'assets/favicon-32.png',
     'assets/favicon-48.png',
@@ -118,7 +128,8 @@ export async function buildSite({ root, output }) {
     (file) => textExtensions.has(extname(file)) && !vendor.includes(file),
   );
   for (const filename of filenames) {
-    if (pages.includes(filename) || code.includes(filename)) continue;
+    if (pages.includes(filename) || code.includes(filename) || rootFiles.includes(filename))
+      continue;
     const hash = vendor.includes(filename) ? vendorHash : digest(sources.get(filename));
     manifest[filename] = `/immutable/${hash}/${filename}`;
   }

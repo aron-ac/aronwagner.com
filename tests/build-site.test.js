@@ -90,6 +90,18 @@ test('release build resolves immutable assets, secures scripts, and excludes pro
       .map((line) => line.trim().replace(/^([\w-]+): (.*)$/, '\t$1 "$2"'));
     assert.ok(caddy.includes(`header ${matcher}{\n${expected.join('\n')}\n}`), `Caddy ${path}`);
   }
+  // Crawlers and Caddy expect these at fixed paths, not fingerprinted.
+  for (const file of ['robots.txt', 'sitemap.xml', '404.html']) {
+    await access(join(output, file));
+    assert.equal(manifest[file], undefined, `${file} keeps its root URL`);
+  }
+  assert.match(
+    await readFile(join(output, 'robots.txt'), 'utf8'),
+    /^Sitemap: https:\/\/aronwagner\.com\/sitemap\.xml$/m,
+  );
+  const notFound = await readFile(join(output, '404.html'), 'utf8');
+  assert.match(notFound, /Page not found/);
+  assert.match(notFound, /name="robots" content="noindex"/);
   await assert.rejects(access(join(output, 'desk.html')));
   await assert.rejects(access(join(output, 'cr-surf-rides.html')));
   assert.ok(!Object.keys(manifest).some((file) => /desk\.|-source\.png|\.md$/.test(file)));
