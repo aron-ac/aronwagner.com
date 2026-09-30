@@ -18,6 +18,12 @@ const games = [
     active: ['playing'],
     touch: 'right',
   },
+  {
+    page: 'tee-time.html',
+    debug: 'teeDebug',
+    active: ['playing'],
+    touch: 'right',
+  },
 ];
 
 async function assertKeyboardNavigation(browser, page, game, selector, mode) {

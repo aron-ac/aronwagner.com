@@ -57,6 +57,8 @@ function shard(files, spec) {
     'cards-smoke.cjs': 18,
     'external-links-smoke.cjs': 14,
     'aisle-dash-smoke.cjs': 10,
+    'tee-time-smoke.cjs': 12,
+    'responsive-tee-time.cjs': 15,
     'browser-emulation-smoke.cjs': 5,
   };
   const weight = (file) => seconds[file.slice(tests.length + 1)] ?? 30;

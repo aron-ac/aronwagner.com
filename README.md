@@ -2,7 +2,7 @@
 
 The personal website of Aron Wagner, CEO of [American Cloud](https://americancloud.com/). It is an
 illustrated, clickable version of his home office, with Rebecca, Jack and Maggie the Goldendoodle,
-plus a small arcade of two games, and it's self-hosted on an American Cloud virtual machine.
+plus a small arcade of three games, and it's self-hosted on an American Cloud virtual machine.
 
 **[Visit the site →](https://aronwagner.com/)**
 
@@ -24,7 +24,7 @@ The office illustration has day and night versions that follow the time of day i
 | Right monitor  | An American Cloud dashboard; opens americancloud.com   |
 | Framed uniform | His Army service                                       |
 | Bible          | John 3:16 (King James Version)                         |
-| Golf bag       | An invitation to play a round, with an email link      |
+| Golf bag       | An invitation to play a round, plus a link to Tee Time |
 | Camera         | Photos from the camera roll, in a Polaroid frame       |
 | Rebecca        | Their wedding-day photo                                |
 | Maggie         | Pet her                                                |
@@ -54,6 +54,15 @@ the same way as the office art. See [its README](assets/aisle-dash/README.md).
 
 [![Aisle Dash](assets/social/aisle-dash-og.jpg)](https://aronwagner.com/aisle-dash.html)
 
+**[Tee Time](https://aronwagner.com/tee-time.html)** is nine holes of side-on golf, par 33: tee off
+in the office, bank off the living-room sofa, play out the kitchen onto the patio, then finish on a
+Tampa course by the bay with a gator pond, an island green and Rebecca and Jack cheering on the last
+green. Drag back and let go to swing (or aim with the arrows and hold Space). Maggie sometimes steals
+the ball and drops it somewhere else. The golf bag in the office links to it too. See
+[its README](assets/tee-time/README.md).
+
+[![Tee Time](assets/social/tee-time-og.jpg)](https://aronwagner.com/tee-time.html)
+
 ## Local development
 
 Use Node.js 24 or newer:
@@ -78,7 +87,7 @@ inlines the homepage's critical theme files, as the production build does.
   in `script.js`, then update `PHOTO_COUNT` in the homepage tests.
 - `tests/helpers/identity.cjs` holds the owner details the tests expect: name, title, email and
   social links.
-- `assets/maggies-toy-run/` and `assets/aisle-dash/` are the games; `assets/shared/` holds their
+- `assets/maggies-toy-run/`, `assets/aisle-dash/` and `assets/tee-time/` are the games; `assets/shared/` holds their
   common arcade shell, input, game loop, audio and storage.
 
 ## Checks

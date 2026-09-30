@@ -27,6 +27,7 @@ export default [
         ...globals.node,
         maggieDebug: 'readonly',
         aisleDebug: 'readonly',
+        teeDebug: 'readonly',
         setTestClock: 'readonly',
         themeLoadProbe: 'readonly',
       },

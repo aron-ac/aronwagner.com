@@ -14,7 +14,13 @@ export const LEGACY_REDIRECTS = [
 ];
 // Crawlers fetch these at fixed root URLs, so they are never fingerprinted.
 const rootFiles = ['robots.txt', 'sitemap.xml'];
-export const pages = ['index.html', '404.html', 'maggies-toy-run.html', 'aisle-dash.html'];
+export const pages = [
+  'index.html',
+  '404.html',
+  'maggies-toy-run.html',
+  'aisle-dash.html',
+  'tee-time.html',
+];
 const textExtensions = new Set(['.js', '.css', '.json']);
 const digest = (value) => createHash('sha256').update(value).digest('hex').slice(0, 16);
 
@@ -43,7 +49,7 @@ async function runtimeFiles(root) {
   await include('assets/polaroids', ['.jpg']);
   await include('assets/social', ['.jpg']);
   await include('assets/office', ['.webp']);
-  for (const directory of ['shared', 'maggies-toy-run', 'aisle-dash']) {
+  for (const directory of ['shared', 'maggies-toy-run', 'aisle-dash', 'tee-time']) {
     await include(`assets/${directory}`, ['.js', '.css', '.webp', '.glb']);
   }
   return [...files].sort();
