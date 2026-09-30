@@ -16,9 +16,14 @@ The layout constants below are mirrored in assets/aisle-dash/sprites.js.
 """
 
 import argparse
+import sys
 from pathlib import Path
 
+
 from PIL import Image, ImageDraw, ImageFilter
+
+sys.path.insert(0, str(Path(__file__).resolve().parent / 'lib'))
+from sprite_sheets import components, normalized  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 OUTPUT = ROOT / 'assets' / 'aisle-dash' / 'sprites'
@@ -29,13 +34,6 @@ REBECCA_HEIGHT = 470  # every pose is scaled to this figure height
 ITEM_CELL = 128
 ITEM_GRID = (7, 4)
 
-
-def normalized(image):
-    """The generator leaves figures at ~99% opacity with faint haze around them."""
-    alpha = image.getchannel('A').point(lambda v: 255 if v >= 240 else 0 if v <= 8 else v)
-    image = image.copy()
-    image.putalpha(alpha)
-    return image
 
 
 def region_mask(image, seed, threshold=20):
@@ -102,30 +100,6 @@ def rebecca(source):
         out.alpha_composite(pose, (index * REBECCA_POSE[0], 0))
     return out
 
-
-def components(mask):
-    """Connected shapes in a binary L mask: a list of (pixel list, bbox)."""
-    width, height = mask.size
-    data = mask.load()
-    seen = bytearray(width * height)
-    found = []
-    for y in range(height):
-        for x in range(width):
-            if not data[x, y] or seen[y * width + x]:
-                continue
-            stack, pixels = [(x, y)], []
-            seen[y * width + x] = 1
-            while stack:
-                px, py = stack.pop()
-                pixels.append((px, py))
-                for nx, ny in ((px + 1, py), (px - 1, py), (px, py + 1), (px, py - 1)):
-                    if 0 <= nx < width and 0 <= ny < height and data[nx, ny] and not seen[ny * width + nx]:
-                        seen[ny * width + nx] = 1
-                        stack.append((nx, ny))
-            xs = [p[0] for p in pixels]
-            ys = [p[1] for p in pixels]
-            found.append((pixels, (min(xs), min(ys), max(xs) + 1, max(ys) + 1)))
-    return found
 
 
 def items(source):

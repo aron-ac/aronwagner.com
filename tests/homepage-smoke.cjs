@@ -309,13 +309,19 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
       [
         ['maggies-toy-run.html', 'Maggie’s Toy Run'],
         ['aisle-dash.html', 'Aisle Dash'],
+        ['tee-time.html', 'Tee Time'],
       ],
-      'The arcade lists both games',
+      'The arcade lists all three games',
     );
     assert.equal(
       await page.$eval('.scene .emac', (link) => link.getAttribute('href')),
       '#projects',
       'The eMac opens the arcade',
+    );
+    assert.equal(
+      await page.$eval('#golf-dialog a[href="tee-time.html"]', (link) => link.textContent.trim()),
+      'Tee Time',
+      'The golf invitation also links to Tee Time',
     );
     assert.deepEqual(
       await page.$$eval('.intro p a', (links) =>
@@ -325,11 +331,12 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
         ['American Cloud', identity.companyUrl],
         ['Maggie’s Toy Run', 'maggies-toy-run.html'],
         ['Aisle Dash', 'aisle-dash.html'],
+        ['Tee Time', 'tee-time.html'],
       ],
-      'The introduction links to American Cloud and both games',
+      'The introduction links to American Cloud and all three games',
     );
     const homeUrl = page.url();
-    for (const href of ['maggies-toy-run.html', 'aisle-dash.html']) {
+    for (const href of ['maggies-toy-run.html', 'aisle-dash.html', 'tee-time.html']) {
       const gameTarget = browser.waitForTarget(
         (target) => target.type() === 'page' && new URL(target.url()).pathname.endsWith(`/${href}`),
       );
@@ -707,7 +714,7 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
     }
     assert.deepEqual(errors, [], 'No JavaScript errors or failed homepage assets');
     console.log(
-      'PASS: Eastern schedule (winter/summer), manual override expiry, new-tab navigation, the arcade and both game launches, social screen and submenu links, American Cloud business card and email link, seven-photo Polaroid shuffle, Rebecca’s wedding photo and keyboard controls, Maggie’s fetch and pets, pulsing touch pins and touchscreen activation, scene-scoped gesture protection, selectable and zoomable page/dialog text, and responsive layouts.',
+      'PASS: Eastern schedule (winter/summer), manual override expiry, new-tab navigation, the arcade and all three game launches, social screen and submenu links, American Cloud business card and email link, seven-photo Polaroid shuffle, Rebecca’s wedding photo and keyboard controls, Maggie’s fetch and pets, pulsing touch pins and touchscreen activation, scene-scoped gesture protection, selectable and zoomable page/dialog text, and responsive layouts.',
     );
   } finally {
     await closeBrowser(browser);

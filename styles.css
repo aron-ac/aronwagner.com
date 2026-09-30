@@ -623,6 +623,11 @@ main {
   border-left: 3px solid color-mix(in srgb, var(--accent) 45%, var(--line));
 }
 .quote-passage blockquote p,
+.quote-aside {
+  margin: 12px 0 0;
+  font-size: 0.85em;
+  opacity: 0.85;
+}
 .quote-statement {
   margin: 0;
   font-size: clamp(18px, 3vw, 23px);

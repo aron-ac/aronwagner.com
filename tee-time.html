@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="theme-color" content="#173a2b" />
+    <meta
+      name="description"
+      content="Nine holes of side-on golf, from Aron's office to a Tampa course by the bay. Watch out for Maggie: she steals golf balls."
+    />
+    <title>Tee Time · Aron Wagner</title>
+    <link rel="canonical" href="https://aronwagner.com/tee-time.html" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Aron Wagner" />
+    <meta property="og:title" content="Tee Time · Aron Wagner" />
+    <meta
+      property="og:description"
+      content="Nine holes of side-on golf, from Aron's office to a Tampa course by the bay. Watch out for Maggie: she steals golf balls."
+    />
+    <meta property="og:url" content="https://aronwagner.com/tee-time.html" />
+    <meta property="og:image" content="https://aronwagner.com/assets/social/tee-time-og.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:alt" content="Tee Time: Aron tees off while Maggie watches." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Tee Time · Aron Wagner" />
+    <meta
+      name="twitter:description"
+      content="Nine holes of side-on golf, from Aron's office to a Tampa course by the bay. Watch out for Maggie: she steals golf balls."
+    />
+    <meta name="twitter:image" content="https://aronwagner.com/assets/social/tee-time-og.jpg" />
+    <meta name="twitter:image:alt" content="Tee Time: Aron tees off while Maggie watches." />
+    <meta name="twitter:creator" content="@aronwagner" />
+    <link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48" />
+    <link rel="icon" href="assets/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="icon" href="assets/favicon-48.png" type="image/png" sizes="48x48" />
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" sizes="any" />
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" sizes="180x180" />
+    <link rel="stylesheet" href="assets/shared/arcade.css" />
+    <link rel="stylesheet" href="assets/tee-time/style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a href="index.html" target="_blank" rel="noopener noreferrer">← BACK TO THE OFFICE</a
+      ><span class="terminal">./tee-time <span aria-hidden="true">▌</span></span
+      ><button id="sound" type="button" aria-pressed="false">SOUND OFF</button>
+    </header>
+    <main id="game-shell">
+      <div id="viewport">
+        <canvas
+          role="img"
+          id="canvas"
+          tabindex="0"
+          aria-label="A side-on golf hole. Drag back from anywhere and release to swing, or aim with the arrow keys and hold Space for power."
+          >Nine holes of golf. This game needs Canvas and JavaScript.</canvas
+        >
+      </div>
+      <section class="hud" aria-label="Round statistics">
+        <div class="game-brand">
+          <span class="eyebrow">NINE HOLES, OFFICE TO THE BAY</span>
+          <h1>TEE TIME <span aria-hidden="true">⛳</span></h1>
+        </div>
+        <div class="stats">
+          <div><span>HOLE</span><strong id="hole">1/9</strong></div>
+          <div><span>PAR</span><strong id="par">3</strong></div>
+          <div><span>STROKES</span><strong id="strokes">0</strong></div>
+          <div><span>SCORE</span><strong id="to-par">E</strong></div>
+        </div>
+      </section>
+      <div id="hole-panel" class="day-panel hidden">
+        <div><span id="hole-name">THE OFFICE</span><span id="distance">0 YDS</span></div>
+        <small id="wind">INDOORS · NO WIND</small><small id="hint">Drag back and let go</small>
+      </div>
+      <div id="toast" role="status" aria-live="polite"></div>
+      <div class="bottom-bar">
+        <span class="keyboard-help"
+          ><kbd>DRAG</kbd> AIM + POWER <b>·</b> <kbd>← →</kbd> AIM <b>·</b> <kbd>SPACE</kbd> HOLD TO
+          SWING <b>·</b> <kbd>P</kbd> PAUSE</span
+        ><button id="pause" class="hidden" type="button">Ⅱ PAUSE</button>
+      </div>
+      <div
+        role="group"
+        id="touch-controls"
+        class="touch-controls hidden"
+        aria-label="Touch golf controls"
+      >
+        <div>
+          <button type="button" data-control="left" aria-label="Aim higher">↺</button
+          ><button type="button" data-control="right" aria-label="Aim lower">↻</button>
+        </div>
+        <button
+          type="button"
+          data-control="action"
+          class="action"
+          aria-label="Hold to set power, release to swing"
+        >
+          HOLD TO SWING
+        </button>
+      </div>
+      <section id="overlay" class="overlay" aria-label="Game menu">
+        <div class="menu-card">
+          <span id="menu-eyebrow" class="eyebrow">NINE HOLES. ONE GOOD DOG.</span>
+          <h2 id="menu-title">Tee Time.</h2>
+          <p id="menu-description">
+            Tee off in the office, play through the living room and the kitchen, then finish on a
+            Tampa course by the bay. Par is 33.
+          </p>
+          <div id="intro-details" class="intro-details">
+            <div>
+              <span>01</span>
+              <p>
+                <strong>Drag back, let go.</strong>Pull back from anywhere on the course like a
+                slingshot. Farther is more power.
+              </p>
+            </div>
+            <div>
+              <span>02</span>
+              <p>
+                <strong>Read the lie.</strong>Sand and rough slow the ball down, the green is fast,
+                and water costs a stroke.
+              </p>
+            </div>
+            <div>
+              <span>03</span>
+              <p>
+                <strong>Watch out for Maggie.</strong>She steals golf balls. Sometimes she even
+                drops them closer.
+              </p>
+            </div>
+          </div>
+          <div id="results" class="results scorecard hidden"></div>
+          <button id="start" class="primary" type="button">
+            TEE OFF <span aria-hidden="true">↗</span></button
+          ><button id="restart" class="secondary hidden" type="button">START THE ROUND OVER</button>
+          <a
+            id="golf-invite"
+            class="invite hidden"
+            href="mailto:aron@americancloud.com?subject=Golf"
+            >Email Aron about a round <span aria-hidden="true">↗</span></a
+          >
+          <p id="menu-note" class="menu-note">
+            Drag to aim and swing · or ← → and hold Space<br />Best round: <span id="best">—</span>
+          </p>
+        </div>
+      </section>
+      <div id="load-state" class="load-state" role="status">Grabbing the clubs…</div>
+    </main>
+    <footer>
+      <span
+        >A tiny arcade adventure by
+        <a href="index.html" target="_blank" rel="noopener noreferrer">Aron Wagner</a></span
+      ><span>Made for Saturday mornings · Maggie plays through</span>
+    </footer>
+    <noscript><p class="no-script">This game needs JavaScript.</p></noscript>
+    <script defer src="assets/shared/game-loader.js" data-entry="assets/tee-time/game.js"></script>
+  </body>
+</html>
