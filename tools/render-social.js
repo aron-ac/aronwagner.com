@@ -93,10 +93,10 @@ try {
       description: 'Three laps. Your Sea-Doo. One more shot at your best time.',
     },
     {
-      file: 'cici-treat-trail',
-      image: 'cici-treat-trail',
-      title: 'CiCi’s Treat Trail',
-      description: 'Chase treats. Hop past squirrels. Be a very good dog.',
+      file: 'maggies-toy-run',
+      image: 'maggies-toy-run',
+      title: 'Maggie’s Toy Run',
+      description: 'Grab the tennis balls. Dodge bath time. Be a very good girl.',
     },
   ]) {
     await page.evaluate(

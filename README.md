@@ -2,7 +2,7 @@
 
 The personal website of Aron Wagner, CEO of [American Cloud](https://americancloud.com/). It is an
 illustrated, clickable version of his home office, with Rebecca, Jack and Maggie the Goldendoodle,
-and it's self-hosted on an American Cloud virtual machine.
+plus a small arcade, and it's self-hosted on an American Cloud virtual machine.
 
 **[Visit the site →](https://aronwagner.com/)**
 
@@ -29,13 +29,26 @@ The office illustration has day and night versions that follow the time of day i
 | Rebecca        | Their wedding-day photo                                |
 | Maggie         | Pet her                                                |
 | Toy bin        | Play fetch: a squeak toy flies to Maggie               |
+| eMac           | Scrolls to the arcade                                  |
 
 On touch devices, small pulsing pins mark the objects. Every dialog supports Escape, its close
 button and backdrop clicks, and returns focus to the object that opened it.
 
-Three browser games (Surf Riders, Bay Racer and CiCi's Treat Trail) are still in the repository and
-are being reworked for v2. Their pages build and have tests, but the homepage doesn't link them yet;
-the game cards, the eMac link and the intro's game link are commented out in `index.html`.
+## The arcade
+
+**[Maggie's Toy Run](https://aronwagner.com/maggies-toy-run.html)** is a side-scrolling
+platformer: Maggie rounds up her tennis balls across the backyard, hops over bath-time bubbles
+(landing on one pops it), stays out of the wading pools, and runs home to Aron and Rebecca on the
+patio. Arrow keys or A/D to run, Space to jump; phones and tablets get touch controls. It's all
+drawn in Canvas 2D, and the best score stays in the browser. See
+[its README](assets/maggies-toy-run/README.md) and [course notes](assets/maggies-toy-run/LEVEL.md).
+
+[![Maggie's Toy Run](assets/social/maggies-toy-run-og.jpg)](https://aronwagner.com/maggies-toy-run.html)
+
+Two more games, Surf Riders and Bay Racer, are still in the repository and are being reworked.
+Their pages build and have tests but aren't linked or indexed yet; their cards are commented out in
+`index.html`. To bring one back, uncomment its card, remove the `noindex` meta tag from its page and
+add it to `sitemap.xml`.
 
 ## Local development
 
@@ -61,7 +74,7 @@ inlines the homepage's critical theme files, as the production build does.
   in `script.js`, then update `PHOTO_COUNT` in the homepage tests.
 - `tests/helpers/identity.cjs` holds the owner details the tests expect: name, title, email and
   social links.
-- `assets/shared/`, `assets/surf-rides/`, `assets/bay-racer/` and `assets/cici-treat-trail/` are the
+- `assets/shared/`, `assets/surf-rides/`, `assets/bay-racer/` and `assets/maggies-toy-run/` are the
   games, which share a pinned copy of Three.js in `assets/vendor/three/`.
 
 ## Checks
@@ -197,9 +210,10 @@ root-disk snapshot in American Cloud is a quick restore point. To rebuild from s
 ## Credits
 
 This site began as a fork of [Mark Hammonds's](https://markhammonds.com/) personal website, and its
-structure, build, tests and games are his work. Thank you, Mark. The office illustration, content,
-photos and hosting are Aron's.
+structure, build, tests and games are his work. Thank you, Mark. Maggie's Toy Run is his CiCi's Treat
+Trail, redrawn for Maggie and Aron's backyard. The office illustration, content, photos and hosting
+are Aron's.
 
 Fonts are self-hosted from [Merriweather](https://github.com/EbenSorkin/Merriweather4) and
 [Caveat](https://github.com/googlefonts/caveat) under the SIL Open Font License (see
-`assets/fonts/`). The games use [Three.js](https://threejs.org/) (MIT, `assets/vendor/three/`).
+`assets/fonts/`). Surf Riders and Bay Racer use [Three.js](https://threejs.org/) (MIT, `assets/vendor/three/`).

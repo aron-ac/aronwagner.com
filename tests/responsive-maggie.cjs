@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const { launchBrowser, closeBrowser, artifactPath } = require('./helpers/browser.cjs');
 const url = new URL(
   process.env.GAME_URL ||
-    new URL('cici-treat-trail.html', process.env.SITE_URL || 'http://localhost:8000/').href,
+    new URL('maggies-toy-run.html', process.env.SITE_URL || 'http://localhost:8000/').href,
 );
 url.searchParams.set('debug', '1');
 const sizes = [
@@ -30,7 +30,7 @@ const safeAreaSizes = [
   [700, 650, true, { top: 0, right: 0, bottom: 21, left: 0 }],
 ];
 
-test('responsive cici', { timeout: 300_000 }, async () => {
+test('responsive maggie', { timeout: 300_000 }, async () => {
   const browser = await launchBrowser();
   try {
     const page = await browser.newPage();
@@ -50,7 +50,7 @@ test('responsive cici', { timeout: 300_000 }, async () => {
         deviceScaleFactor: 1,
       });
       await page.goto(url.href, { waitUntil: 'networkidle0' });
-      await page.waitForFunction(() => window.ciciDebug);
+      await page.waitForFunction(() => window.maggieDebug);
       if (safeArea) {
         // Chromium emulation does not supply iOS safe-area environment values.
         await page.addStyleTag({
@@ -102,26 +102,26 @@ test('responsive cici', { timeout: 300_000 }, async () => {
         }
         const button = await page.$('[data-control="right"]');
         const r = await button.boundingBox();
-        const before = await page.evaluate(() => ciciDebug.state.player.x);
+        const before = await page.evaluate(() => maggieDebug.state.player.x);
         const finger = await page.touchscreen.touchStart(r.x + r.width / 2, r.y + r.height / 2);
         const after = await page.evaluate(() => {
-          for (let i = 0; i < 36; i++) ciciDebug.update(1 / 120);
-          return ciciDebug.state.player.x;
+          for (let i = 0; i < 36; i++) maggieDebug.update(1 / 120);
+          return maggieDebug.state.player.x;
         });
         await finger.end();
-        assert.ok(after > before + 10, `${label}: touch steering moves CiCi`);
+        assert.ok(after > before + 10, `${label}: touch steering moves Maggie`);
       }
       await page.click('#pause');
-      assert.equal(await page.evaluate(() => ciciDebug.state.mode), 'paused');
+      assert.equal(await page.evaluate(() => maggieDebug.state.mode), 'paused');
       await reachable('#start');
       await reachable('#restart');
       await page.click('#restart');
-      assert.equal(await page.evaluate(() => ciciDebug.state.mode), 'playing');
+      assert.equal(await page.evaluate(() => maggieDebug.state.mode), 'playing');
 
       // The tallest optional route exposed HUD collisions that ground-level
-      // screenshots missed. Place CiCi on it without changing canvas scaling.
+      // screenshots missed. Place Maggie on it without changing canvas scaling.
       const visibility = await page.evaluate(() => {
-        const d = ciciDebug;
+        const d = maggieDebug;
         const p = d.state.player;
         Object.assign(p, { x: 5150, y: 127, vx: 0, vy: 0, onGround: true });
         const view = d.view;
@@ -157,14 +157,16 @@ test('responsive cici', { timeout: 300_000 }, async () => {
       assert.deepEqual(
         visibility.blockers,
         [],
-        `${label}: HUD does not cover CiCi on the upper route`,
+        `${label}: HUD does not cover Maggie on the upper route`,
       );
       assert.ok(visibility.landingVisible, `${label}: the next landing is visible ahead`);
       await page.screenshot({
-        path: artifactPath(`cici-responsive-${width}x${height}${safeArea ? '-safe-area' : ''}.png`),
+        path: artifactPath(
+          `maggie-responsive-${width}x${height}${safeArea ? '-safe-area' : ''}.png`,
+        ),
       });
       await page.evaluate(() => {
-        const d = ciciDebug;
+        const d = maggieDebug;
         Object.assign(d.state.player, {
           x: d.level.finish.x + 10,
           y: d.level.finish.y + d.level.finish.h - d.state.player.h,
@@ -173,12 +175,12 @@ test('responsive cici', { timeout: 300_000 }, async () => {
         });
         d.update(1 / 120);
       });
-      assert.equal(await page.evaluate(() => ciciDebug.state.mode), 'won');
+      assert.equal(await page.evaluate(() => maggieDebug.state.mode), 'won');
       await reachable('#start');
     }
     assert.deepEqual(errors, [], 'No browser errors or missing assets');
     console.log(
-      `PASS: CiCi responsive menus, touch controls, upper-route visibility and results at ${sizes.length} phone, tablet and laptop sizes plus portrait and landscape safe areas.`,
+      `PASS: Maggie responsive menus, touch controls, upper-route visibility and results at ${sizes.length} phone, tablet and laptop sizes plus portrait and landscape safe areas.`,
     );
   } finally {
     await closeBrowser(browser);

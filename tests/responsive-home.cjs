@@ -31,6 +31,7 @@ const viewports = [
 const sceneControls = [
   '.camera-toggle',
   '.bible-toggle',
+  '.emac',
   '.left-screen',
   '.right-screen',
   '.uniform-toggle',
@@ -45,6 +46,7 @@ const sceneControls = [
 const sceneObjects = [
   ['.camera-toggle', 169, 168],
   ['.bible-toggle', 204, 365],
+  ['.emac', 184, 470],
   ['.left-screen', 687, 420],
   ['.right-screen', 900, 420],
   ['.uniform-toggle', 1393, 290],

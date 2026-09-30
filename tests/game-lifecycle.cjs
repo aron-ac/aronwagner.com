@@ -19,8 +19,8 @@ const games = [
     touch: 'brake',
   },
   {
-    page: 'cici-treat-trail.html',
-    debug: 'ciciDebug',
+    page: 'maggies-toy-run.html',
+    debug: 'maggieDebug',
     active: ['playing'],
     touch: 'right',
   },
@@ -134,7 +134,7 @@ async function checkGame(browser, game) {
       await page.$eval('#touch-controls', (element) => element.getAttribute('role')),
       'group',
     );
-    if (game.debug !== 'ciciDebug') {
+    if (game.debug !== 'maggieDebug') {
       assert.equal(
         await page.$eval('#viewport', (element) => element.getAttribute('role')),
         'group',
@@ -324,7 +324,7 @@ async function checkGame(browser, game) {
       `${game.page}: starting enters active gameplay`,
     );
     assert.deepEqual(errors, [], `${game.page}: normal reload recovers without browser errors`);
-    if (game.debug !== 'ciciDebug') {
+    if (game.debug !== 'maggieDebug') {
       const initialFrames = await page.evaluate(() => {
         document.getElementById('viewport').style.display = 'none';
         return window.__gameFrames.callbacks;

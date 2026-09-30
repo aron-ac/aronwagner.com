@@ -34,6 +34,7 @@ check 'stable asset alias' /favicon.ico '^location: /immutable/[0-9a-f]+/favicon
 immutable=$(curl ${curl_opts[@]+"${curl_opts[@]}"} -sS -o /dev/null -D - --max-time 20 "$base/favicon.ico" | tr -d '\r' |
   sed -n 's/^[Ll]ocation: //p')
 check 'immutable caching' "$immutable" '^cache-control: public, max-age=31536000, immutable'
+check 'arcade game' /maggies-toy-run.html '^HTTP/[0-9.]+ 200'
 check 'robots.txt' /robots.txt '^HTTP/[0-9.]+ 200'
 check 'sitemap' /sitemap.xml '^content-type: (application|text)/xml'
 # The 404 page must keep its status and actually be the site's page.

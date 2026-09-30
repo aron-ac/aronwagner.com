@@ -11,7 +11,7 @@ export const pages = [
   '404.html',
   'surf-riders.html',
   'bay-racer.html',
-  'cici-treat-trail.html',
+  'maggies-toy-run.html',
 ];
 const textExtensions = new Set(['.js', '.css', '.json']);
 const digest = (value) => createHash('sha256').update(value).digest('hex').slice(0, 16);
@@ -44,7 +44,7 @@ async function runtimeFiles(root) {
   await include('assets/polaroids', ['.jpg']);
   await include('assets/social', ['.jpg']);
   await include('assets/office', ['.webp']);
-  for (const directory of ['shared', 'surf-rides', 'bay-racer', 'cici-treat-trail']) {
+  for (const directory of ['shared', 'surf-rides', 'bay-racer', 'maggies-toy-run']) {
     await include(`assets/${directory}`, ['.js', '.css', '.webp', '.glb']);
   }
   return [...files].sort();

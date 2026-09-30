@@ -27,7 +27,7 @@ export default [
         ...globals.node,
         surfDebug: 'readonly',
         bayDebug: 'readonly',
-        ciciDebug: 'readonly',
+        maggieDebug: 'readonly',
         setTestClock: 'readonly',
         themeLoadProbe: 'readonly',
       },

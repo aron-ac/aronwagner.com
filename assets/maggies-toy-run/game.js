@@ -17,7 +17,7 @@ const ui = requireElements([
   'restart',
   'pause',
   'touch-controls',
-  'treats',
+  'balls',
   'score',
   'hearts',
   'trail-progress',
@@ -60,7 +60,7 @@ const frameInput = {};
 const coarse = matchMedia('(pointer:coarse)').matches || navigator.maxTouchPoints > 0;
 const reducedMotion = matchMedia('(prefers-reduced-motion:reduce)').matches;
 const effects = [];
-const BEST_SCORE_KEY = 'cici-treat-trail-best-score';
+const BEST_SCORE_KEY = 'maggies-toy-run-best-score';
 let best = Math.max(0, readStoredNumber(BEST_SCORE_KEY));
 let toastUntil = 0,
   animationTime = 0,
@@ -98,7 +98,7 @@ function gameEvent(type, detail = {}) {
     ui.toast.classList.remove('show');
     setPlayingUI(true);
   } else if (type === 'jump') beep(480, 0.12);
-  else if (type === 'treat') {
+  else if (type === 'ball') {
     pop(detail.x, detail.y, '+10');
     beep(880, 0.08);
   } else if (type === 'bounce') {
@@ -106,14 +106,14 @@ function gameEvent(type, detail = {}) {
     beep(620, 0.16);
   } else if (type === 'checkpoint') {
     pop(detail.x + 20, detail.y - 30, '+50', '#346846');
-    toast('Checkpoint saved! A little water break restores one heart.');
+    toast('Paw flag saved! A water break restores one heart.');
     beep(523);
     beep(784, 0.17, 0.12);
   } else if (type === 'hurt') {
     toast(
       detail.reason === 'fall'
-        ? 'Back to your last paw flag. You’ve got this, CiCi!'
-        : 'Cheeky squirrel! Hop over the next one.',
+        ? 'Splash! That was almost a bath. Back to your last paw flag.'
+        : 'Bath bubbles! Hop over the next one.',
     );
     beep(170, 0.2);
     if (detail.respawn) {
@@ -126,9 +126,10 @@ function gameEvent(type, detail = {}) {
     ui.overlay.classList.remove('hidden');
     ui['intro-details'].classList.add('hidden');
     ui.results.classList.add('hidden');
-    ui['menu-eyebrow'].textContent = 'A LITTLE PAWS';
-    ui['menu-title'].textContent = 'Sniff break.';
-    ui['menu-description'].textContent = 'The treats can wait. Your adventure is paused.';
+    ui['menu-eyebrow'].textContent = 'PAWS';
+    ui['menu-title'].textContent = 'Water break.';
+    ui['menu-description'].textContent =
+      'The tennis balls aren’t going anywhere. Your run is paused.';
     ui.start.innerHTML = 'KEEP GOING <span aria-hidden="true">↗</span>';
     ui.restart.classList.remove('hidden');
     ui.start.focus({ preventScroll: true });
@@ -153,15 +154,15 @@ function gameEvent(type, detail = {}) {
     }
     ui['menu-eyebrow'].textContent = won
       ? record
-        ? 'A PERSONAL BEST FOR A VERY GOOD DOG'
-        : 'THE PICNIC IS SERVED'
+        ? 'NEW PERSONAL BEST, GOOD GIRL'
+        : 'HOME SWEET HOME'
       : 'EVERY GOOD DOG GETS ANOTHER TRY';
-    ui['menu-title'].textContent = won ? 'Picnic time!' : 'One more walk?';
+    ui['menu-title'].textContent = won ? 'Good girl!' : 'Bath time won.';
     ui['menu-description'].textContent = won
-      ? `CiCi brought ${state.treats} treats to the picnic. That deserves a belly rub.`
-      : 'A few squirrels got in the way. Let’s try that trail again.';
-    ui.results.innerHTML = `<div><span>TREATS</span><strong>${state.treats} / ${level.treats.length}</strong></div><div><span>SCORE</span><strong>${state.score}</strong></div><div><span>TRAIL TIME</span><strong>${formatTime(state.elapsed)}</strong></div><div><span>BEST PICNIC</span><strong>${best}</strong></div>`;
-    ui.start.innerHTML = `${won ? 'ANOTHER ADVENTURE' : 'TRY AGAIN'} <span aria-hidden="true">↗</span>`;
+      ? `Maggie brought ${state.balls} tennis balls home. Nobody said the B-word.`
+      : 'The bubbles caught up with her this time. Let’s try that run again.';
+    ui.results.innerHTML = `<div><span>BALLS</span><strong>${state.balls} / ${level.balls.length}</strong></div><div><span>SCORE</span><strong>${state.score}</strong></div><div><span>RUN TIME</span><strong>${formatTime(state.elapsed)}</strong></div><div><span>BEST RUN</span><strong>${best}</strong></div>`;
+    ui.start.innerHTML = `${won ? 'RUN IT BACK' : 'TRY AGAIN'} <span aria-hidden="true">↗</span>`;
     ui.start.focus({ preventScroll: true });
     beep(won ? 523 : 220, 0.16);
     if (won) {
@@ -212,7 +213,7 @@ function update(dt) {
   adventure.update(dt, controls.snapshot(frameInput));
 }
 function updateUI() {
-  setText(ui.treats, `${state.treats} / ${level.treats.length}`);
+  setText(ui.balls, `${state.balls} / ${level.balls.length}`);
   setText(ui.score, state.score);
   setText(ui.hearts, '♥'.repeat(state.hearts) + '♡'.repeat(MAX_HEARTS - state.hearts));
   setAttribute(ui.hearts, 'aria-label', `${state.hearts} hearts remaining`);
@@ -226,14 +227,14 @@ function updateUI() {
   setText(
     ui.zone,
     state.player.x < level.checkpoints[0].x
-      ? 'MEADOW MUNCHIES'
+      ? 'THE LAWN'
       : state.player.x < level.checkpoints[1].x
-        ? 'ACORN ALLEY'
-        : 'PICNIC PARK',
+        ? 'THE GARDEN'
+        : 'THE PATIO',
   );
   setText(
     ui['checkpoint-label'],
-    state.checkpointId ? 'Paw flag saved · onward to the picnic' : 'Next stop: a picnic!',
+    state.checkpointId ? 'Paw flag saved · Aron and Rebecca are waiting' : 'Next stop: the patio!',
   );
 }
 function resize() {
@@ -260,6 +261,7 @@ function render() {
   art.drawBackground(ctx, backgroundView);
   ctx.save();
   ctx.translate(-view.cameraX, 0);
+  for (const pool of level.pools) if (visible(pool.x, pool.w)) art.drawPool(ctx, pool, time);
   for (const platform of level.platforms)
     if (visible(platform.x, platform.w)) art.drawPlatform(ctx, platform);
   for (const checkpoint of level.checkpoints)
@@ -269,10 +271,10 @@ function render() {
       art.drawCheckpoint(ctx, checkpointView, time);
     }
   if (visible(level.finish.x, level.finish.w + 80)) art.drawFinish(ctx, level.finish, time);
-  for (const treat of level.treats)
-    if (!treat.collected && visible(treat.x, 20)) art.drawTreat(ctx, treat.x, treat.y, time);
-  for (const squirrel of level.squirrels)
-    if (visible(squirrel.x, squirrel.w)) art.drawSquirrel(ctx, squirrel, time);
+  for (const ball of level.balls)
+    if (!ball.collected && visible(ball.x, 20)) art.drawBall(ctx, ball.x, ball.y, time);
+  for (const bubble of level.bubbles)
+    if (visible(bubble.x, bubble.w)) art.drawBubble(ctx, bubble, time);
   if (state.mode === 'menu' && view.width > 650) {
     Object.assign(menuPlayer, state.player);
     menuPlayer.x = view.cameraX + view.width * 0.76 - 50;
@@ -280,8 +282,8 @@ function render() {
     menuPlayer.w = 108;
     menuPlayer.h = 113;
     menuPlayer.vx = 0;
-    art.drawCici(ctx, menuPlayer, time);
-  } else art.drawCici(ctx, state.player, time);
+    art.drawMaggie(ctx, menuPlayer, time);
+  } else art.drawMaggie(ctx, state.player, time);
   ctx.textAlign = 'center';
   ctx.font = 'bold 16px Trebuchet MS, sans-serif';
   for (const effect of effects) {
@@ -335,7 +337,7 @@ updateUI();
 ui['load-state'].classList.add('hidden');
 loop.start();
 if (new URLSearchParams(location.search).has('debug'))
-  window.ciciDebug = {
+  window.maggieDebug = {
     state,
     level,
     adventure,
