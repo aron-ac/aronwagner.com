@@ -1,0 +1,711 @@
+:root {
+  --cream: #f3f7ff;
+  --mint: #9cc3ff;
+  --muted: #b8c6de;
+  --gold: #ffd166;
+  --dark: #131c2e;
+  --coral: #6dffae;
+}
+
+body {
+  background: #0d1422;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 4px;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+.topbar button,
+.bottom-bar button {
+  border: 1px solid #9cc3ff4a;
+  background: #131c2ec9;
+  letter-spacing: 0.6px;
+}
+
+.topbar button:hover,
+.bottom-bar button:hover {
+  background: #22324f;
+}
+#game-shell {
+  height: min(780px, calc(100svh - 105px - var(--safe-top) - var(--safe-bottom)));
+  margin: auto;
+  border: 1px solid #6f93d040;
+  background: #0d1422;
+}
+
+/* A thumb can land between arrows or beside a button. Protect the whole active
+   play area, then restore native gestures when the menu is showing. */
+#game-shell:has(.touch-controls:not(.hidden)) {
+  touch-action: none;
+}
+#game-shell:has(.touch-controls:not(.hidden)),
+#game-shell:has(.touch-controls:not(.hidden)) * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+#viewport,
+#canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+#canvas {
+  outline: none;
+}
+.overlay {
+  background: linear-gradient(90deg, #0d142270, transparent 75%);
+}
+#canvas:focus-visible {
+  outline: 3px solid #ffd16699;
+  outline-offset: -4px;
+}
+.hud {
+  top: 25px;
+  align-items: flex-start;
+}
+
+.eyebrow {
+  font: 600 10px monospace;
+  letter-spacing: 1.6px;
+}
+.game-brand {
+  color: #eef3fb;
+  text-shadow: 0 2px 8px #000c;
+}
+.game-brand h1 {
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: -1px;
+  line-height: 1.1;
+  margin: 7px 0;
+}
+.game-brand h1 span {
+  font-size: 23px;
+  margin-left: 4px;
+}
+.game-brand .eyebrow {
+  color: #8fb4ff;
+}
+.stats {
+  align-self: flex-start;
+  background: #131c2eef;
+  border: 1px solid #dbe7ff33;
+  padding: 12px 5px;
+  box-shadow: 0 7px 25px #050a1412;
+}
+
+.stats > div {
+  min-width: 90px;
+  padding: 0 14px;
+}
+
+.stats strong {
+  font-size: 23px;
+  line-height: 1.5;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.stats .happy strong {
+  color: var(--coral);
+}
+.stats .uptime strong {
+  min-width: 7.4ch;
+}
+.stats .uptime.warn strong {
+  color: var(--gold);
+}
+.stats .uptime.bad strong {
+  color: #ff7b7b;
+}
+.stats .clock .meter b {
+  width: 0;
+  background: var(--mint);
+}
+.stats .meter {
+  display: block;
+  width: 96px;
+  height: 6px;
+  margin: 1px 0 3px;
+  border-radius: 3px;
+  background: #ffffff22;
+  overflow: hidden;
+}
+.stats .meter b {
+  display: block;
+  width: 50%;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--coral);
+  transition: width 0.35s;
+}
+.touch-controls > div button {
+  min-width: 72px;
+  font-size: 18px;
+}
+
+.bottom-bar {
+  bottom: 15px;
+  gap: 10px;
+}
+
+.keyboard-help {
+  color: #16233d;
+}
+
+.keyboard-help b {
+  padding: 0 5px;
+}
+kbd {
+  border-bottom: 1px solid #fff6;
+}
+
+/* Toasts sit low, over the empty floor, so they never cover a rack's bubble. */
+#toast {
+  top: auto;
+  bottom: 58px;
+  max-width: 430px;
+  padding: 12px 20px;
+  border-radius: 9px;
+  color: #16233d;
+  font-size: 12px;
+  box-shadow: 0 7px 22px #050a1424;
+}
+
+.overlay {
+  padding: 31px 6%;
+  background: linear-gradient(90deg, #0a102052, transparent 75%);
+  overflow-y: auto;
+}
+
+.menu-card {
+  width: 357px;
+  padding: 28px;
+  border: 1px solid #b6cdf547;
+  background: #131c2ef5;
+  box-shadow: 0 15px 60px #131c2e2b;
+}
+
+.menu-card > .eyebrow {
+  font-size: 10px;
+}
+
+.menu-card h2 {
+  font-size: 47px;
+  letter-spacing: -1.8px;
+  line-height: 1.08;
+}
+
+.menu-card > p {
+  color: #c9d6ec;
+}
+
+.intro-details {
+  margin: 23px 0;
+}
+
+.intro-details > div > span {
+  font: 10px monospace;
+  color: var(--mint);
+  border: 1px solid #9cc3ff47;
+  border-radius: 50%;
+  padding: 5px;
+  margin-top: 1px;
+}
+.intro-details p {
+  color: #b3c2dc;
+}
+
+.primary {
+  color: #16233d;
+}
+
+.primary > span {
+  float: right;
+  font-size: 17px;
+  line-height: 14px;
+}
+.primary:hover {
+  background: #dcebff;
+}
+.secondary {
+  border: 1px solid #ffffff35;
+  color: var(--cream);
+}
+
+.menu-card .menu-note {
+  color: #9fb0cd;
+}
+
+.results {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 22px 0;
+}
+.results div {
+  border-top: 1px solid #ffffff30;
+}
+
+.results span {
+  display: block;
+  font: 10px monospace;
+  letter-spacing: 0.8px;
+  color: #aebdd8;
+}
+.results strong {
+  font-size: 25px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.touch-controls {
+  left: 18px;
+  right: 18px;
+}
+
+.touch-controls > div {
+  gap: 8px;
+}
+
+.touch-controls button {
+  pointer-events: auto;
+  min-width: 55px;
+  background: #1c2940ed;
+  border: 1px solid #b6cdf54f;
+  border-radius: 12px;
+  font: 14px monospace;
+}
+
+.touch-controls .action {
+  align-self: flex-end;
+  height: 72px;
+  min-width: 118px;
+  padding: 0 16px;
+  border-radius: 36px;
+  background: #9cc3ffd9;
+  color: #16233d;
+  font-size: 13px;
+  font-weight: bold;
+}
+.touch-controls .action.ready {
+  background: #dcebff;
+  box-shadow: 0 0 0 4px #6dffae80;
+}
+.touch-controls button.pressed,
+.touch-controls button:active {
+  background: var(--gold);
+  color: #16233d;
+}
+.load-state {
+  background: #131c2e;
+}
+
+footer {
+  gap: 16px;
+  color: #8c9dbb;
+}
+
+footer a {
+  color: #d6e2f5;
+}
+.no-script {
+  padding: 24px;
+}
+@media (min-width: 1550px) {
+  #game-shell {
+    margin: 0 30px;
+    max-width: none;
+  }
+}
+@media (max-width: 1050px) {
+  .terminal {
+    display: none;
+  }
+  .hud {
+    left: 22px;
+    right: 22px;
+  }
+  .game-brand h1 {
+    font-size: 24px;
+  }
+  .stats > div {
+    min-width: 77px;
+    padding: 0 11px;
+  }
+  .stats strong {
+    font-size: 20px;
+  }
+
+  .menu-card {
+    width: 330px;
+    padding: 24px;
+  }
+  .menu-card h2 {
+    font-size: 42px;
+  }
+  .keyboard-help {
+    font-size: 10px;
+  }
+}
+@media (pointer: coarse) {
+  .keyboard-help {
+    display: none;
+  }
+  .bottom-bar {
+    justify-content: flex-end;
+  }
+}
+@media (max-width: 650px) {
+  .topbar {
+    height: 46px;
+    padding: 0 15px;
+    font-size: 10px;
+  }
+  .topbar button {
+    font-size: 10px;
+    padding: 7px 9px;
+  }
+  #game-shell {
+    height: calc(100svh - 76px - var(--safe-top) - var(--safe-bottom));
+    min-height: 0;
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+  }
+  .hud {
+    top: 16px;
+    left: 14px;
+    right: 14px;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .game-brand {
+    width: 100%;
+  }
+  .game-brand h1 {
+    font-size: 22px;
+    margin: 6px 0;
+  }
+  .game-brand h1 span {
+    font-size: 18px;
+  }
+  .game-brand .eyebrow {
+    font-size: 10px;
+    letter-spacing: 1px;
+  }
+  .stats {
+    padding: 7px 0;
+    min-width: 220px;
+    max-width: 100%;
+    width: 100%;
+    justify-content: space-between;
+  }
+  .stats > div {
+    min-width: 0;
+    flex: 1;
+    padding: 0 9px;
+  }
+  .stats .meter {
+    width: 100%;
+  }
+  .stats span {
+    font-size: 10px;
+  }
+  .stats strong {
+    font-size: 16px;
+    line-height: 1.4;
+  }
+  .stats .uptime strong {
+    min-width: 0;
+  }
+
+  .bottom-bar {
+    left: 16px;
+    right: 16px;
+    bottom: 12px;
+    justify-content: flex-end;
+  }
+  .keyboard-help {
+    display: none;
+  }
+  .touch-controls {
+    left: 14px;
+    right: 14px;
+    bottom: 57px;
+  }
+  .touch-controls button,
+  .touch-controls > div button {
+    min-width: 56px;
+  }
+  .overlay {
+    padding: 155px 14px 32px;
+    justify-content: center;
+    background: #0a10202d;
+  }
+  .menu-card {
+    width: min(340px, 100%);
+    padding: 21px;
+  }
+  .menu-card h2 {
+    font-size: 35px;
+    margin: 11px 0;
+  }
+  .menu-card > p {
+    font-size: 11px;
+    line-height: 1.6;
+  }
+  .intro-details {
+    gap: 10px;
+    margin: 15px 0;
+  }
+  .intro-details p {
+    font-size: 10px;
+  }
+  .intro-details strong {
+    font-size: 11px;
+  }
+  .menu-card .menu-note {
+    font-size: 10px;
+  }
+  .primary {
+    padding: 13px 16px;
+    font-size: 11px;
+  }
+  #toast {
+    top: auto;
+    bottom: 150px;
+    max-width: 320px;
+    width: calc(100% - 32px);
+    font-size: 11px;
+  }
+  .results {
+    margin: 17px 0;
+    gap: 12px;
+  }
+  .results strong {
+    font-size: 23px;
+  }
+  footer {
+    height: 30px;
+    font-size: 10px;
+    padding: 0 15px;
+  }
+  footer > span:last-child {
+    display: none;
+  }
+}
+@media (max-height: 760px) and (max-width: 650px) {
+  .overlay {
+    padding-top: 139px;
+    padding-bottom: 20px;
+  }
+  .menu-card {
+    padding: 17px;
+  }
+  .menu-card h2 {
+    font-size: 30px;
+    margin: 9px 0;
+  }
+  .intro-details {
+    gap: 7px;
+    margin: 11px 0;
+  }
+  .menu-card > p {
+    margin: 7px 0;
+  }
+  .menu-card .menu-note {
+    font-size: 10px;
+    margin-top: 10px;
+  }
+}
+@media (max-height: 620px) and (min-width: 651px) {
+  .overlay {
+    padding-top: 78px;
+    padding-bottom: 16px;
+  }
+  .menu-card {
+    width: 320px;
+    padding: 20px;
+  }
+  .menu-card h2 {
+    font-size: 33px;
+    margin: 10px 0;
+  }
+  .intro-details {
+    gap: 7px;
+    margin: 12px 0;
+  }
+  .menu-card > p {
+    font-size: 11px;
+  }
+  .menu-card .menu-note {
+    display: none;
+  }
+}
+@media (max-height: 520px) and (orientation: landscape) {
+  .topbar {
+    height: 36px;
+    padding: 0 15px;
+    font-size: 10px;
+  }
+  .topbar button {
+    padding: 5px 9px;
+    font-size: 10px;
+  }
+  #game-shell {
+    height: calc(100svh - 36px - var(--safe-top) - var(--safe-bottom));
+    min-height: 0;
+    border-radius: 0;
+  }
+  footer {
+    display: none;
+  }
+  .hud {
+    top: 12px;
+    left: 14px;
+    right: 14px;
+    flex-wrap: nowrap;
+  }
+  .game-brand {
+    width: auto;
+  }
+  .game-brand h1 {
+    font-size: 19px;
+    line-height: 1.1;
+    margin: 5px 0;
+  }
+  .game-brand h1 span {
+    font-size: 17px;
+  }
+  .game-brand .eyebrow {
+    font-size: 10px;
+  }
+  .stats {
+    min-width: 0;
+    width: auto;
+    padding: 6px 0;
+  }
+  .stats > div {
+    min-width: 61px;
+    padding: 0 8px;
+    flex: initial;
+  }
+  .stats span {
+    font-size: 10px;
+  }
+  .stats strong {
+    font-size: 17px;
+  }
+
+  .overlay {
+    padding: 64px 16px 10px;
+    justify-content: flex-start;
+  }
+  .menu-card {
+    width: 315px;
+    padding: 16px;
+  }
+  .menu-card h2 {
+    font-size: 28px;
+    margin: 7px 0;
+  }
+  .menu-card > p {
+    font-size: 10px;
+    margin: 8px 0;
+  }
+  .intro-details {
+    display: none;
+  }
+  .menu-card .menu-note {
+    display: block;
+    font-size: 10px;
+    margin-top: 8px;
+  }
+  .primary {
+    padding: 11px;
+    font-size: 10px;
+  }
+  .secondary {
+    padding: 8px;
+    margin-top: 6px;
+  }
+  .results {
+    gap: 7px;
+    margin: 9px 0;
+  }
+  .results div {
+    padding-top: 5px;
+  }
+  .results strong {
+    font-size: 18px;
+  }
+  .results span {
+    font-size: 10px;
+  }
+  /* Four stats fill the top right, so pause sits between the touch controls. */
+  .bottom-bar {
+    top: auto;
+    bottom: 14px;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+  }
+  .bottom-bar button {
+    font-size: 10px;
+    padding: 7px 8px;
+  }
+  .touch-controls {
+    bottom: 10px;
+    left: 14px;
+    right: 14px;
+  }
+  .touch-controls button {
+    height: 44px;
+    min-width: 47px;
+  }
+  .touch-controls .action {
+    height: 58px;
+    min-width: 104px;
+  }
+  .keyboard-help {
+    display: none;
+  }
+  #toast {
+    top: auto;
+    bottom: 76px;
+    font-size: 10px;
+    max-width: 290px;
+    padding: 9px 14px;
+  }
+}
+@media (max-width: 650px) and (max-height: 680px) and (orientation: portrait) {
+  .hud {
+    top: 12px;
+  }
+  .game-brand .eyebrow {
+    display: none;
+  }
+  .game-brand h1 {
+    font-size: 18px;
+    margin: 4px 0;
+  }
+}
+@media (max-width: 650px) and (max-height: 620px) and (orientation: portrait) {
+  .intro-details {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
