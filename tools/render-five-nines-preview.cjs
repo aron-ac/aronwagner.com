@@ -14,8 +14,11 @@ renderPreview('five-nines', async () => {
   canvas.height = 600;
   document.body.append(canvas);
   const ctx = canvas.getContext('2d');
-  const view = { x: 292, y: 0, width: 1200, height: 600 };
-  ctx.translate(-view.x, 0);
+  // A little wider than the game's own framing, with ceiling above the bubbles.
+  const zoom = 0.92;
+  const view = { x: 262, y: -60, width: 1200 / zoom, height: 600 / zoom };
+  ctx.scale(zoom, zoom);
+  ctx.translate(-view.x, -view.y);
   const rack = (id) => RACKS.find((r) => r.id === id);
   const states = {
     vms: { problem: { kind: 'cable', age: 3, limit: 0 } },
@@ -37,7 +40,7 @@ renderPreview('five-nines', async () => {
     ],
     time,
   );
-  const aron = { x: rack('object').x - 175, vx: 0, facing: 1, walked: 0, fixing: 'fire' };
+  const aron = { x: rack('object').x - 175, vx: 0, facing: 1, walked: 0, fixing: 'spray' };
   art.drawAronFigure(ctx, sheets, aron);
   art.drawFire(ctx, sheets, rack('object'), time);
   art.drawFoam(ctx, sheets, art.nozzle(aron), { x: rack('object').x, y: 300 }, time);
