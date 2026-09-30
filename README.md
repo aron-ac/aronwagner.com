@@ -2,7 +2,7 @@
 
 The personal website of Aron Wagner, CEO of [American Cloud](https://americancloud.com/). It is an
 illustrated, clickable version of his home office, with Rebecca, Jack and Maggie the Goldendoodle,
-plus a small arcade, and it's self-hosted on an American Cloud virtual machine.
+plus a small arcade of two games, and it's self-hosted on an American Cloud virtual machine.
 
 **[Visit the site →](https://aronwagner.com/)**
 
@@ -45,6 +45,15 @@ drawn in Canvas 2D, and the best score stays in the browser. See
 
 [![Maggie's Toy Run](assets/social/maggies-toy-run-og.jpg)](https://aronwagner.com/maggies-toy-run.html)
 
+**[Aisle Dash](https://aronwagner.com/aisle-dash.html)** is a side-scrolling shopping day: Aron
+pushes Jack's stroller through Target and then International Plaza while Rebecca shops. Hearts in
+her thought bubble mean she wants something; "hmm…" means she's just looking. Compliment her
+outfits, run back for her coffee and cupcake cravings, grab coupons, and pick up Jack's pacifier
+every time he throws it, all on a $250 budget. The characters and items are illustrated sprites made
+the same way as the office art. See [its README](assets/aisle-dash/README.md).
+
+[![Aisle Dash](assets/social/aisle-dash-og.jpg)](https://aronwagner.com/aisle-dash.html)
+
 Two more games, Surf Riders and Bay Racer, are still in the repository and are being reworked.
 Their pages build and have tests but aren't linked or indexed yet; their cards are commented out in
 `index.html`. To bring one back, uncomment its card, remove the `noindex` meta tag from its page and
@@ -74,7 +83,8 @@ inlines the homepage's critical theme files, as the production build does.
   in `script.js`, then update `PHOTO_COUNT` in the homepage tests.
 - `tests/helpers/identity.cjs` holds the owner details the tests expect: name, title, email and
   social links.
-- `assets/shared/`, `assets/surf-rides/`, `assets/bay-racer/` and `assets/maggies-toy-run/` are the
+- `assets/shared/`, `assets/surf-rides/`, `assets/bay-racer/`, `assets/maggies-toy-run/` and
+  `assets/aisle-dash/` are the
   games, which share a pinned copy of Three.js in `assets/vendor/three/`.
 
 ## Checks
@@ -210,8 +220,7 @@ root-disk snapshot in American Cloud is a quick restore point. To rebuild from s
 ## Credits
 
 This site began as a fork of [Mark Hammonds's](https://markhammonds.com/) personal website, and its
-structure, build, tests and games are his work. Thank you, Mark. Maggie's Toy Run is his CiCi's Treat
-Trail, redrawn for Maggie and Aron's backyard. The office illustration, content, photos and hosting
+structure, build, tests and games are his work. Thank you, Mark. Maggie's Toy Run is his CiCi's Treat Trail, redrawn for Maggie and Aron's backyard. Aisle Dash is new, built on his shared arcade code. The office illustration, content, photos and hosting
 are Aron's.
 
 Fonts are self-hosted from [Merriweather](https://github.com/EbenSorkin/Merriweather4) and

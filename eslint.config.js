@@ -28,6 +28,7 @@ export default [
         surfDebug: 'readonly',
         bayDebug: 'readonly',
         maggieDebug: 'readonly',
+        aisleDebug: 'readonly',
         setTestClock: 'readonly',
         themeLoadProbe: 'readonly',
       },

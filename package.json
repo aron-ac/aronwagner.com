@@ -18,7 +18,7 @@
     "test:browser": "node tools/test-browser.js",
     "check": "npm run format:check && npm run lint && npm test",
     "setup:browser": "puppeteer browsers install chrome",
-    "render:previews": "node tools/render-surf-preview.cjs && node tools/render-bay-preview.cjs && node tools/render-maggie-preview.cjs",
+    "render:previews": "node tools/render-surf-preview.cjs && node tools/render-bay-preview.cjs && node tools/render-maggie-preview.cjs && node tools/render-aisle-dash-preview.cjs",
     "test:browser:production": "npm run build:site && node tools/test-browser.js --root dist"
   },
   "devDependencies": {
