@@ -1,9 +1,9 @@
 /* Render the homepage thumbnail with the game's native Canvas art and level. */
 const { renderPreview } = require('./lib/preview.cjs');
 
-renderPreview('cici-treat-trail', async () => {
-  const art = await import('./assets/cici-treat-trail/art.js');
-  const { createLevel } = await import('./assets/cici-treat-trail/level.js');
+renderPreview('maggies-toy-run', async () => {
+  const art = await import('./assets/maggies-toy-run/art.js');
+  const { createLevel } = await import('./assets/maggies-toy-run/level.js');
   const level = createLevel(),
     cameraX = 350,
     time = 1.2;
@@ -18,13 +18,14 @@ renderPreview('cici-treat-trail', async () => {
   art.drawBackground(ctx, { cameraX, width: 1000, height: 500, time });
   ctx.save();
   ctx.translate(-cameraX, 0);
+  for (const pool of level.pools) art.drawPool(ctx, pool, time);
   for (const platform of level.platforms) art.drawPlatform(ctx, platform);
-  for (const treat of level.treats) art.drawTreat(ctx, treat.x, treat.y, time);
-  for (const squirrel of level.squirrels) art.drawSquirrel(ctx, squirrel, time);
+  for (const ball of level.balls) art.drawBall(ctx, ball.x, ball.y, time);
+  for (const bubble of level.bubbles) art.drawBubble(ctx, bubble, time);
   for (const checkpoint of level.checkpoints)
     art.drawCheckpoint(ctx, { ...checkpoint, y: checkpoint.y + 48 }, time);
   art.drawFinish(ctx, level.finish, time);
-  art.drawCici(
+  art.drawMaggie(
     ctx,
     {
       x: 780,

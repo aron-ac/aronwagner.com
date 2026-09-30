@@ -33,7 +33,7 @@ The office illustration has day and night versions that follow the time of day i
 On touch devices, small pulsing pins mark the objects. Every dialog supports Escape, its close
 button and backdrop clicks, and returns focus to the object that opened it.
 
-Three browser games (Surf Riders, Bay Racer and CiCi's Treat Trail) are still in the repository and
+Three browser games (Surf Riders, Bay Racer and Maggie's Toy Run) are still in the repository and
 are being reworked for v2. Their pages build and have tests, but the homepage doesn't link them yet;
 the game cards, the eMac link and the intro's game link are commented out in `index.html`.
 
@@ -61,7 +61,7 @@ inlines the homepage's critical theme files, as the production build does.
   in `script.js`, then update `PHOTO_COUNT` in the homepage tests.
 - `tests/helpers/identity.cjs` holds the owner details the tests expect: name, title, email and
   social links.
-- `assets/shared/`, `assets/surf-rides/`, `assets/bay-racer/` and `assets/cici-treat-trail/` are the
+- `assets/shared/`, `assets/surf-rides/`, `assets/bay-racer/` and `assets/maggies-toy-run/` are the
   games, which share a pinned copy of Three.js in `assets/vendor/three/`.
 
 ## Checks

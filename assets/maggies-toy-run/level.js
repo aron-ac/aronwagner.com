@@ -1,5 +1,5 @@
-// Original side-scrolling meadow course. Platforms use top-left coordinates;
-// treat coordinates are their centers. Every call returns fresh mutable state.
+// Original side-scrolling backyard course. Platforms use top-left coordinates;
+// ball coordinates are their centers. Every call returns fresh mutable state.
 export function createLevel() {
   const width = 6200;
   const groundTop = 420;
@@ -52,26 +52,26 @@ export function createLevel() {
     platforms.push({ id: `platform-${id}`, x, y, w, h: 20, kind: 'platform' });
   }
 
-  const treats = [];
-  const addTreat = (id, x, y) => treats.push({ id, x, y, collected: false });
-  // Mouth-height treats can be collected while running along the safe ground.
-  const groundTreats = [
+  const balls = [];
+  const addBall = (id, x, y) => balls.push({ id, x, y, collected: false });
+  // Mouth-height balls can be collected while running along the safe ground.
+  const groundBalls = [
     140, 220, 510, 700, 960, 1030, 1335, 1435, 1690, 1900, 1980, 2080, 2230, 2460, 2740, 2950, 3210,
     3520, 3685, 3960, 4040, 4160, 4330, 4510, 4760, 5090, 5240, 5490, 5735, 5850, 5900, 5930,
   ];
-  groundTreats.forEach((x, index) => addTreat(`treat-ground-${index + 1}`, x, groundTop - 34));
-  // Three-treat arcs illustrate the flight path over each mandatory gap. A
+  groundBalls.forEach((x, index) => addBall(`ball-ground-${index + 1}`, x, groundTop - 34));
+  // Three-ball arcs illustrate the flight path over each mandatory gap. A
   // full-speed jump started about 70px before the gap can touch the whole arc.
   for (let index = 0; index < groundSections.length - 1; index++) {
     const left = groundSections[index][1];
     const right = groundSections[index + 1][0];
-    addTreat(`treat-jump-${index + 1}-rise`, left + 8, 300);
-    addTreat(`treat-jump-${index + 1}-peak`, (left + right) / 2, 280);
-    addTreat(`treat-jump-${index + 1}-land`, right - 8, 312);
+    addBall(`ball-jump-${index + 1}-rise`, left + 8, 300);
+    addBall(`ball-jump-${index + 1}-peak`, (left + right) / 2, 280);
+    addBall(`ball-jump-${index + 1}-land`, right - 8, 312);
   }
-  upperRoute.forEach(([id, x, y, w]) => addTreat(`treat-upper-${id}`, x + w / 2, y - 34));
+  upperRoute.forEach(([id, x, y, w]) => addBall(`ball-upper-${id}`, x + w / 2, y - 34));
 
-  // Patrol endpoints refer to the squirrel's left edge. Every patrol remains
+  // Patrol endpoints refer to the bubble's left edge. Every patrol remains
   // at least 80px from a pit and well clear of the spawn and checkpoint flags.
   const patrols = [
     [550, 480, 635, -44],
@@ -83,8 +83,8 @@ export function createLevel() {
     [4910, 4850, 5000, -47],
     [5620, 5580, 5700, 43],
   ];
-  const squirrels = patrols.map(([x, patrolMin, patrolMax, vx], index) => ({
-    id: `squirrel-${index + 1}`,
+  const bubbles = patrols.map(([x, patrolMin, patrolMax, vx], index) => ({
+    id: `bubble-${index + 1}`,
     x,
     y: groundTop - 34,
     w: 44,
@@ -92,7 +92,7 @@ export function createLevel() {
     vx,
     patrolMin,
     patrolMax,
-    stunned: 0,
+    popped: 0,
   }));
   // y is the standing player's top-left respawn height; flags may be drawn
   // above this anchor with their base at the 420px ground line.
@@ -100,12 +100,18 @@ export function createLevel() {
     { id: 'checkpoint-picnic', x: 2025, y: groundTop - 48, active: false },
     { id: 'checkpoint-orchard', x: 4080, y: groundTop - 48, active: false },
   ];
+  // Each pit is drawn as a sudsy wading pool; falling in is almost a bath.
+  const pools = groundSections.slice(1).map(([start], index) => ({
+    x: groundSections[index][1],
+    w: start - groundSections[index][1],
+  }));
   return {
     width,
+    pools,
     spawn: { x: 80, y: groundTop - 48 },
     platforms,
-    treats,
-    squirrels,
+    balls,
+    bubbles,
     checkpoints,
     finish: { x: width - 230, y: 280, w: 100, h: 140 },
   };

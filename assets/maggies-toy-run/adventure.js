@@ -26,7 +26,7 @@ export function createAdventure(level, onEvent = () => {}) {
     mode: 'menu',
     elapsed: 0,
     hearts: MAX_HEARTS,
-    treats: 0,
+    balls: 0,
     score: 0,
     bounces: 0,
     checkpointId: null,
@@ -140,49 +140,49 @@ export function createAdventure(level, onEvent = () => {}) {
         p.vy = 0;
       }
     }
-    for (const treat of level.treats) {
+    for (const ball of level.balls) {
       if (
-        !treat.collected &&
-        treat.x >= p.x - 10 &&
-        treat.x <= p.x + p.w + 10 &&
-        treat.y >= p.y - 10 &&
-        treat.y <= p.y + p.h + 10
+        !ball.collected &&
+        ball.x >= p.x - 10 &&
+        ball.x <= p.x + p.w + 10 &&
+        ball.y >= p.y - 10 &&
+        ball.y <= p.y + p.h + 10
       ) {
-        treat.collected = true;
-        state.treats++;
+        ball.collected = true;
+        state.balls++;
         state.score += 10;
-        onEvent('treat', { x: treat.x, y: treat.y });
+        onEvent('ball', { x: ball.x, y: ball.y });
       }
     }
-    for (const squirrel of level.squirrels) {
-      if (squirrel.stunned > 0) {
-        squirrel.stunned = Math.max(0, squirrel.stunned - dt);
+    for (const bubble of level.bubbles) {
+      if (bubble.popped > 0) {
+        bubble.popped = Math.max(0, bubble.popped - dt);
         continue;
       }
-      squirrel.x += squirrel.vx * dt;
-      if (squirrel.x < squirrel.patrolMin) {
-        squirrel.x = squirrel.patrolMin;
-        squirrel.vx = Math.abs(squirrel.vx);
+      bubble.x += bubble.vx * dt;
+      if (bubble.x < bubble.patrolMin) {
+        bubble.x = bubble.patrolMin;
+        bubble.vx = Math.abs(bubble.vx);
       }
-      if (squirrel.x > squirrel.patrolMax) {
-        squirrel.x = squirrel.patrolMax;
-        squirrel.vx = -Math.abs(squirrel.vx);
+      if (bubble.x > bubble.patrolMax) {
+        bubble.x = bubble.patrolMax;
+        bubble.vx = -Math.abs(bubble.vx);
       }
-      if (!overlaps(p, squirrel)) continue;
-      if (p.vy > 0 && previousBottom <= squirrel.y + 14) {
-        p.y = squirrel.y - p.h;
+      if (!overlaps(p, bubble)) continue;
+      if (p.vy > 0 && previousBottom <= bubble.y + 14) {
+        p.y = bubble.y - p.h;
         p.vy = -450;
         p.onGround = false;
         p.coyote = 0;
-        squirrel.stunned = 3;
-        const firstBounce = !squirrel.bounced;
+        bubble.popped = 3;
+        const firstBounce = !bubble.bounced;
         if (firstBounce) {
-          squirrel.bounced = true;
+          bubble.bounced = true;
           state.bounces++;
           state.score += 25;
         }
-        onEvent('bounce', { x: squirrel.x + squirrel.w / 2, y: squirrel.y, firstBounce });
-      } else hurt('squirrel', false, squirrel.x + squirrel.w / 2);
+        onEvent('bounce', { x: bubble.x + bubble.w / 2, y: bubble.y, firstBounce });
+      } else hurt('bubble', false, bubble.x + bubble.w / 2);
       if (state.mode !== 'playing') return;
     }
     for (const checkpoint of level.checkpoints) {

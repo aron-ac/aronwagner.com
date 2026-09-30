@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const { launchBrowser, closeBrowser, artifactPath, settlePage } = require('./helpers/browser.cjs');
 const url = new URL(
   process.env.GAME_URL ||
-    new URL('cici-treat-trail.html', process.env.SITE_URL || 'http://localhost:8000/').href,
+    new URL('maggies-toy-run.html', process.env.SITE_URL || 'http://localhost:8000/').href,
 );
 url.searchParams.set('debug', '1');
 
@@ -72,7 +72,7 @@ async function exerciseMobileGestures(page) {
     assert.equal(await page.$$eval('[data-control].pressed', (buttons) => buttons.length), 0);
 
     await page.tap('#pause');
-    assert.equal(await page.evaluate(() => ciciDebug.state.mode), 'paused');
+    assert.equal(await page.evaluate(() => maggieDebug.state.mode), 'paused');
     const menu = await page.$eval('#overlay', (element) => {
       const r = element.getBoundingClientRect();
       return {
@@ -109,7 +109,7 @@ async function exerciseMobileGestures(page) {
 }
 
 async function exerciseMobilePause(page) {
-  await page.evaluate(() => ciciDebug.startGame());
+  await page.evaluate(() => maggieDebug.startGame());
   const right = await (await page.$('[data-control="right"]')).boundingBox();
   const finger = await page.touchscreen.touchStart(
     right.x + right.width / 2,
@@ -117,20 +117,20 @@ async function exerciseMobilePause(page) {
   );
   assert.ok(
     await page.evaluate(() => {
-      for (let i = 0; i < 12; i++) ciciDebug.update(1 / 120);
-      return ciciDebug.state.player.vx > 0;
+      for (let i = 0; i < 12; i++) maggieDebug.update(1 / 120);
+      return maggieDebug.state.player.vx > 0;
     }),
-    'The first finger is moving CiCi before the second finger pauses',
+    'The first finger is moving Maggie before the second finger pauses',
   );
   await page.tap('#pause');
   assert.equal(
-    await page.evaluate(() => ciciDebug.state.mode),
+    await page.evaluate(() => maggieDebug.state.mode),
     'paused',
-    'A second finger pauses CiCi while a movement arrow remains held',
+    'A second finger pauses Maggie while a movement arrow remains held',
   );
   await finger.end();
   assert.equal(
-    await page.evaluate(() => ciciDebug.state.mode),
+    await page.evaluate(() => maggieDebug.state.mode),
     'paused',
     'Lifting the old movement finger cannot activate the newly exposed menu',
   );
@@ -142,29 +142,29 @@ async function exerciseMobilePause(page) {
   await page.tap('#start');
   assert.ok(
     await page.evaluate(() => {
-      for (let i = 0; i < 120; i++) ciciDebug.update(1 / 120);
-      return ciciDebug.state.mode === 'playing' && Math.abs(ciciDebug.state.player.vx) < 0.1;
+      for (let i = 0; i < 120; i++) maggieDebug.update(1 / 120);
+      return maggieDebug.state.mode === 'playing' && Math.abs(maggieDebug.state.player.vx) < 0.1;
     }),
     'Resuming cannot reactivate the old movement finger',
   );
   await page.focus('#pause');
   await page.keyboard.press('Enter');
   assert.equal(
-    await page.evaluate(() => ciciDebug.state.mode),
+    await page.evaluate(() => maggieDebug.state.mode),
     'paused',
     'Keyboard activation of the Pause button is preserved',
   );
   await page.click('#start');
   await page.click('#pause');
   assert.equal(
-    await page.evaluate(() => ciciDebug.state.mode),
+    await page.evaluate(() => maggieDebug.state.mode),
     'paused',
     'Mouse activation of the Pause button is preserved',
   );
   await page.click('#start');
 }
 
-test('cici treat trail smoke', { timeout: 300_000 }, async () => {
+test('maggies toy run smoke', { timeout: 300_000 }, async () => {
   const browser = await launchBrowser();
   try {
     const page = await browser.newPage(),
@@ -175,8 +175,8 @@ test('cici treat trail smoke', { timeout: 300_000 }, async () => {
     });
     await page.setViewport({ width: 1440, height: 1000 });
     await page.goto(url.href, { waitUntil: 'networkidle0' });
-    await page.waitForFunction(() => window.ciciDebug);
-    assert.match(await page.title(), /CiCi[’']s Treat Trail/);
+    await page.waitForFunction(() => window.maggieDebug);
+    assert.match(await page.title(), /Maggie[’']s Toy Run/);
     const links = await page.$$eval('a[href]', (els) =>
       els
         .filter((el) => !el.getAttribute('href').startsWith('#'))
@@ -190,9 +190,9 @@ test('cici treat trail smoke', { timeout: 300_000 }, async () => {
         `${link.href} protects its originating tab`,
       );
     }
-    await page.screenshot({ path: artifactPath('cici-treat-trail-menu-desktop.png') });
+    await page.screenshot({ path: artifactPath('maggies-toy-run-menu-desktop.png') });
     const mechanical = await page.evaluate(() => {
-      const d = ciciDebug,
+      const d = maggieDebug,
         s = d.state,
         results = [];
       const check = (condition, label) => {
@@ -214,8 +214,8 @@ test('cici treat trail smoke', { timeout: 300_000 }, async () => {
       const ground = () => d.level.platforms.find((platform) => platform.kind === 'ground');
       d.startGame();
       check(
-        s.mode === 'playing' && s.hearts === 3 && s.treats === 0 && s.score === 0,
-        'A fresh adventure starts with three hearts and no collected treats',
+        s.mode === 'playing' && s.hearts === 3 && s.balls === 0 && s.score === 0,
+        'A fresh adventure starts with three hearts and no collected balls',
       );
       place(100, ground().y - s.player.h - 1, { vy: 180 });
       step(1 / 60);
@@ -223,7 +223,7 @@ test('cici treat trail smoke', { timeout: 300_000 }, async () => {
         s.player.onGround &&
           Math.abs(s.player.y - (ground().y - s.player.h)) < 0.01 &&
           s.player.vy === 0,
-        'Descending onto ground lands CiCi without sinking',
+        'Descending onto ground lands Maggie without sinking',
       );
       d.keys.add('Space');
       step(1 / 60);
@@ -259,7 +259,7 @@ test('cici treat trail smoke', { timeout: 300_000 }, async () => {
       step(0.08);
       check(
         s.player.y < ledge.y + 5 && s.player.vy < 0,
-        'CiCi can jump upward through an optional one-way ledge',
+        'Maggie can jump upward through an optional one-way ledge',
       );
       place(ledge.x + 20, ledge.y - s.player.h - 1, { vy: 180 });
       step(1 / 60);
@@ -274,51 +274,47 @@ test('cici treat trail smoke', { timeout: 300_000 }, async () => {
       d.clearInput();
       check(
         s.player.x + s.player.w <= wall.x + 0.01,
-        'CiCi cannot run through the side of solid ground',
+        'Maggie cannot run through the side of solid ground',
       );
       d.startGame();
-      const treat = d.level.treats[0];
-      place(treat.x - s.player.w / 2, treat.y - s.player.h / 2);
+      const ball = d.level.balls[0];
+      place(ball.x - s.player.w / 2, ball.y - s.player.h / 2);
       step(1 / 120);
       check(
-        treat.collected && s.treats === 1 && s.score === 10,
-        'Touching a treat collects it for ten points',
+        ball.collected && s.balls === 1 && s.score === 10,
+        'Touching a ball collects it for ten points',
       );
       step(0.1);
-      check(s.treats === 1 && s.score === 10, 'A collected treat cannot score twice');
+      check(s.balls === 1 && s.score === 10, 'A collected ball cannot score twice');
       d.startGame();
-      let squirrel = d.level.squirrels[0];
-      place(squirrel.x, squirrel.y, { vy: 0 });
+      let bubble = d.level.bubbles[0];
+      place(bubble.x, bubble.y, { vy: 0 });
       step(1 / 120);
       check(
         s.hearts === 2 && s.player.invulnerable > 0,
-        'A side hit from a squirrel costs one heart and grants recovery time',
+        'A side hit from a bubble costs one heart and grants recovery time',
       );
-      Object.assign(s.player, { x: squirrel.x, y: squirrel.y, vx: 0, vy: 0 });
+      Object.assign(s.player, { x: bubble.x, y: bubble.y, vx: 0, vy: 0 });
       step(0.1);
       check(s.hearts === 2, 'Recovery invulnerability prevents repeated contact damage');
       d.startGame();
-      squirrel = d.level.squirrels[0];
-      place(squirrel.x, squirrel.y - s.player.h - 1, { vy: 180 });
+      bubble = d.level.bubbles[0];
+      place(bubble.x, bubble.y - s.player.h - 1, { vy: 180 });
       step(1 / 60);
       check(
-        s.hearts === 3 &&
-          s.bounces === 1 &&
-          s.score === 25 &&
-          s.player.vy < 0 &&
-          squirrel.stunned > 0,
-        'Landing on a squirrel bounces CiCi, stuns it and awards twenty-five points',
+        s.hearts === 3 && s.bounces === 1 && s.score === 25 && s.player.vy < 0 && bubble.popped > 0,
+        'Landing on a bubble bounces Maggie, pops it and awards twenty-five points',
       );
       place(d.level.spawn.x, d.level.spawn.y);
       step(3.1);
-      place(squirrel.x, squirrel.y - s.player.h - 1, { vy: 180 });
+      place(bubble.x, bubble.y - s.player.h - 1, { vy: 180 });
       step(1 / 60);
-      check(s.score === 25, 'Bouncing on the same squirrel again does not farm points');
+      check(s.score === 25, 'Bouncing on the same bubble again does not farm points');
       d.startGame();
       place(d.level.spawn.x, 580);
       step(1 / 120);
-      const savedTreat = d.level.treats[0];
-      place(savedTreat.x - s.player.w / 2, savedTreat.y - s.player.h / 2);
+      const savedBall = d.level.balls[0];
+      place(savedBall.x - s.player.w / 2, savedBall.y - s.player.h / 2);
       step(1 / 120);
       const checkpoint = d.level.checkpoints[0];
       place(checkpoint.x - s.player.w / 2, checkpoint.y);
@@ -336,8 +332,8 @@ test('cici treat trail smoke', { timeout: 300_000 }, async () => {
         'Falling into a pit loses one heart and returns to the checkpoint',
       );
       check(
-        s.treats === 1 && s.score === 60 && savedTreat.collected,
-        'Checkpoint recovery preserves collected treats and score',
+        s.balls === 1 && s.score === 60 && savedBall.collected,
+        'Checkpoint recovery preserves collected balls and score',
       );
       place(s.player.x, 580);
       step(1 / 120);
@@ -353,18 +349,18 @@ test('cici treat trail smoke', { timeout: 300_000 }, async () => {
         'Game over freezes movement and elapsed time',
       );
       check(
-        localStorage.getItem('cici-treat-trail-best-score') === null,
+        localStorage.getItem('maggies-toy-run-best-score') === null,
         'An unfinished adventure does not save a completion record',
       );
       d.startGame();
       check(
         s.hearts === 3 &&
           s.score === 0 &&
-          s.treats === 0 &&
+          s.balls === 0 &&
           s.checkpointId === null &&
-          d.level.treats.every((item) => !item.collected) &&
+          d.level.balls.every((item) => !item.collected) &&
           d.level.checkpoints.every((item) => !item.active),
-        'Restart restores hearts, treats and checkpoint flags',
+        'Restart restores hearts, balls and checkpoint flags',
       );
       step(0.2);
       d.pauseGame();
@@ -372,7 +368,7 @@ test('cici treat trail smoke', { timeout: 300_000 }, async () => {
         x: s.player.x,
         y: s.player.y,
         time: s.elapsed,
-        enemies: d.level.squirrels.map((enemy) => enemy.x),
+        enemies: d.level.bubbles.map((enemy) => enemy.x),
       };
       step(0.5);
       check(
@@ -380,8 +376,8 @@ test('cici treat trail smoke', { timeout: 300_000 }, async () => {
           s.player.x === paused.x &&
           s.player.y === paused.y &&
           s.elapsed === paused.time &&
-          d.level.squirrels.every((enemy, i) => enemy.x === paused.enemies[i]),
-        'Pause freezes CiCi, squirrels and the timer',
+          d.level.bubbles.every((enemy, i) => enemy.x === paused.enemies[i]),
+        'Pause freezes Maggie, bubbles and the timer',
       );
       d.resumeGame();
       check(s.mode === 'playing', 'Resume returns to the adventure');
@@ -395,7 +391,7 @@ test('cici treat trail smoke', { timeout: 300_000 }, async () => {
       step(0.2);
       check(s.score === winScore, 'The finish bonus is awarded only once');
       check(
-        Number(localStorage.getItem('cici-treat-trail-best-score')) === winScore,
+        Number(localStorage.getItem('maggies-toy-run-best-score')) === winScore,
         'Completed adventure saves its best score',
       );
       return results;
@@ -410,18 +406,18 @@ test('cici treat trail smoke', { timeout: 300_000 }, async () => {
     const trace = [];
     for (let frame = 0; frame < 1800; frame++) {
       snapshot = await page.evaluate(() => {
-        for (let i = 0; i < 4; i++) ciciDebug.update(1 / 120);
-        const s = ciciDebug.state,
+        for (let i = 0; i < 4; i++) maggieDebug.update(1 / 120);
+        const s = maggieDebug.state,
           p = s.player;
-        const sections = ciciDebug.level.platforms
+        const sections = maggieDebug.level.platforms
           .filter((platform) => platform.kind === 'ground')
           .sort((a, b) => a.x - b.x);
         const nextEdge = sections
           .slice(0, -1)
           .map((platform) => platform.x + platform.w)
           .find((edge) => edge > p.x);
-        const enemies = ciciDebug.level.squirrels
-          .filter((enemy) => enemy.stunned <= 0 && enemy.x + enemy.w >= p.x && enemy.x < p.x + 220)
+        const enemies = maggieDebug.level.bubbles
+          .filter((enemy) => enemy.popped <= 0 && enemy.x + enemy.w >= p.x && enemy.x < p.x + 220)
           .map((enemy) => enemy.x - (p.x + p.w));
         return {
           mode: s.mode,
@@ -431,7 +427,7 @@ test('cici treat trail smoke', { timeout: 300_000 }, async () => {
           coyote: p.coyote,
           elapsed: s.elapsed,
           hearts: s.hearts,
-          treats: s.treats,
+          balls: s.balls,
           score: s.score,
           nextEdge,
           enemies,
@@ -449,13 +445,13 @@ test('cici treat trail smoke', { timeout: 300_000 }, async () => {
         jumpHeld = false;
       }
       const approachingGap = snapshot.nextEdge !== undefined && snapshot.nextEdge - snapshot.x < 80;
-      const approachingSquirrel = snapshot.enemies.some(
+      const approachingBubble = snapshot.enemies.some(
         (distance) => distance < 66 && distance > -28,
       );
       if (
         !jumpHeld &&
         (snapshot.onGround || snapshot.coyote > 0) &&
-        (approachingGap || approachingSquirrel)
+        (approachingGap || approachingBubble)
       ) {
         await page.keyboard.down('Space');
         jumpHeld = true;
@@ -465,12 +461,12 @@ test('cici treat trail smoke', { timeout: 300_000 }, async () => {
     await page.keyboard.up('Space');
     await page.keyboard.up('ArrowRight');
     if (snapshot.mode !== 'won') {
-      await page.screenshot({ path: artifactPath('cici-treat-trail-playthrough-failure.png') });
+      await page.screenshot({ path: artifactPath('maggies-toy-run-playthrough-failure.png') });
       throw new Error(
         `Keyboard playthrough did not finish: ${JSON.stringify({ snapshot, trace })}`,
       );
     }
-    assert.ok(snapshot.treats >= 5, 'Full keyboard playthrough collects treats along the route');
+    assert.ok(snapshot.balls >= 5, 'Full keyboard playthrough collects balls along the route');
     assert.ok(snapshot.hearts > 0, 'Full keyboard playthrough reaches home with hearts remaining');
     assert.equal(
       await page.$eval('#results', (el) => el.classList.contains('hidden')),
@@ -478,30 +474,30 @@ test('cici treat trail smoke', { timeout: 300_000 }, async () => {
       'Winning displays the results',
     );
     await settlePage(page);
-    await page.screenshot({ path: artifactPath('cici-treat-trail-win.png') });
+    await page.screenshot({ path: artifactPath('maggies-toy-run-win.png') });
     const savedBest = await page.evaluate(() =>
-      Number(localStorage.getItem('cici-treat-trail-best-score')),
+      Number(localStorage.getItem('maggies-toy-run-best-score')),
     );
     await page.click('#start');
     await page.keyboard.down('KeyD');
     await page.evaluate(() => {
-      for (let i = 0; i < 60; i++) ciciDebug.update(1 / 120);
+      for (let i = 0; i < 60; i++) maggieDebug.update(1 / 120);
     });
     await page.keyboard.up('KeyD');
     await page.keyboard.press('KeyP');
-    assert.equal(await page.evaluate(() => ciciDebug.state.mode), 'paused');
+    assert.equal(await page.evaluate(() => maggieDebug.state.mode), 'paused');
     await page.keyboard.press('Escape');
-    assert.equal(await page.evaluate(() => ciciDebug.state.mode), 'playing');
-    await page.screenshot({ path: artifactPath('cici-treat-trail-desktop.png') });
+    assert.equal(await page.evaluate(() => maggieDebug.state.mode), 'playing');
+    await page.screenshot({ path: artifactPath('maggies-toy-run-desktop.png') });
     for (const viewport of [
       { width: 390, height: 844 },
       { width: 844, height: 390 },
     ]) {
       await page.setViewport({ ...viewport, isMobile: true, hasTouch: true, deviceScaleFactor: 1 });
       await page.goto(url.href, { waitUntil: 'networkidle0' });
-      await page.waitForFunction(() => window.ciciDebug);
+      await page.waitForFunction(() => window.maggieDebug);
       assert.equal(
-        await page.evaluate(() => Number(localStorage.getItem('cici-treat-trail-best-score'))),
+        await page.evaluate(() => Number(localStorage.getItem('maggies-toy-run-best-score'))),
         savedBest,
         'Completion record persists across reloads',
       );
@@ -545,17 +541,17 @@ test('cici treat trail smoke', { timeout: 300_000 }, async () => {
       await exerciseMobilePause(page);
       const right = await (await page.$('[data-control="right"]')).boundingBox();
       const jump = await (await page.$('[data-control="jump"]')).boundingBox();
-      const startX = await page.evaluate(() => ciciDebug.state.player.x);
+      const startX = await page.evaluate(() => maggieDebug.state.player.x);
       const moveTouch = await page.touchscreen.touchStart(
         right.x + right.width / 2,
         right.y + right.height / 2,
       );
       await page.evaluate(() => {
-        for (let i = 0; i < 36; i++) ciciDebug.update(1 / 120);
+        for (let i = 0; i < 36; i++) maggieDebug.update(1 / 120);
       });
       assert.ok(
-        await page.evaluate((x) => ciciDebug.state.player.x > x + 10, startX),
-        'Touch direction moves CiCi',
+        await page.evaluate((x) => maggieDebug.state.player.x > x + 10, startX),
+        'Touch direction moves Maggie',
       );
       const jumpTouch = await page.touchscreen.touchStart(
         jump.x + jump.width / 2,
@@ -563,8 +559,8 @@ test('cici treat trail smoke', { timeout: 300_000 }, async () => {
       );
       assert.ok(
         await page.evaluate(() => {
-          for (let i = 0; i < 6; i++) ciciDebug.update(1 / 120);
-          return ciciDebug.state.player.vy < 0;
+          for (let i = 0; i < 6; i++) maggieDebug.update(1 / 120);
+          return maggieDebug.state.player.vy < 0;
         }),
         'Two fingers can move and jump together',
       );
@@ -580,13 +576,13 @@ test('cici treat trail smoke', { timeout: 300_000 }, async () => {
         'Releasing both fingers leaves no stuck controls',
       );
       // Capture only after touch checks; screenshots can alter Chromium's emulated input state.
-      await page.screenshot({ path: artifactPath(`cici-treat-trail-${viewport.width}.png`) });
+      await page.screenshot({ path: artifactPath(`maggies-toy-run-${viewport.width}.png`) });
       await page.click('#pause');
-      await page.screenshot({ path: artifactPath(`cici-treat-trail-menu-${viewport.width}.png`) });
+      await page.screenshot({ path: artifactPath(`maggies-toy-run-menu-${viewport.width}.png`) });
     }
     assert.deepEqual(errors, [], 'No JavaScript errors or failed game assets');
     console.log(
-      `PASS: ${mechanical.length} platform checks, full keyboard playthrough (${snapshot.treats} treats, ${snapshot.hearts} hearts), pause keys, multitouch, touch gesture protection and mobile layouts.\n${mechanical.join('\n')}`,
+      `PASS: ${mechanical.length} platform checks, full keyboard playthrough (${snapshot.balls} balls, ${snapshot.hearts} hearts), pause keys, multitouch, touch gesture protection and mobile layouts.\n${mechanical.join('\n')}`,
     );
   } finally {
     await closeBrowser(browser);
