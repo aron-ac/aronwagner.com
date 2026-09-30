@@ -98,6 +98,12 @@ try {
       title: 'Maggie’s Toy Run',
       description: 'Grab the tennis balls. Dodge bath time. Be a very good girl.',
     },
+    {
+      file: 'aisle-dash',
+      image: 'aisle-dash',
+      title: 'Aisle Dash',
+      description: 'Keep Rebecca happy. Keep the budget alive. Get home before Jack calls it.',
+    },
   ]) {
     await page.evaluate(
       ({ game, arcade, domain }) => {

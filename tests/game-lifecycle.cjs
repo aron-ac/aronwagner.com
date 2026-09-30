@@ -23,6 +23,14 @@ const games = [
     debug: 'maggieDebug',
     active: ['playing'],
     touch: 'right',
+    canvas2d: true,
+  },
+  {
+    page: 'aisle-dash.html',
+    debug: 'aisleDebug',
+    active: ['playing'],
+    touch: 'right',
+    canvas2d: true,
   },
 ];
 
@@ -134,7 +142,7 @@ async function checkGame(browser, game) {
       await page.$eval('#touch-controls', (element) => element.getAttribute('role')),
       'group',
     );
-    if (game.debug !== 'maggieDebug') {
+    if (!game.canvas2d) {
       assert.equal(
         await page.$eval('#viewport', (element) => element.getAttribute('role')),
         'group',
@@ -324,7 +332,7 @@ async function checkGame(browser, game) {
       `${game.page}: starting enters active gameplay`,
     );
     assert.deepEqual(errors, [], `${game.page}: normal reload recovers without browser errors`);
-    if (game.debug !== 'maggieDebug') {
+    if (!game.canvas2d) {
       const initialFrames = await page.evaluate(() => {
         document.getElementById('viewport').style.display = 'none';
         return window.__gameFrames.callbacks;

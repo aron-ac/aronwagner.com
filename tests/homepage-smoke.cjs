@@ -306,8 +306,11 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
       await page.$$eval('.project-card', (els) =>
         els.map((el) => [el.getAttribute('href'), el.querySelector('h3').textContent.trim()]),
       ),
-      [['maggies-toy-run.html', 'Maggie’s Toy Run']],
-      'The arcade lists Maggie’s Toy Run',
+      [
+        ['maggies-toy-run.html', 'Maggie’s Toy Run'],
+        ['aisle-dash.html', 'Aisle Dash'],
+      ],
+      'The arcade lists both games',
     );
     assert.equal(
       await page.$$eval('a[href$="riders.html"], a[href$="racer.html"]', (els) => els.length),
@@ -326,25 +329,26 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
       [
         ['American Cloud', identity.companyUrl],
         ['Maggie’s Toy Run', 'maggies-toy-run.html'],
+        ['Aisle Dash', 'aisle-dash.html'],
       ],
-      'The introduction links to American Cloud and the game',
+      'The introduction links to American Cloud and both games',
     );
     const homeUrl = page.url();
-    const gameTarget = browser.waitForTarget(
-      (target) =>
-        target.type() === 'page' &&
-        new URL(target.url()).pathname.endsWith('/maggies-toy-run.html'),
-    );
-    await page.click('.project-card[href="maggies-toy-run.html"]');
-    const gamePage = await (await gameTarget).page();
-    assert.equal(page.url(), homeUrl, 'Opening the game keeps the homepage in its original tab');
-    assert.equal(
-      await gamePage.evaluate(() => window.opener === null),
-      true,
-      'The game has no access to its opener',
-    );
-    await gamePage.close();
-    await page.bringToFront();
+    for (const href of ['maggies-toy-run.html', 'aisle-dash.html']) {
+      const gameTarget = browser.waitForTarget(
+        (target) => target.type() === 'page' && new URL(target.url()).pathname.endsWith(`/${href}`),
+      );
+      await page.click(`.project-card[href="${href}"]`);
+      const gamePage = await (await gameTarget).page();
+      assert.equal(page.url(), homeUrl, `Opening ${href} keeps the homepage in its original tab`);
+      assert.equal(
+        await gamePage.evaluate(() => window.opener === null),
+        true,
+        `${href} has no access to its opener`,
+      );
+      await gamePage.close();
+      await page.bringToFront();
+    }
     assert.deepEqual(
       await page.$eval('footer .hosted-by', (link) => ({
         text: link.textContent.replace(/\s+/g, ' ').trim(),
@@ -708,7 +712,7 @@ test('homepage smoke', { timeout: 300_000 }, async () => {
     }
     assert.deepEqual(errors, [], 'No JavaScript errors or failed homepage assets');
     console.log(
-      'PASS: Eastern schedule (winter/summer), manual override expiry, new-tab navigation, the arcade and Maggie’s Toy Run launch, social screen and submenu links, American Cloud business card and email link, seven-photo Polaroid shuffle, Rebecca’s wedding photo and keyboard controls, Maggie’s fetch and pets, pulsing touch pins and touchscreen activation, scene-scoped gesture protection, selectable and zoomable page/dialog text, and responsive layouts.',
+      'PASS: Eastern schedule (winter/summer), manual override expiry, new-tab navigation, the arcade and both game launches, social screen and submenu links, American Cloud business card and email link, seven-photo Polaroid shuffle, Rebecca’s wedding photo and keyboard controls, Maggie’s fetch and pets, pulsing touch pins and touchscreen activation, scene-scoped gesture protection, selectable and zoomable page/dialog text, and responsive layouts.',
     );
   } finally {
     await closeBrowser(browser);

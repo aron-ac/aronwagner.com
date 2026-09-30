@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="theme-color" content="#2b1720" />
+    <meta
+      name="description"
+      content="Take Rebecca shopping at Target and International Plaza. Keep her happy, keep the budget alive, and get home before Jack runs out of patience."
+    />
+    <title>Aisle Dash · Aron Wagner</title>
+    <link rel="canonical" href="https://aronwagner.com/aisle-dash.html" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Aron Wagner" />
+    <meta property="og:title" content="Aisle Dash · Aron Wagner" />
+    <meta
+      property="og:description"
+      content="Take Rebecca shopping at Target and International Plaza. Keep her happy, keep the budget alive, and get home before Jack runs out of patience."
+    />
+    <meta property="og:url" content="https://aronwagner.com/aisle-dash.html" />
+    <meta property="og:image" content="https://aronwagner.com/assets/social/aisle-dash-og.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta
+      property="og:image:alt"
+      content="Aisle Dash: Aron pushes Jack's stroller while Rebecca shops at Target."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Aisle Dash · Aron Wagner" />
+    <meta
+      name="twitter:description"
+      content="Take Rebecca shopping at Target and International Plaza. Keep her happy, keep the budget alive, and get home before Jack runs out of patience."
+    />
+    <meta name="twitter:image" content="https://aronwagner.com/assets/social/aisle-dash-og.jpg" />
+    <meta
+      name="twitter:image:alt"
+      content="Aisle Dash: Aron pushes Jack's stroller while Rebecca shops at Target."
+    />
+    <meta name="twitter:creator" content="@aronwagner" />
+    <link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48" />
+    <link rel="icon" href="assets/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="icon" href="assets/favicon-48.png" type="image/png" sizes="48x48" />
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" sizes="any" />
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" sizes="180x180" />
+    <link rel="stylesheet" href="assets/shared/arcade.css" />
+    <link rel="stylesheet" href="assets/aisle-dash/style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a href="index.html" target="_blank" rel="noopener noreferrer">← ARON'S ARCADE</a
+      ><span class="terminal">./aisle-dash <span aria-hidden="true">▌</span></span
+      ><button id="sound" type="button" aria-pressed="false">SOUND OFF</button>
+    </header>
+    <main id="game-shell">
+      <div id="viewport">
+        <canvas
+          role="img"
+          id="canvas"
+          tabindex="0"
+          aria-label="A side-on store. Left and right arrows or A and D to walk; Space or E to buy, compliment or order."
+          >Take Rebecca shopping without going broke. This game needs Canvas and JavaScript.</canvas
+        >
+      </div>
+      <section class="hud" aria-label="Shopping day statistics">
+        <div class="game-brand">
+          <span class="eyebrow">A DAY OUT WITH REBECCA AND JACK</span>
+          <h1>AISLE DASH <span aria-hidden="true">🛍️</span></h1>
+        </div>
+        <div class="stats">
+          <div><span>BUDGET</span><strong id="budget">$250</strong></div>
+          <div class="happy">
+            <span>HAPPY</span
+            ><strong id="happiness" role="img" aria-label="Rebecca is 50% happy">50%</strong
+            ><i class="meter" aria-hidden="true"><b id="happy-fill"></b></i>
+          </div>
+          <div><span>BAGS</span><strong id="bags">0</strong></div>
+        </div>
+      </section>
+      <div id="day-panel" class="day-panel hidden">
+        <div><span id="zone">TARGET</span><span id="patience-label">JACK 100%</span></div>
+        <progress id="patience" value="100" max="100" aria-label="Jack's patience">100%</progress
+        ><small id="objective">Stay close to Rebecca</small>
+      </div>
+      <div id="toast" role="status" aria-live="polite"></div>
+      <div class="bottom-bar">
+        <span class="keyboard-help"
+          ><kbd>← →</kbd> / <kbd>A D</kbd> WALK <b>·</b> <kbd>SPACE</kbd> BUY / COMPLIMENT <b>·</b>
+          <kbd>P</kbd> PAUSE</span
+        ><button id="pause" class="hidden" type="button">Ⅱ PAUSE</button>
+      </div>
+      <div
+        role="group"
+        id="touch-controls"
+        class="touch-controls hidden"
+        aria-label="Touch shopping controls"
+      >
+        <div>
+          <button type="button" data-control="left" aria-label="Walk left">◀</button
+          ><button type="button" data-control="right" aria-label="Walk right">▶</button>
+        </div>
+        <button
+          type="button"
+          id="action"
+          data-control="action"
+          class="action"
+          aria-label="Buy, compliment or order"
+        >
+          GRAB
+        </button>
+      </div>
+      <section id="overlay" class="overlay" aria-label="Game menu">
+        <div class="menu-card">
+          <span id="menu-eyebrow" class="eyebrow">ONE STROLLER. TWO STOPS. $250.</span>
+          <h2 id="menu-title">Happy wife.<br />Happy wallet.</h2>
+          <p id="menu-description">
+            Rebecca has a Target run and a trip to International Plaza planned. Keep her happy, keep
+            some money, and get home before Jack calls it.
+          </p>
+          <div id="intro-details" class="intro-details">
+            <div>
+              <span>01</span>
+              <p>
+                <strong>Hearts mean she wants it.</strong>Walk up and press Space to buy. “Hmm…”
+                means she’s just looking.
+              </p>
+            </div>
+            <div>
+              <span>02</span>
+              <p>
+                <strong>Money isn’t everything.</strong>Compliments are free. A coffee when she
+                wants one goes a long way. Coupons knock off 20%.
+              </p>
+            </div>
+            <div>
+              <span>03</span>
+              <p>
+                <strong>Watch Jack.</strong>He throws his pacifier. Grab it, or his patience runs
+                out and the day is over.
+              </p>
+            </div>
+          </div>
+          <div id="results" class="results hidden"></div>
+          <button id="start" class="primary" type="button">
+            LET'S GO SHOPPING <span aria-hidden="true">↗</span></button
+          ><button id="restart" class="secondary hidden" type="button">START THE DAY OVER</button>
+          <p id="menu-note" class="menu-note">
+            ← → / A D to walk · Space / E to buy or compliment<br />Touch controls on mobile<br />Best
+            day: <span id="best">0</span>
+          </p>
+        </div>
+      </section>
+      <div id="load-state" class="load-state" role="status">Grabbing a cart…</div>
+    </main>
+    <footer>
+      <span
+        >A tiny arcade adventure by
+        <a href="index.html" target="_blank" rel="noopener noreferrer">Aron Wagner</a></span
+      ><span>Made for Rebecca · Coffee encouraged</span>
+    </footer>
+    <noscript><p class="no-script">This game needs JavaScript.</p></noscript>
+    <script
+      defer
+      src="assets/shared/game-loader.js"
+      data-entry="assets/aisle-dash/game.js"
+    ></script>
+  </body>
+</html>
