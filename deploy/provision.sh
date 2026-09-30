@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
-# Prepare a fresh Ubuntu VM to serve aronwagner.com. Safe to re-run, for example
-# to refresh Cloudflare's IP ranges.
+# Prepare a fresh Ubuntu VM to serve aronwagner.com. Safe to re-run.
 #
-#   scp deploy/Caddyfile cloud@<vm>:/tmp/Caddyfile
+#   scp deploy/Caddyfile deploy/refresh-cloudflare-ips.sh cloud@<vm>:/tmp/
 #   ssh cloud@<vm> sudo bash -s -- "'$(cat deploy_key.pub)'" < deploy/provision.sh
 #
 # `cloud` is the image's sudo-capable admin user.
@@ -59,17 +58,38 @@ fi
 install -d -o caddy -g caddy /var/log/caddy
 find /var/log/caddy -user root -exec chown caddy:caddy {} +
 
-# Only Cloudflare may reach HTTPS; Caddy trusts its forwarded client address.
-ipv4=$(curl -fsS https://www.cloudflare.com/ips-v4)
-ipv6=$(curl -fsS https://www.cloudflare.com/ips-v6)
-ranges=$(printf '%s\n%s\n' "$ipv4" "$ipv6" | grep -v '^$')
-printf 'trusted_proxies static %s\n' "$(tr '\n' ' ' <<< "$ranges")" > "$config/cloudflare-proxies.caddy"
-ufw --force reset
+# Only Cloudflare may reach HTTPS; Caddy trusts its forwarded client address. The
+# refresh script keeps both current, and a weekly timer reruns it.
+install -m 755 /tmp/refresh-cloudflare-ips.sh /usr/local/sbin/refresh-cloudflare-ips
 ufw default deny incoming
 ufw default allow outgoing
 ufw allow 22/tcp
-while read -r range; do ufw allow proto tcp from "$range" to any port 443; done <<< "$ranges"
+/usr/local/sbin/refresh-cloudflare-ips
 ufw --force enable
+cat > /etc/systemd/system/refresh-cloudflare-ips.service <<'UNIT'
+[Unit]
+Description=Refresh the Cloudflare IP allowlist and Caddy trusted proxies
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/refresh-cloudflare-ips
+UNIT
+cat > /etc/systemd/system/refresh-cloudflare-ips.timer <<'UNIT'
+[Unit]
+Description=Weekly Cloudflare IP refresh
+
+[Timer]
+OnCalendar=weekly
+RandomizedDelaySec=6h
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+UNIT
+systemctl daemon-reload
+systemctl enable --now refresh-cloudflare-ips.timer
 
 # Cloudflare Origin Certificate. Until it is installed, a self-signed stand-in
 # lets Caddy start (Cloudflare's Full (strict) mode will reject it).

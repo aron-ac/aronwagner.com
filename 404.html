@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="" />
+    <meta name="robots" content="noindex" />
+    <!-- Served for missing pages at any depth, so every other URL is absolute. -->
+    <link rel="stylesheet" href="assets/homepage/theme-critical.css" data-inline />
+    <title>Page not found · Aron Wagner</title>
+    <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
+    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" sizes="any" />
+    <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" sizes="180x180" />
+    <link rel="stylesheet" href="/styles.css" />
+    <style>
+      .not-found {
+        display: grid;
+        justify-items: center;
+        gap: 18px;
+        max-width: 480px;
+        margin: 12vh auto 0;
+        padding: 0 24px;
+        text-align: center;
+      }
+      /* Maggie's portrait, cropped from a 220px square of the office illustration. */
+      .not-found-maggie {
+        width: 170px;
+        aspect-ratio: 1;
+        border: 3px solid var(--line);
+        border-radius: 50%;
+        background: url('/assets/office/office-day.webp') no-repeat;
+        background-size: calc(1536 / 220 * 100%) auto;
+        background-position: calc(540 / (1536 - 220) * 100%) calc(585 / (1024 - 220) * 100%);
+      }
+      .not-found h1 {
+        margin: 0;
+        color: var(--strong);
+        font:
+          400 44px/1.1 'Caveat Brush',
+          cursive;
+      }
+      .not-found p {
+        margin: 0;
+        font-size: 17px;
+        line-height: 1.6;
+      }
+      .not-found a {
+        color: var(--accent);
+        font:
+          700 14px/1.5 Arial,
+          sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="not-found">
+      <div class="not-found-maggie" role="img" aria-label="Maggie the Goldendoodle"></div>
+      <h1>Page not found</h1>
+      <p>This page wandered off. Maggie looked everywhere, but even she couldn't fetch it.</p>
+      <a href="/">Back to the office</a>
+    </main>
+  </body>
+</html>
