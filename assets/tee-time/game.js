@@ -290,27 +290,24 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
-// Slingshot aiming: press anywhere on the course, pull back, let go.
+// Slingshot aiming: press anywhere on the course, pull back, let go. The pull is
+// measured on screen, so a camera still settling after a shot can't bend it.
 let drag = null;
 const PULL = 190;
-function toWorld(event) {
-  const r = canvas.getBoundingClientRect();
-  return {
-    x: view.x + ((event.clientX - r.left) / r.width) * view.width,
-    y: view.y + ((event.clientY - r.top) / r.height) * view.height,
-  };
+function worldUnitsPerPixel() {
+  return view.width / canvas.getBoundingClientRect().width;
 }
 canvas.addEventListener('pointerdown', (event) => {
   if (state.mode !== 'playing' || state.phase !== 'aim' || drag) return;
   event.preventDefault();
   canvas.setPointerCapture(event.pointerId);
-  drag = { id: event.pointerId, start: toWorld(event), moved: false };
+  drag = { id: event.pointerId, x: event.clientX, y: event.clientY, moved: false };
 });
 canvas.addEventListener('pointermove', (event) => {
   if (!drag || drag.id !== event.pointerId) return;
-  const point = toWorld(event);
-  const dx = drag.start.x - point.x,
-    dy = drag.start.y - point.y;
+  const scale = worldUnitsPerPixel();
+  const dx = (drag.x - event.clientX) * scale,
+    dy = (drag.y - event.clientY) * scale;
   const length = Math.hypot(dx, dy);
   if (length < 6) return;
   drag.moved = true;

@@ -63,6 +63,7 @@ test('tee time smoke', { timeout: 300_000 }, async () => {
     assert.equal(await page.$eval('#strokes', (el) => el.textContent), '1');
 
     // Mouse: drag back from anywhere and let go.
+    await page.evaluate(() => (teeDebug.view.x = Math.max(0, teeDebug.view.x - 300)));
     const box = await (await page.$('#canvas')).boundingBox();
     const x = box.x + box.width / 2,
       y = box.y + box.height / 2;
